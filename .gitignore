@@ -1,0 +1,14 @@
+.dainexus/verify/
+.dainexus/guardrail-log.jsonl
+.dainexus/escalations/
+.dainexus/pipeline-state.json
+.dainexus/memory.db*
+.dainexus/leases.json
+.dainexus/policy-log.jsonl
+.dainexus/rule-ledger.jsonl
+.worktrees/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*

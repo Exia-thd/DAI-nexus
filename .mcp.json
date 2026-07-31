@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dai-nexus": {
+      "command": "py",
+      "args": ["-3", "mcp/server.py"]
+    }
+  }
+}

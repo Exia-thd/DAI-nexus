@@ -1,0 +1,202 @@
+skill: qa-engineer
+version: "1.0.0"
+description: Tests for the QA Engineer skill
+
+tests:
+  - id: test-unit-test-generation
+    description: Generate unit tests for a TypeScript function
+    tags: [unit, typescript, testing]
+    input:
+      language: typescript
+      framework: vitest
+      file: src/math/calculator.ts
+      function: add
+    expected:
+      contains:
+        - "describe"
+        - "it"
+        - "expect"
+        - "add"
+      files_created: 1
+      min_test_cases: 3
+    validate:
+      - output_contains_all
+      - file_count_matches
+      - min_test_cases_satisfied
+    timeout: 60s
+  
+  - id: test-integration-test-generation
+    description: Generate integration tests for API endpoint
+    tags: [integration, api, rest]
+    input:
+      language: typescript
+      framework: supertest
+      endpoint: /api/users
+      method: POST
+    expected:
+      contains:
+        - "describe"
+        - "POST"
+        - "status"
+        - "body"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 90s
+  
+  - id: test-e2e-test-generation
+    description: Generate E2E tests for login flow
+    tags: [e2e, playwright, user-flow]
+    input:
+      language: typescript
+      framework: playwright
+      flow: login
+      steps:
+        - navigate to /login
+        - fill email
+        - fill password
+        - click submit
+    expected:
+      contains:
+        - "test"
+        - "page.goto"
+        - "page.fill"
+        - "page.click"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 90s
+  
+  - id: test-mock-generation
+    description: Generate mock data for testing
+    tags: [mock, testing, faker]
+    input:
+      language: typescript
+      framework: faker
+      entities:
+        - User
+        - Product
+        - Order
+    expected:
+      contains:
+        - "faker"
+        - "User"
+        - "Product"
+        - "Order"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-contract-testing
+    description: Generate Pact contract tests
+    tags: [contract, pact, api]
+    input:
+      language: typescript
+      framework: pact
+      consumer: web-app
+      provider: api-service
+      interactions:
+        - getUser
+        - createOrder
+    expected:
+      contains:
+        - "Pact"
+        - "consumer"
+        - "provider"
+        - "interaction"
+      files_created: 2
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 90s
+  
+  - id: test-performance-test
+    description: Generate k6 load test script
+    tags: [performance, k6, load-testing]
+    input:
+      language: javascript
+      framework: k6
+      endpoint: /api/users
+      scenarios:
+        - name: smoke
+          vus: 1
+          duration: 30s
+        - name: load
+          vus: 50
+          duration: 2m
+    expected:
+      contains:
+        - "k6"
+        - "http.get"
+        - "check"
+        - "sleep"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-snapshot-testing
+    description: Generate snapshot tests for component
+    tags: [snapshot, jest, component]
+    input:
+      language: typescript
+      framework: jest
+      component: UserCard
+      props:
+        name: "John Doe"
+        email: "john@example.com"
+    expected:
+      contains:
+        - "toMatchSnapshot"
+        - "renderer"
+        - "UserCard"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-api-contract-test
+    description: Generate API contract tests
+    tags: [api, contract, openapi]
+    input:
+      language: typescript
+      framework: jest
+      spec: openapi
+      endpoint: /api/users
+      method: GET
+    expected:
+      contains:
+        - "supertest"
+        - "expect"
+        - "status"
+        - "toEqual"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-mutation-testing
+    description: Generate Stryker mutation test config
+    tags: [mutation, stryker, testing]
+    input:
+      language: typescript
+      framework: stryker
+      target: src/**/*.ts
+    expected:
+      contains:
+        - "stryker"
+        - "mutate"
+        - "tsconfig"
+        - "reporters"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s

@@ -1,0 +1,64 @@
+---
+id: pipeline-activation
+title: Pipeline Activation Protocol
+summary: Core protocol for pipeline activation.
+status: active
+version: 1.0.0
+owners: [core]
+triggers: []
+used_by: [all]
+related: []
+supersedes: []
+superseded_by: null
+---
+# Pipeline Activation Protocol
+
+<!-- source: skills/_shared/protocols/pipeline-activation.md -->
+
+This protocol is the source of truth for starting and tracking the DAI Nexus
+pipeline across Antigravity, Codex, Claude Code, Cursor, Gemini CLI, and
+OpenCode.
+
+## Mandatory Activation Contract
+
+For every new user request:
+
+1. Output the exact string `[PIPELINE_RESET]` before any tool call.
+2. Run memory retrieval:
+   - `bash scripts/memory-retrieve.sh "<request>"`
+   - `bash scripts/memory-suggest.sh "<request>"`
+3. Read the production-grade orchestrator instructions before execution.
+4. Classify the mode and create a plan.
+5. Record a passing plan score with `scripts/dai-nexus-session-tracker.sh`.
+6. If DAI Nexus MCP is available, call `dn_start_pipeline` at request start.
+7. Track progress in `.dainexus/task.md` while working (and mirror phase state via `dn_get_state` when the MCP server is connected).
+8. Use `dn_advance_phase` when moving across pipeline phases.
+9. Use `dn_get_state` before closing substantial work.
+
+## Failure Rules
+
+- Missing `[PIPELINE_RESET]` is a pipeline activation failure.
+- Missing memory retrieval is a pipeline activation failure.
+- Missing plan score is a pipeline activation failure.
+- A stale `.dainexus/pipeline-state.json` is a dashboard compliance failure.
+- MCP setup drift is an MCP availability failure.
+
+## Verification Commands
+
+```bash
+bash scripts/pipeline-preflight.sh --strict
+bash scripts/dai-nexus-mcp-setup.sh --check
+bash scripts/verify-mcp-manifest.sh .
+```
+
+## Score Targets
+
+All pipeline activation controls must maintain these minimum scores:
+
+| Category | Target |
+|---|---:|
+| Rule clarity | 9/10 |
+| Cross-client consistency | 9/10 |
+| Runtime enforcement | 9/10 |
+| MCP availability | 9/10 |
+| Pipeline state compliance | 9/10 |

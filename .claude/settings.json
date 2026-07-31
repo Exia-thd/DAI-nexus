@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py -3 scripts/lite/verify_gate.py --hook"
+          }
+        ]
+      }
+    ]
+  }
+}

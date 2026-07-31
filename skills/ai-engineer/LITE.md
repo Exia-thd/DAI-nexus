@@ -1,0 +1,71 @@
+---
+name: ai-engineer
+description: "Orchestrates LLM integration, custom RAG pipelines, cognitive memory management, and prompt routing policies. Use when the user requests custom AI feature builds, RAG pipeline integrations, memory-bank customizations, or LLM-backed agentic flows."
+version: 1.0.0
+---
+
+# Ai Engineer (LITE)
+
+## SOLVE Step 2: GROUND (Ai Engineer Domain Slots)
+| Assumption | Check command / file read | Result | Script-produced evidence |
+|---|---|---|---|
+| Project tech stack and AI routing profiles are onboarded | `cat .dainexus/project-profile.json` | ... | run the check command and paste output |
+| Production-grade model variables and thinking levels are active | `cat .production-grade.yaml` | ... | run the check command and paste output |
+| Memory bank structures and schema directories are initialized | `find .dainexus/ -maxdepth 2 -type d` | ... | run the check command and paste output |
+
+## SOLVE Step 3: DECOMPOSE (Ai Engineer Domain Slots)
+Format: `n. ACTION | TARGET | CHECK`
+
+1. ROUTE | Match prompt task complexity to model routing rules | Verify high-stakes tasks use Gemini 3.1 Pro (`thinking_level: HIGH`) and low-risk tasks use Gemini 3.5 Flash (`thinking_level: MINIMAL`).
+2. CONFIGURE | Enforce API parameter rules Thought Signatures preservation | Ensure intermediate prompt layers do not filter out Thought Signatures, avoiding API 400 bad requests.
+3. OFFLOAD | Divert heavy outputs (>1200 tokens) via Context Offload (Middleware ④d) | Verify outputs are written under `.dainexus/offload/` and represented as compact trace handles (e.g., `refs/n-X-tool-hash.md`).
+4. REINFORCE | Apply ASIP edge adjustments to SQLite Cognitive Graph (FluxMem) nodes | Verify failed execution loops trigger a 0.5 decay while successful workflows trigger a 1.2 reinforcement.
+
+## Common Mistakes Checklist
+- **Stripping Thought Signatures**: Using custom text or regex parsers on model output streams that accidentally strip thought signatures, triggering immediate API 400 failures.
+- **Bypassing Sandbox Redaction**: Allowing raw tool executions to run without filtering through Middleware ④c (Tool Sandbox), causing API keys or credentials to leak into context caching layers.
+- **Context Overload (Missing Offload)**: Failing to enforce the 1200-token threshold for large tool outputs, leading to rapid context window exhaustion and increased API latency.
+- **Hardcoding Temperatures**: Specifying standard temperature overrides (like 0.0 or 0.7) for reasoning tasks, violating
+- **Fragmented Memory Updates**: Manually editing JSON-based memory files directly instead of letting `scripts/lite/memory.py` or the SQLite memory manager handle cognitive updates.
+
+### Step 1: Verify the orchestrator's production-grade configurations and budgets
+```bash
+cat .production-grade.yaml
+cat .dainexus/budget.yaml
+```
+
+### Step 2: Build a cost-aware, RAG-grounded model dispatcher in `src/ai-dispatcher.ts`
+```typescript
+import { GeminiClient } from 'dai-nexus-gemini';
+
+export class AIDispatcher {
+  private client: GeminiClient;
+
+  constructor() {
+    this.client = new GeminiClient({
+      // Safe: Enforces the mandatory Temperature 1.0 rule
+      temperature: 1.0,
+      preserveThoughtSignatures: true
+    });
+  }
+
+  // Handle task routing with adaptive thinking budget configs
+  public async dispatchTask(taskPrompt: string, complexity: 'HIGH' | 'LOW') {
+    const model = complexity === 'HIGH' ? 'gemini-3.1-pro' : 'gemini-3.5-flash';
+    const thinkingBudget = complexity === 'HIGH' ? 1024 : 0;
+
+    console.log(`[ROUTE] Dispatching to ${model} (Budget: ${thinkingBudget} tokens)`);
+
+    return await this.client.generate({
+      model,
+      prompt: taskPrompt,
+      thinkingConfig: { budget: thinkingBudget }
+    });
+  }
+}
+```
+
+### Step 3: Run the memory-consolidator script to optimize RAG performance
+```bash
+python3 scripts/memory-consolidate.py
+```

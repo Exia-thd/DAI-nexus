@@ -1,0 +1,255 @@
+skill: software-engineer
+version: "1.0.0"
+description: Tests for the Software Engineer skill
+
+tests:
+  - id: test-basic-rest-endpoint
+    description: Generate a basic REST endpoint with CRUD operations
+    tags: [basic, api, rest, crud]
+    input:
+      language: typescript
+      framework: express
+      endpoint: /api/tasks
+      operations: [create, read, update, delete]
+    expected:
+      contains:
+        - "export default"
+        - "router"
+        - "async function"
+        - "/api/tasks"
+      files_created: 1
+      min_lines: 30
+    validate:
+      - output_contains_all
+      - file_count_matches
+      - min_lines_satisfied
+      - no_todos
+    timeout: 60s
+  
+  - id: test-auth-service
+    description: Generate JWT authentication service
+    tags: [auth, jwt, security]
+    input:
+      language: typescript
+      type: auth-service
+      auth_type: jwt
+    expected:
+      contains:
+        - "jwt"
+        - "sign"
+        - "verify"
+        - "authorization"
+        - "Bearer"
+      not_contains:
+        - "TODO"
+        - "FIXME"
+        - "password"  # Should be hashed, not plain
+    validate:
+      - output_contains_all
+      - output_excludes_none
+      - no_todos
+    timeout: 90s
+  
+  - id: test-database-model
+    description: Generate a database model with TypeScript
+    tags: [database, model, typescript]
+    input:
+      language: typescript
+      orm: prisma
+      model: User
+      fields:
+        - id: UUID
+        - email: String
+        - name: String
+        - createdAt: DateTime
+    expected:
+      contains:
+        - "model"
+        - "User"
+        - "@id"
+        - "@map"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-middleware
+    description: Generate Express middleware
+    tags: [middleware, express]
+    input:
+      language: typescript
+      type: middleware
+      middleware_type: rate-limit
+    expected:
+      contains:
+        - "middleware"
+        - "next"
+        - "rate"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-error-handler
+    description: Generate global error handler
+    tags: [error-handling, middleware]
+    input:
+      language: typescript
+      type: error-handler
+    expected:
+      contains:
+        - "Error"
+        - "status"
+        - "message"
+      not_contains:
+        - "console.log"
+    validate:
+      - output_contains_all
+      - output_excludes_none
+    timeout: 60s
+  
+  - id: test-graphql-resolver
+    description: Generate GraphQL resolver with type definitions
+    tags: [graphql, api, typescript]
+    input:
+      language: typescript
+      framework: graphql-yoga
+      type: user
+      operations: [query, mutation]
+    expected:
+      contains:
+        - "typeDefs"
+        - "resolvers"
+        - "Query"
+        - "Mutation"
+      files_created: 2
+      min_lines: 50
+    validate:
+      - output_contains_all
+      - file_count_matches
+      - min_lines_satisfied
+    timeout: 90s
+  
+  - id: test-websocket-server
+    description: Generate WebSocket server with rooms
+    tags: [websocket, realtime, socket]
+    input:
+      language: typescript
+      framework: ws
+      features: [rooms, broadcast, typing-indicator]
+    expected:
+      contains:
+        - "WebSocketServer"
+        - "on"
+        - "broadcast"
+        - "join"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 90s
+  
+  - id: test-validation-schema
+    description: Generate Zod validation schema
+    tags: [validation, zod, typescript]
+    input:
+      language: typescript
+      library: zod
+      schema: user-registration
+      fields:
+        - name: email
+          type: email
+        - name: password
+          type: string
+          min: 8
+        - name: age
+          type: number
+          optional: true
+    expected:
+      contains:
+        - "z.object"
+        - "z.string"
+        - "z.number"
+        - "email"
+        - "min"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-api-client
+    description: Generate typed API client with fetch
+    tags: [api-client, fetch, typescript]
+    input:
+      language: typescript
+      type: api-client
+      endpoints:
+        - GET /users
+        - POST /users
+        - GET /users/:id
+    expected:
+      contains:
+        - "fetch"
+        - "async"
+        - "GET"
+        - "POST"
+        - "Content-Type"
+      files_created: 1
+      min_lines: 40
+    validate:
+      - output_contains_all
+      - file_count_matches
+      - min_lines_satisfied
+    timeout: 60s
+  
+  - id: test-state-management
+    description: Generate Zustand store with persistence
+    tags: [state, zustand, react]
+    input:
+      language: typescript
+      framework: zustand
+      store: cart
+      features: [persistence, devtools]
+      state:
+        - items
+        - total
+        - addItem
+        - removeItem
+    expected:
+      contains:
+        - "create"
+        - "persist"
+        - "useStore"
+        - "set"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
+  
+  - id: test-api-middleware-stack
+    description: Generate middleware stack for Express
+    tags: [middleware, express, cors]
+    input:
+      language: typescript
+      framework: express
+      middlewares:
+        - cors
+        - helmet
+        - compression
+        - morgan
+    expected:
+      contains:
+        - "cors"
+        - "helmet"
+        - "compression"
+        - "morgan"
+        - "app.use"
+      files_created: 1
+    validate:
+      - output_contains_all
+      - file_count_matches
+    timeout: 60s
