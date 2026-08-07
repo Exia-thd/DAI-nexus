@@ -36,6 +36,7 @@ TẦNG 3 — RUNTIME (Python thuần, zero-dependency, Windows/macOS/Linux)
   scripts/lite/policy_check.py      → execution policy gate (deny patterns, fail-closed)
   scripts/lite/runtime_lease.py     → runtime lease guard: chống leak dev server/process
   scripts/lite/rule_ledger.py       → ledger tự khai vi phạm rule (JSONL, stats)
+  scripts/lite/validate_overlays.py → linter overlay: chặn evidence giả, path chết, bảng hỏng
   mcp/server.py                     → MCP server (stdio) 8 dn_* tools: pipeline state + memory
 ```
 
@@ -47,7 +48,7 @@ TẦNG 3 — RUNTIME (Python thuần, zero-dependency, Windows/macOS/Linux)
 # 1. Sinh boot files từ kernel (chạy lại mỗi khi sửa kernel/)
 python scripts/lite/sync-kernel.py
 
-# 2. Tự kiểm tra toàn hệ thống (26 checks)
+# 2. Tự kiểm tra toàn hệ thống (34 checks)
 python tests/smoke.py
 
 # 3. Dùng: mở Claude Code (hoặc Cursor/Gemini CLI) tại repo này.

@@ -31,10 +31,10 @@ Format: `n. ACTION | TARGET | CHECK`
 ### Step 1: Ground the target game stack and baseline settings
 ```bash
 cat .dainexus/project-profile.json
-find .agents/ -name "*design_dna*"
+ls docs/design/
 ```
 ```
-.agents/workflows/design_dna.json
+docs/design/design-tokens.json
 ```
 
 ### Step 2: Implement a responsive, theme-aligned visual card using Design DNA variables

@@ -191,6 +191,59 @@ def test_skill_overlays_clean() -> None:
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
 
 
+def test_overlay_validator() -> None:
+    r = run(PY + ["scripts/lite/validate_overlays.py"])
+    check("all overlays pass validator (no fake evidence/dead paths)",
+          r.returncode == 0, (r.stdout + r.stderr)[-400:])
+
+
+def test_escalate_timeout_and_lease() -> None:
+    """A hung provider must be killed, reported as 124, and leave no lease behind."""
+    sys.path.insert(0, str(ROOT / "scripts" / "lite"))
+    import importlib
+    esc = importlib.import_module("escalate")
+    lease_mod = importlib.import_module("runtime_lease")
+
+    check("timeout clamps below 1", esc.provider_timeout_seconds({"providerTimeoutSeconds": 0}) == 1)
+    check("timeout clamps above 3600",
+          esc.provider_timeout_seconds({"providerTimeoutSeconds": 99999}) == 3600)
+    check("timeout falls back on garbage",
+          esc.provider_timeout_seconds({"providerTimeoutSeconds": "abc"}) == 120)
+
+    lease_file = ROOT / ".dainexus" / "leases.json"
+    backup = lease_file.read_text(encoding="utf-8") if lease_file.is_file() else None
+    import os
+    cwd = os.getcwd()
+    try:
+        os.chdir(ROOT)
+        before = len(lease_mod.load_leases())
+        result = esc.run_provider(
+            [sys.executable, "-c", "import time; time.sleep(30)"],
+            "", False, dict(os.environ), timeout_seconds=2,
+        )
+        after = lease_mod.load_leases()
+        check("hung provider returns exit 124", result.returncode == 124, str(result.returncode))
+        check("timed-out provider leaves no lease", len(after) == before,
+              f"before={before} after={len(after)}")
+    finally:
+        os.chdir(cwd)
+        if backup is not None:
+            lease_file.write_text(backup, encoding="utf-8")
+        elif lease_file.is_file():
+            lease_file.unlink()
+
+
+def test_skill_test_contracts() -> None:
+    r = run(PY + ["skills/_test/skill-test-executor.py", "validate"])
+    check("skill test contracts valid", r.returncode == 0, (r.stdout + r.stderr)[-400:])
+    # The harness must never fabricate output: a silent adapter has to FAIL.
+    r = run(PY + ["skills/_test/skill-test-executor.py", "run", "code-reviewer",
+                  "--id", "test-basic-review",
+                  "--adapter", f'"{sys.executable}" -c "print(\'nothing\')"'])
+    check("silent adapter fails instead of faking a pass",
+          r.returncode == 1 and "FAIL" in (r.stdout + r.stderr), (r.stdout + r.stderr)[-200:])
+
+
 def test_rule_ledger() -> None:
     ledger = ROOT / ".dainexus" / "rule-ledger.jsonl"
     backup = ledger.read_text(encoding="utf-8") if ledger.is_file() else None
@@ -212,7 +265,8 @@ def main() -> None:
                test_escalate_dry_run, test_mcp_server, test_mcp_gate_discipline,
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
-               test_rule_ledger):
+               test_overlay_validator, test_escalate_timeout_and_lease,
+               test_skill_test_contracts, test_rule_ledger):
         try:
             fn()
         except Exception as e:

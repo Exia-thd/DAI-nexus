@@ -1,3 +1,8 @@
+---
+name: pipeline
+description: "Meta-orchestrator for all software engineering work — turns one requirement sentence into a shipped app (DEFINE → BUILD → HARDEN → SHIP with user gates), and routes smaller requests (debug, review, test, ship-only) to the minimal subset of phases they need."
+---
+
 # Pipeline — LITE Overlay
 
 One orchestrator skill, mode-based. The kernel routing table selected your mode; this overlay tells you which phases run. Full details: `skills/pipeline/SKILL.md`.

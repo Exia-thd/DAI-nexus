@@ -16,6 +16,7 @@ Config (.dainexus.yaml, optional):
     expertMode:
       activeCli: claude
       fallbackCli: gemini
+      providerTimeoutSeconds: 120
       budget:
         maxExpertCallsPerRun: 5
         requireConfirmationAbove: 3
@@ -23,6 +24,7 @@ Config (.dainexus.yaml, optional):
 Env vars:
     DAINEXUS_RUN_ID    budget-window key (default: today's date)
     DAINEXUS_CONFIRM   set "1" to proceed past the confirmation threshold
+    DAINEXUS_ESCALATION_TIMEOUT_SECS  provider wall-clock cap (clamped 1..3600)
 
 Output: escalation records in .dainexus/escalations/<run>-<ts>-<task>.json
 Secrets are redacted before any packet is written or sent.
@@ -95,6 +97,7 @@ def load_config() -> dict:
         "fallbackCli": None,
         "maxExpertCallsPerRun": 5,
         "requireConfirmationAbove": 3,
+        "providerTimeoutSeconds": 120,
     }
     if not CONFIG_FILE.exists():
         return defaults
@@ -105,7 +108,8 @@ def load_config() -> dict:
         cfg = dict(defaults)
         cfg["activeCli"] = _yaml_scalar(block, "activeCli") or defaults["activeCli"]
         cfg["fallbackCli"] = _yaml_scalar(block, "fallbackCli")
-        for key in ("maxExpertCallsPerRun", "requireConfirmationAbove"):
+        for key in ("maxExpertCallsPerRun", "requireConfirmationAbove",
+                    "providerTimeoutSeconds"):
             v = _yaml_scalar(block, key)
             if v is not None:
                 try:
@@ -162,6 +166,76 @@ def get_git_diff() -> str:
         return redact(diff[:10000])
     except Exception:
         return ""
+
+
+def provider_timeout_seconds(cfg: dict) -> int:
+    """Provider wall-clock cap. Env wins over config; always clamped to [1, 3600]."""
+    raw = os.environ.get("DAINEXUS_ESCALATION_TIMEOUT_SECS")
+    try:
+        value = int(raw) if raw is not None else int(cfg.get("providerTimeoutSeconds", 120))
+    except (TypeError, ValueError):
+        value = 120
+    return max(1, min(value, 3600))
+
+
+def _lease_module():
+    """Import the runtime lease guard from the same directory. None if unavailable."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import runtime_lease  # noqa: PLC0415
+        return runtime_lease
+    except ImportError:
+        return None
+
+
+def run_provider(argv: list[str], prompt: str, use_stdin: bool, env: dict,
+                 timeout_seconds: int) -> subprocess.CompletedProcess:
+    """Run the expert CLI under a runtime lease so a hung provider is never invisible.
+
+    The lease is registered right after spawn and released in `finally`, so a
+    provider that overruns its timeout is killed AND deregistered rather than
+    lingering as an orphan.
+    """
+    proc = subprocess.Popen(
+        argv,
+        stdin=subprocess.PIPE if use_stdin else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+
+    lease_mod, lease_id = _lease_module(), None
+    if lease_mod is not None:
+        try:
+            leases = lease_mod.load_leases()
+            lease = lease_mod.new_lease("expert", proc.pid, None, "reap", " ".join(argv[:2]))
+            leases.append(lease)
+            lease_mod.save_leases(leases)
+            lease_id = lease["lease_id"]
+        except OSError as e:
+            print(f"[ESCALATE] WARNING: could not register runtime lease: {e}", file=sys.stderr)
+
+    try:
+        stdout, stderr = proc.communicate(input=prompt if use_stdin else None,
+                                          timeout=timeout_seconds)
+        return subprocess.CompletedProcess(argv, proc.returncode, stdout, stderr)
+    except subprocess.TimeoutExpired:
+        if lease_mod is not None:
+            lease_mod.pid_kill(proc.pid)
+        else:
+            proc.kill()
+        stdout, stderr = proc.communicate()
+        msg = f"[ESCALATE] ERROR: provider timed out after {timeout_seconds}s.\n"
+        return subprocess.CompletedProcess(argv, 124, stdout, (stderr or "") + msg)
+    finally:
+        if lease_id and lease_mod is not None:
+            try:
+                remaining = [le for le in lease_mod.load_leases() if le["lease_id"] != lease_id]
+                lease_mod.save_leases(remaining)
+            except OSError as e:
+                print(f"[ESCALATE] WARNING: could not release lease {lease_id}: {e}",
+                      file=sys.stderr)
 
 
 def build_argv(cli: str, prompt: str) -> tuple[list[str], bool]:
@@ -247,18 +321,14 @@ def main() -> None:
         print(f"[ESCALATE] ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"[ESCALATE] CLI: {active_cli}, budget {prior + 1}/{max_calls}")
+    timeout_seconds = provider_timeout_seconds(cfg)
+    print(f"[ESCALATE] CLI: {active_cli}, budget {prior + 1}/{max_calls}, timeout {timeout_seconds}s")
     delegation_env = dict(os.environ, DAINEXUS_WORKSPACE=str(PROJECT_ROOT))
     start_time = time.time()
     try:
-        result = subprocess.run(argv, capture_output=True, text=True, timeout=600,
-                                input=prompt_text if use_stdin else None,
-                                env=delegation_env)
+        result = run_provider(argv, prompt_text, use_stdin, delegation_env, timeout_seconds)
     except FileNotFoundError:
         print(f"[ESCALATE] ERROR: CLI '{active_cli}' not found in PATH.", file=sys.stderr)
-        sys.exit(1)
-    except subprocess.TimeoutExpired:
-        print("[ESCALATE] ERROR: expert CLI timed out after 600s.", file=sys.stderr)
         sys.exit(1)
     latency_ms = int((time.time() - start_time) * 1000)
 
@@ -283,9 +353,7 @@ def main() -> None:
     if result.returncode != 0 and fallback_cli in CLI_ARGV:
         print(f"[ESCALATE] Primary exited {result.returncode}. Trying fallback: {fallback_cli}.")
         fb_argv, fb_stdin = build_argv(fallback_cli, prompt_text)
-        fb = subprocess.run(fb_argv, capture_output=True, text=True, timeout=600,
-                            input=prompt_text if fb_stdin else None,
-                            env=delegation_env)
+        fb = run_provider(fb_argv, prompt_text, fb_stdin, delegation_env, timeout_seconds)
         print(fb.stdout)
         if fb.stderr:
             print(fb.stderr, file=sys.stderr)

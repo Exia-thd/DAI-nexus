@@ -10,7 +10,7 @@ version: 1.0.0
 | Assumption | Check command / file read | Result | Script-produced evidence |
 |---|---|---|---|
 | Target UI framework (Tailwind CSS, React, or custom CSS) is installed | `cat package.json \| jq '.dependencies["tailwindcss"] // .dependencies["react"]'` | ... | run the check command and paste output |
-| Active design_dna contracts or visual tokens exist under workspace paths | `find .agents/ -name "*design*" -o -name "*dna*"` | ... | run the check command and paste output |
+| Active design_dna contracts or visual tokens exist under workspace paths | `ls docs/design/` | ... | run the check command and paste output |
 | Playwright visual regression test configurations are onboarded | `cat playwright.config.ts` | ... | run the check command and paste output |
 
 ## SOLVE Step 3: DECOMPOSE (Ui Designer Domain Slots)
@@ -37,10 +37,10 @@ Format: `n. ACTION | TARGET | CHECK`
 #### Step 1 (AUDIT): Verify the UI styling framework and active design guidelines
 ```bash
 cat package.json | grep -E "(tailwindcss|playwright)"
-find .agents/ -name "*design_dna*"
+ls docs/design/
 ```
 ```
-.agents/workflows/design_dna.json
+docs/design/design-tokens.json
 ```
 
 #### Step 2 (DESIGN): Draft wireframe and component states

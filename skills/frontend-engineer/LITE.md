@@ -38,7 +38,7 @@ Format: `n. ACTION | TARGET | CHECK`
 | Tailwind CSS is configured | `cat tailwind.config.ts` | Tailwind CSS configured | Y |
 | Component directory exists | `ls src/components` | Directory exists | Y |
 | React is installed | Read `package.json` | React v18 | Y |
-| Design DNA exists | `find .agents/ -name "*design_dna*"` | `.agents/design_dna.json` found | Y |
+| Design DNA exists | `ls docs/design/` | `docs/design/design-tokens.json` found | Y |
 
 #### 3. DECOMPOSE
 1. ACTION (draft UI design gate contract) | TARGET (design_dna/UI spec) | CHECK (verify responsive matrix exists)
