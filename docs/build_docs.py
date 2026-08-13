@@ -24,6 +24,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _page_memory_guide  # noqa: E402  (prose module, same directory)
+
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 
@@ -34,6 +37,7 @@ PAGES = [
     ("evidence.html", "Bằng chứng"),
     ("runtime.html", "Runtime"),
     ("memory.html", "Memory"),
+    ("memory-guide.html", "Bóc tách Memory"),
     ("patterns.html", "Tinh túy"),
 ]
 
@@ -118,6 +122,41 @@ def facts() -> dict:
         "policy_patterns": policy_patterns,
         "reject_reasons": reject_reasons,
         "memory_loc": lines_of("scripts/lite/memory.py"),
+        **_memory_facts(),
+    }
+
+
+def _memory_facts() -> dict:
+    """Read the memory module's real surface so the extraction guide cannot lie."""
+    src = read("scripts/lite/memory.py")
+    cls = src.split("class MemoryDB:")[1]
+    api = [m for m in re.findall(r"^    def (\w+)\(", cls, re.MULTILINE) if not m.startswith("_")]
+    cli = re.findall(r'add_parser\("([a-z_]+)"\)', src)
+    for m in re.findall(r'for name in \(([^)]+)\):', src):        # subcommands added in a loop
+        cli += [x.strip().strip('"\'') for x in m.split(",") if x.strip()]
+    env = sorted(set(re.findall(r'os\.environ\.get\("(\w+)"', src)))
+    tags = re.findall(r',\s*"(\w+)"\),\s*$', src.split("AUTO_TAG_PATTERNS")[1].split("\n]")[0],
+                      re.MULTILINE)
+    if not tags:
+        raise SystemExit("[docs] AUTO_TAG_PATTERNS parse returned nothing — fix _memory_facts()")
+    weights = re.findall(r'^\s+"([\w-]+)": (\d+),', src.split("CATEGORY_WEIGHTS")[1].split("}")[0],
+                         re.MULTILINE)
+    redact = re.findall(r'^\s+r"', src.split("REDACT_PATTERNS")[1].split("\n]")[0], re.MULTILINE)
+    triggers = re.findall(r"CREATE TRIGGER IF NOT EXISTS (\w+)", src)
+    indexes = re.findall(r"CREATE INDEX IF NOT EXISTS (\w+)", src)
+    rrf_k = re.search(r"^RRF_K = (\d+)", src, re.MULTILINE)
+    max_obs = re.search(r"^MAX_OBS_DEFAULT = (\d+)", src, re.MULTILINE)
+    return {
+        "mem_api": api,
+        "mem_cli": sorted(set(cli)),
+        "mem_env": env,
+        "mem_tags": tags,
+        "mem_weights": weights,
+        "mem_redact_count": len(redact),
+        "mem_triggers": triggers,
+        "mem_index_count": len(indexes),
+        "mem_rrf_k": rrf_k.group(1) if rrf_k else "?",
+        "mem_max_obs": max_obs.group(1) if max_obs else "?",
     }
 
 
@@ -790,6 +829,8 @@ def build() -> dict[str, str]:
         "evidence.html": page("evidence.html", "Chuỗi bằng chứng", page_evidence(f), f),
         "runtime.html": page("runtime.html", "Runtime", page_runtime(f), f),
         "memory.html": page("memory.html", "Memory", page_memory(f), f),
+        "memory-guide.html": page("memory-guide.html", "Bóc tách Memory",
+                                  _page_memory_guide.render(f, code, table, callout, esc, stat_grid), f),
         "patterns.html": page("patterns.html", "Tinh túy", page_patterns(f), f),
     }
 

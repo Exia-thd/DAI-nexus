@@ -192,6 +192,51 @@ def test_skill_overlays_clean() -> None:
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
 
 
+def test_memory_is_portable() -> None:
+    """docs/memory-guide.html promises one file, stdlib only, works standalone.
+
+    If someone adds a third-party import or splits the module, that promise turns
+    into a lie for every reader who followed the guide — so it is a test, not a
+    comment.
+    """
+    import ast
+    src = (ROOT / "scripts" / "lite" / "memory.py").read_text(encoding="utf-8")
+    mods: set[str] = set()
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.Import):
+            mods |= {a.name.split(".")[0] for a in node.names}
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            mods.add(node.module.split(".")[0])
+    third_party = sorted(m for m in mods if m not in sys.stdlib_module_names)
+    check("memory.py imports stdlib only", not third_party, f"third-party: {third_party}")
+    check("memory.py has no local imports (single-file promise)",
+          not any(isinstance(n, ast.ImportFrom) and n.level > 0 for n in ast.walk(ast.parse(src))))
+
+    # The guide's own verification snippet, run against a copy in a bare directory.
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(tmp)
+        (d / "memory.py").write_text(src, encoding="utf-8")
+        snippet = (
+            "import sys; sys.path.insert(0, %r)\n"
+            "from memory import MemoryDB\n"
+            "db = MemoryDB(%r)\n"
+            "a = db.add('use jwt with token=abcdefgh12345678 rotation',"
+            " category='decisions', importance=9)\n"
+            "assert not a['duplicate'] and a['tags']\n"
+            "assert db.add('use jwt with token=abcdefgh12345678 rotation')['duplicate']\n"
+            "assert '[REDACTED]' in db.memory_get(a['id'])['content']\n"
+            "assert db.memory_search('jwt')[0]['id'] == a['id']\n"
+            "[db.add('filler %%d' %% i, category='ingested') for i in range(6)]\n"
+            "db.gc(max_obs=3)\n"
+            "assert 'decisions' in {m['type'] for m in db.list_all(limit=10)}\n"
+            "print('memory OK')\n"
+        ) % (str(d), str(d / "t.db"))
+        r = subprocess.run(PY + ["-c", snippet], capture_output=True, text=True,
+                           cwd=str(d), timeout=60)
+        check("guide's verification snippet passes on a bare copy",
+              r.returncode == 0 and "memory OK" in r.stdout, (r.stdout + r.stderr)[-250:])
+
+
 def test_evidence_schema_v2() -> None:
     """v2 records carry an integrity digest; a doctored output must not survive it."""
     import importlib
@@ -345,6 +390,7 @@ def main() -> None:
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
                test_overlay_validator, test_docs_fresh, test_evidence_schema_v2,
+               test_memory_is_portable,
                test_stub_check_precision,
                test_utf8_cli_output, test_escalate_timeout_and_lease,
                test_skill_test_contracts, test_rule_ledger):

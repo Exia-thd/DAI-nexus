@@ -48,7 +48,7 @@ TẦNG 3 — RUNTIME (Python thuần, zero-dependency, Windows/macOS/Linux)
 # 1. Sinh boot files từ kernel (chạy lại mỗi khi sửa kernel/)
 python scripts/lite/sync-kernel.py
 
-# 2. Tự kiểm tra toàn hệ thống (53 checks)
+# 2. Tự kiểm tra toàn hệ thống (56 checks)
 python tests/smoke.py
 
 # 3. Dùng: mở Claude Code (hoặc Cursor/Gemini CLI) tại repo này.
@@ -69,6 +69,11 @@ Site tài liệu nằm ở `docs/` — mở `docs/index.html` bằng browser, ho
 ```bash
 python -m http.server 8000 --directory docs
 ```
+
+Có 8 trang; trong đó [`memory-guide.html`](docs/memory-guide.html) là **trang độc lập** hướng dẫn
+bóc riêng module memory (`scripts/lite/memory.py` — một file, chỉ stdlib) đem gắn vào project khác:
+cài 60 giây, 4 cách tích hợp (library · CLI · MCP · hook vòng đời agent), điểm cấu hình nào nên sửa,
+thứ gì đừng đụng vào, giới hạn đã biết, và đoạn kiểm chứng chạy được sau khi port.
 
 Toàn bộ số liệu và code excerpt trong đó được **sinh từ source lúc build** (`docs/build_docs.py`),
 nên không thể drift khỏi code. `python docs/build_docs.py --check` sẽ fail nếu trang đã cũ —
