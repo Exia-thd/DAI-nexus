@@ -124,7 +124,16 @@ def validate_file(path: Path) -> list[str]:
     return errors
 
 
+def _utf8_io() -> None:
+    """Windows consoles default to a legacy codepage; non-ASCII output would
+    crash the tool instead of printing. Force UTF-8 on our own streams."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _utf8_io()
     args = sys.argv[1:]
     targets = [Path(a) for a in args] if args else sorted(Path("skills").glob("*/LITE.md"))
     if not targets:

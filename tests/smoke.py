@@ -192,6 +192,45 @@ def test_skill_overlays_clean() -> None:
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
 
 
+def test_stub_check_precision() -> None:
+    """Real stubs must be caught; documentation *about* stub markers must not be."""
+    sys.path.insert(0, str(ROOT / "scripts" / "lite"))
+    import importlib
+    vg = importlib.import_module("verify_gate")
+    with tempfile.TemporaryDirectory() as t:
+        d = Path(t)
+        cases = {
+            "real_comment.py": ("def f():\n    # TODO: implement\n    return 1\n", 1),
+            "real_raise.py": ("def f():\n    raise NotImplementedError\n", 1),
+            "doc_string.py": ('MSG = "we ban TODO and FIXME markers"\n', 0),
+            "other.ts": ("// TODO: fix later\n", 1),
+        }
+        for name, (body, want) in cases.items():
+            (d / name).write_text(body, encoding="utf-8")
+            got = len(vg._check_stubs(d, [name]))
+            check(f"stub check: {name} -> {want}", got == want, f"got {got}")
+    # The gate's own tooling documents these markers and must stay clean.
+    for f in ("docs/build_docs.py", "scripts/lite/verify_gate.py", "docs/evidence.html"):
+        check(f"no false stub positive in {f}",
+              len(vg._check_stubs(ROOT, [f])) == 0)
+    # ...but @generated must not become a blanket bypass for authored code.
+    with tempfile.TemporaryDirectory() as t:
+        d = Path(t)
+        (d / "gen.py").write_text("# @generated\ndef f():\n    # TODO: later\n", encoding="utf-8")
+        (d / "hand.py").write_text(
+            "def f():\n    # TODO: later\n" + "x = 1\n" * 200 + "# @generated\n",
+            encoding="utf-8")
+        check("@generated header skips scan", len(vg._check_stubs(d, ["gen.py"])) == 0)
+        check("@generated deep in file does NOT skip scan",
+              len(vg._check_stubs(d, ["hand.py"])) == 1)
+
+
+def test_utf8_cli_output() -> None:
+    """Every CLI must print non-ASCII without dying on a legacy Windows codepage."""
+    r = run(PY + ["scripts/lite/rule_ledger.py", "list"])
+    check("rule_ledger prints non-ASCII notes", r.returncode == 0, (r.stdout + r.stderr)[-200:])
+
+
 def test_docs_fresh() -> None:
     """Docs are generated from source — a stale committed page is a lie about the code."""
     r = run(PY + ["docs/build_docs.py", "--check"])
@@ -272,7 +311,8 @@ def main() -> None:
                test_escalate_dry_run, test_mcp_server, test_mcp_gate_discipline,
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
-               test_overlay_validator, test_docs_fresh, test_escalate_timeout_and_lease,
+               test_overlay_validator, test_docs_fresh, test_stub_check_precision,
+               test_utf8_cli_output, test_escalate_timeout_and_lease,
                test_skill_test_contracts, test_rule_ledger):
         try:
             fn()

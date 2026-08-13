@@ -250,6 +250,32 @@ def _validate_exit_code(ev: dict) -> list[str]:
 
 # ── stub check (never mutates source) ────────────────────────────────────────
 
+def _python_stub_lines(source: str) -> list[tuple[int, str]]:
+    """Stub markers in Python, ignoring string literals.
+
+    A tool that *documents* stub markers (a linter, this gate, the docs
+    generator) mentions TODO/FIXME inside strings. Flagging those is a false
+    positive that trains people to bypass the gate. Real stubs live in comments
+    (`# TODO: implement`) or in code (`raise NotImplementedError`), so only
+    COMMENT and NAME tokens are inspected.
+    """
+    import io
+    import tokenize
+
+    hits: list[tuple[int, str]] = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.COMMENT and _STUB_PATTERN.search(tok.string):
+                hits.append((tok.start[0], tok.line.rstrip()))
+            elif tok.type == tokenize.NAME and tok.string == "NotImplementedError":
+                hits.append((tok.start[0], tok.line.rstrip()))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        # Unparseable file: fall back to the line scan rather than skipping it.
+        return [(i, line.rstrip()) for i, line in enumerate(source.splitlines(), 1)
+                if _STUB_PATTERN.search(line)]
+    return hits
+
+
 def _check_stubs(workspace: Path, files: list[str]) -> list[str]:
     errors: list[str] = []
     for f in files:
@@ -259,12 +285,20 @@ def _check_stubs(workspace: Path, files: list[str]) -> list[str]:
         if not fp.is_file():
             continue
         try:
-            with fp.open("r", encoding="utf-8", errors="ignore") as fh:
-                for idx, line in enumerate(fh, 1):
-                    if _STUB_PATTERN.search(line):
-                        errors.append(f"  {f}:{idx}: {line.rstrip()}")
+            source = fp.read_text(encoding="utf-8", errors="ignore")
         except OSError:
-            pass
+            continue
+        # Build outputs are not authored code. Scanning them for stubs flags any
+        # generator that *documents* the markers. The file still counts as a
+        # change, so evidence is still required — only this scan is skipped.
+        if "@generated" in source[:400]:
+            continue
+        if fp.suffix.lower() == ".py":
+            hits = _python_stub_lines(source)
+        else:
+            hits = [(i, line.rstrip()) for i, line in enumerate(source.splitlines(), 1)
+                    if _STUB_PATTERN.search(line)]
+        errors.extend(f"  {f}:{idx}: {line}" for idx, line in hits)
     return errors
 
 
@@ -310,7 +344,16 @@ def _selftest() -> int:
 
 # ── main ──────────────────────────────────────────────────────────────────────
 
+def _utf8_io() -> None:
+    """Windows consoles default to a legacy codepage; non-ASCII output would
+    crash the tool instead of printing. Force UTF-8 on our own streams."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _utf8_io()
     hook_mode = "--hook" in sys.argv
     block_code = 2 if hook_mode else 1
 

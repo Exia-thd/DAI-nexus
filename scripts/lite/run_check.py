@@ -96,7 +96,16 @@ def _workspace() -> Path:
     return Path.cwd().resolve()
 
 
+def _utf8_io() -> None:
+    """Windows consoles default to a legacy codepage; non-ASCII output would
+    crash the tool instead of printing. Force UTF-8 on our own streams."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _utf8_io()
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--turn", default=None)
     parser.add_argument("--out", default=None)

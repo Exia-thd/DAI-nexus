@@ -252,7 +252,16 @@ def build_argv(cli: str, prompt: str) -> tuple[list[str], bool]:
 
 # ── main ──────────────────────────────────────────────────────────────────────
 
+def _utf8_io() -> None:
+    """Windows consoles default to a legacy codepage; non-ASCII output would
+    crash the tool instead of printing. Force UTF-8 on our own streams."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _utf8_io()
     args = list(sys.argv[1:])
     is_dry_run = "--dry-run" in args
     if is_dry_run:

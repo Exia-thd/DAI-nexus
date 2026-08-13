@@ -121,7 +121,16 @@ def cmd_check(tool: str, args: list[str]) -> int:
     return 0
 
 
+def _utf8_io() -> None:
+    """Windows consoles default to a legacy codepage; non-ASCII output would
+    crash the tool instead of printing. Force UTF-8 on our own streams."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _utf8_io()
     if len(sys.argv) < 2:
         print(__doc__, file=sys.stderr)
         sys.exit(3)
