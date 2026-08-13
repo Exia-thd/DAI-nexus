@@ -39,8 +39,8 @@ script này thực thi, thu output, <strong>redact secret trong bộ nhớ</stro
 
 <h2><span class="num">02</span> Lớp 2 — Stop-hook gate</h2>
 <p>Cuối mỗi lượt, hook gọi <code>verify_gate.py</code>. Nếu có file code thay đổi, gate đòi
-một evidence hợp lệ. Sáu phép kiểm tra độc lập:</p>
-<table><thead><tr><th>Lý do từ chối</th><th>Nghĩa là</th></tr></thead><tbody><tr><td><code>MISSING</code></td><td>Không có file evidence nào</td></tr><tr><td><code>STALE</code></td><td>Evidence quá cũ (mặc định &gt;1 giờ)</td></tr><tr><td><code>MISMATCH</code></td><td>Workspace hoặc tree-sha đã đổi từ lúc ghi — code sửa sau khi test chạy</td></tr><tr><td><code>FAILED</code></td><td>exit_code ≠ 0</td></tr><tr><td><code>FORGED</code></td><td>Sai schema, command rỗng, output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)</td></tr><tr><td><code>STUBS</code></td><td>File đã sửa còn TODO/FIXME/NotImplementedError</td></tr></tbody></table>
+một evidence hợp lệ. 7 phép kiểm tra độc lập:</p>
+<table><thead><tr><th>Lý do từ chối</th><th>Nghĩa là</th></tr></thead><tbody><tr><td><code>MISSING</code></td><td>Không có file evidence nào</td></tr><tr><td><code>STALE</code></td><td>Evidence quá cũ (mặc định &gt;1 giờ, đổi qua <code>DAINEXUS_STALENESS_SECS</code>)</td></tr><tr><td><code>MISMATCH</code></td><td>Workspace hoặc tree-sha đã đổi từ lúc ghi — tức là code bị sửa <em>sau</em> khi test chạy</td></tr><tr><td><code>FAILED</code></td><td><code>exit_code</code> ≠ 0 — lệnh kiểm chứng thật sự trượt</td></tr><tr><td><code>FORGED</code></td><td>Sai schema, command rỗng, hoặc output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)</td></tr><tr><td><code>SECRETS</code></td><td>Output chứa secret chưa che (API key, token, private key) — chính file evidence đã nhiễm</td></tr><tr><td><code>STUBS</code></td><td>File đã sửa còn TODO/FIXME/NotImplementedError</td></tr></tbody></table>
 <div class="code-block"><div class="code-head"><span class="file">scripts/lite/verify_gate.py:224</span><span class=cap>so khớp tree-sha</span></div><pre><code>def _validate_tree(ev: dict, current_tree: str) -&gt; list[str]:
     ev_tree = ev.get("tree_sha", "")
     if not ev_tree:
@@ -118,7 +118,7 @@ adapter im lặng có fail không, mọi đường dẫn skill trong routing có
 </main>
 <footer>
   <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
-  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+  <div>v0.7.0 · commit <code>24db50a</code> · build 2026-08-13</div>
 </footer>
 </body>
 </html>

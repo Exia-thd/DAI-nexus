@@ -86,6 +86,12 @@ def facts() -> dict:
     mcp_tools = re.findall(r'"(dn_\w+)": \(', read("mcp/server.py"))
     smoke = read("tests/smoke.py")
     hard_rules = re.findall(r"^\d+\. (.+)$", read("kernel/ENTRY.md"), re.MULTILINE)
+    # Rejection reasons come from the gate's own contract. Hand-listing them here
+    # is how the SECRETS reason went missing from the docs once already.
+    reject_block = read("scripts/lite/verify_gate.py").split("Rejection reasons:")[1].split("\n\n")[0]
+    reject_reasons = re.findall(r"^\s+([A-Z]+)\s+- ", reject_block, re.MULTILINE)
+    if not reject_reasons:
+        raise SystemExit("[docs] rejection reasons not found in verify_gate.py")
     policy_patterns = re.findall(r'^\s*- "(.+)"$', read(".dainexus/execution-policy.yaml"), re.MULTILINE)
     try:
         commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
@@ -110,6 +116,7 @@ def facts() -> dict:
         "smoke_loc": lines_of("tests/smoke.py"),
         "hard_rules": hard_rules[:6],
         "policy_patterns": policy_patterns,
+        "reject_reasons": reject_reasons,
         "memory_loc": lines_of("scripts/lite/memory.py"),
     }
 
@@ -178,6 +185,26 @@ def callout(kind: str, title: str, body: str) -> str:
 
 
 WIDE = 78
+
+
+REJECT_VI = {
+    "MISSING":  "Không có file evidence nào",
+    "STALE":    "Evidence quá cũ (mặc định &gt;1 giờ, đổi qua <code>DAINEXUS_STALENESS_SECS</code>)",
+    "MISMATCH": "Workspace hoặc tree-sha đã đổi từ lúc ghi — tức là code bị sửa <em>sau</em> khi test chạy",
+    "FAILED":   "<code>exit_code</code> ≠ 0 — lệnh kiểm chứng thật sự trượt",
+    "FORGED":   "Sai schema, command rỗng, hoặc output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)",
+    "SECRETS":  "Output chứa secret chưa che (API key, token, private key) — chính file evidence đã nhiễm",
+    "STUBS":    "File đã sửa còn TODO/FIXME/NotImplementedError",
+}
+
+
+def reject_table(f: dict) -> str:
+    missing = [r for r in f["reject_reasons"] if r not in REJECT_VI]
+    if missing:
+        raise SystemExit(f"[docs] lý do từ chối mới chưa có giải thích: {missing} "
+                         f"— bổ sung vào REJECT_VI trong build_docs.py")
+    return table(["Lý do từ chối", "Nghĩa là"],
+                 [[f"<code>{r}</code>", REJECT_VI[r]] for r in f["reject_reasons"]])
 
 
 def box(width: int, title: str, lines: list[str]) -> str:
@@ -456,15 +483,8 @@ script này thực thi, thu output, <strong>redact secret trong bộ nhớ</stro
 
 <h2><span class="num">02</span> Lớp 2 — Stop-hook gate</h2>
 <p>Cuối mỗi lượt, hook gọi <code>verify_gate.py</code>. Nếu có file code thay đổi, gate đòi
-một evidence hợp lệ. Sáu phép kiểm tra độc lập:</p>
-{table(["Lý do từ chối", "Nghĩa là"], [
-  ["<code>MISSING</code>", "Không có file evidence nào"],
-  ["<code>STALE</code>", "Evidence quá cũ (mặc định &gt;1 giờ)"],
-  ["<code>MISMATCH</code>", "Workspace hoặc tree-sha đã đổi từ lúc ghi — code sửa sau khi test chạy"],
-  ["<code>FAILED</code>", "exit_code ≠ 0"],
-  ["<code>FORGED</code>", "Sai schema, command rỗng, output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)"],
-  ["<code>STUBS</code>", "File đã sửa còn TODO/FIXME/NotImplementedError"],
-])}
+một evidence hợp lệ. {len(f["reject_reasons"])} phép kiểm tra độc lập:</p>
+{reject_table(f)}
 {code("scripts/lite/verify_gate.py", r"^def _validate_tree", 18, "so khớp tree-sha")}
 {callout("tip", "Cổng này từng chặn chính tác giả",
  "Trong lúc dựng v0.6.0, gate trả về BLOCKED vì README và VERSION được sửa <em>sau</em> khi test chạy — "
