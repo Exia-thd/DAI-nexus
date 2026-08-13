@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory — DAI Nexus</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<nav class="nav"><div class="nav-inner">
+  <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
+  <div class="nav-links"><a href="./index.html">Tổng quan</a><a href="./kernel.html">Kernel</a><a href="./skills.html">Skills</a><a href="./evidence.html">Bằng chứng</a><a href="./runtime.html">Runtime</a><a href="./memory.html" class=current>Memory</a><a href="./patterns.html">Tinh túy</a></div>
+</div></nav>
+<main>
+
+<section class="hero compact">
+  <span class="tag">PERSISTENCE</span>
+  <h1>Memory — <span class="accent">SQLite + FTS5 + RRF</span></h1>
+  <p class="lead">506 dòng, chạy hoàn toàn local. Không dịch vụ ngoài, không API key,
+  không lock-in — và vì thế không rò rỉ nội dung dự án ra đâu cả.</p>
+</section>
+
+<h2><span class="num">01</span> Vì sao không dùng vector DB</h2>
+<p>Với vài trăm quan sát dạng câu ngắn, BM25 của FTS5 đã đủ tốt, chạy in-process, không cần
+embedding model hay dịch vụ. Nhánh embedding vẫn để ngỏ trong roadmap — RRF fusion
+đã viết sẵn để nhận thêm nguồn xếp hạng thứ hai bất cứ lúc nào.</p>
+
+<h2><span class="num">02</span> Ba lớp truy xuất</h2>
+<table><thead><tr><th>Lớp</th><th>Trả về</th><th>Chi phí</th></tr></thead><tbody><tr><td><code>index</code></td><td>Chỉ tiêu đề + điểm</td><td>~15 token/kết quả</td></tr><tr><td><code>search</code></td><td>Tóm tắt 200 ký tự, đã fuse xếp hạng</td><td>~60 token/kết quả</td></tr><tr><td><code>get</code></td><td>Toàn bộ quan sát</td><td>~200 token/kết quả</td></tr></tbody></table>
+<p>Nguyên tắc: nạp lớp rẻ trước, chỉ xuống lớp đắt khi thật cần — đây là cách giữ
+ngân sách boot 500 token mà vẫn có bối cảnh.</p>
+
+<h2><span class="num">03</span> RRF fusion</h2>
+<p>Hai bảng xếp hạng độc lập (BM25 theo liên quan văn bản, và điểm importance/recency)
+được hợp nhất bằng Reciprocal Rank Fusion — thứ gì xuất hiện cao ở cả hai sẽ thắng:</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:181</span></div><pre><code>def rrf_merge(*ranked_lists: list, k: int = RRF_K) -&gt; list:
+    """Reciprocal Rank Fusion: score = sum(1 / (k + rank)) across lists."""
+    scores: dict = {}
+    metadata: dict = {}
+    for rows in ranked_lists:
+        for rank, item in enumerate(rows, start=1):
+            oid = item.get("id")
+            if oid is None:
+                continue
+            scores[oid] = scores.get(oid, 0.0) + 1.0 / (k + rank)
+            metadata.setdefault(oid, item)
+    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    return [dict(metadata[oid], rrf=round(s, 5)) for oid, s in ranked]</code></pre></div>
+
+<h2><span class="num">04</span> FTS đồng bộ bằng trigger</h2>
+<p>Bảng FTS được cập nhật bằng trigger SQLite thay vì rebuild index mỗi lần tìm kiếm —
+một chi tiết nhỏ nhưng là khác biệt giữa tìm kiếm tức thì và tìm kiếm chậm dần theo dữ liệu:</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:116</span></div><pre><code>CREATE TRIGGER IF NOT EXISTS obs_ai AFTER INSERT ON observations BEGIN
+    INSERT INTO observations_fts(rowid, title, content, tags)
+    VALUES (new.id, new.title, new.content, new.tags);
+END;
+CREATE TRIGGER IF NOT EXISTS obs_ad AFTER DELETE ON observations BEGIN
+    INSERT INTO observations_fts(observations_fts, rowid, title, content, tags)
+    VALUES ('delete', old.id, old.title, old.content, old.tags);
+END;
+CREATE TRIGGER IF NOT EXISTS obs_au AFTER UPDATE OF title, content, tags ON observations BEGIN
+    INSERT INTO observations_fts(observations_fts, rowid, title, content, tags)
+    VALUES ('delete', old.id, old.title, old.content, old.tags);
+    INSERT INTO observations_fts(rowid, title, content, tags)
+    VALUES (new.id, new.title, new.content, new.tags);
+END;</code></pre></div>
+
+<h2><span class="num">05</span> Redaction và auto-tag</h2>
+<p>Mọi nội dung ghi vào memory đi qua bộ redact trước (API key, bearer token, password,
+connection string có mật khẩu), và được gắn tag domain tự động để lọc về sau.</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:46</span></div><pre><code>REDACT_PATTERNS = [
+    r"sk-[a-zA-Z0-9]{20,}",
+    r"ghp_[a-zA-Z0-9]{20,}",
+    r"key-[a-zA-Z0-9]{20,}",
+    r"Bearer\s+[a-zA-Z0-9\-._~+/]+=*",
+    r"(?i)password\s*[:=]\s*['\"]?[^\s'\"]{4,}",
+    r"(?i)secret\s*[:=]\s*['\"]?[^\s'\"]{4,}",
+    r"(?i)token\s*[:=]\s*['\"]?[^\s'\"]{8,}",
+    r"postgres://\S+:\S+@",
+    r"mysql://\S+:\S+@",
+    r"mongodb(\+srv)?://\S+:\S+@",
+]</code></pre></div>
+
+<h2><span class="num">06</span> GC theo giá trị</h2>
+<p>Khi vượt ngưỡng, quan sát bị lưu trữ theo điểm = trọng số category (50%) + độ mới (50%).
+Một quyết định kiến trúc (weight 10) sống lâu hơn nhiều so với một ghi chú vặt (weight 2);
+mục <code>pinned</code> không bao giờ bị dọn.</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:399</span></div><pre><code>def gc(self, max_obs: int | None = None) -&gt; int:
+    """Archive lowest-value observations: category weight 50% + recency 50%. Pinned survive."""
+    max_o = max_obs or int(os.environ.get("DAINEXUS_MAX_OBS", MAX_OBS_DEFAULT))
+    total = self.count()
+    if total &lt;= max_o:
+        return 0
+    conn = self._connect()
+    try:
+        weights = json.dumps(CATEGORY_WEIGHTS)
+        rows = conn.execute(
+            """
+            SELECT id FROM observations</code></pre></div>
+
+</main>
+<footer>
+  <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
+  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chuỗi bằng chứng — DAI Nexus</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<nav class="nav"><div class="nav-inner">
+  <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
+  <div class="nav-links"><a href="./index.html">Tổng quan</a><a href="./kernel.html">Kernel</a><a href="./skills.html">Skills</a><a href="./evidence.html" class=current>Bằng chứng</a><a href="./runtime.html">Runtime</a><a href="./memory.html">Memory</a><a href="./patterns.html">Tinh túy</a></div>
+</div></nav>
+<main>
+
+<section class="hero compact">
+  <span class="tag">CƠ CHẾ LÕI</span>
+  <h1>Chuỗi bằng chứng — <span class="accent">chống ảo giác bằng máy</span></h1>
+  <p class="lead">Đây là phần đáng mang đi nhất của DAI Nexus. Không phải lời nhắc "hãy trung thực",
+  mà là bốn cổng cơ học mà agent không thể nói vòng qua.</p>
+</section>
+
+<h2><span class="num">01</span> Lớp 1 — Evidence do máy ghi</h2>
+<p>Agent không tự viết bằng chứng. Nó chạy lệnh kiểm chứng qua <code>run_check.py</code>,
+script này thực thi, thu output, <strong>redact secret trong bộ nhớ</strong>, rồi ghi JSON nguyên tử:</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/run_check.py:161</span><span class=cap>schema bằng chứng</span></div><pre><code>ev = {
+    "schema_version": "1",
+    "turn": turn,
+    "command": cmd_argv,
+    "exit_code": exit_code,
+    "output": output,
+    "output_truncated": output_truncated,
+    "timestamp_utc": timestamp_utc,
+    "workspace": str(workspace),
+    "tree_sha": tree_sha,
+}</code></pre></div>
+<p>Ba trường quyết định tính không-thể-giả: <code>tree_sha</code> (trạng thái cây làm việc lúc chạy),
+<code>timestamp_utc</code>, và <code>exit_code</code> thật của tiến trình con.</p>
+
+<h2><span class="num">02</span> Lớp 2 — Stop-hook gate</h2>
+<p>Cuối mỗi lượt, hook gọi <code>verify_gate.py</code>. Nếu có file code thay đổi, gate đòi
+một evidence hợp lệ. Sáu phép kiểm tra độc lập:</p>
+<table><thead><tr><th>Lý do từ chối</th><th>Nghĩa là</th></tr></thead><tbody><tr><td><code>MISSING</code></td><td>Không có file evidence nào</td></tr><tr><td><code>STALE</code></td><td>Evidence quá cũ (mặc định &gt;1 giờ)</td></tr><tr><td><code>MISMATCH</code></td><td>Workspace hoặc tree-sha đã đổi từ lúc ghi — code sửa sau khi test chạy</td></tr><tr><td><code>FAILED</code></td><td>exit_code ≠ 0</td></tr><tr><td><code>FORGED</code></td><td>Sai schema, command rỗng, output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)</td></tr><tr><td><code>STUBS</code></td><td>File đã sửa còn TODO/FIXME/NotImplementedError</td></tr></tbody></table>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/verify_gate.py:224</span><span class=cap>so khớp tree-sha</span></div><pre><code>def _validate_tree(ev: dict, current_tree: str) -&gt; list[str]:
+    ev_tree = ev.get("tree_sha", "")
+    if not ev_tree:
+        return ["MISMATCH: tree_sha missing in evidence"]
+    if ev_tree == current_tree:
+        return []
+    # Both DIRTY: compare HEAD part only (index may have evolved)
+    if ev_tree.startswith("DIRTY:") and current_tree.startswith("DIRTY:"):
+        if ev_tree.split(":")[1] == current_tree.split(":")[1]:
+            return []
+    if ev_tree.startswith("NONGIT") or current_tree.startswith("NONGIT"):
+        return []
+    return [
+        f"MISMATCH: tree_sha changed since evidence was written. "
+        f"Evidence: {ev_tree!r}, Current: {current_tree!r}"
+    ]</code></pre></div>
+<div class="callout tip"><div class="title">Cổng này từng chặn chính tác giả</div>Trong lúc dựng v0.6.0, gate trả về BLOCKED vì README và VERSION được sửa <em>sau</em> khi test chạy — tree-sha lệch. Phải chạy lại test rồi mới commit được. Đó là dấu hiệu cổng hoạt động, không phải phiền toái.</div>
+
+<h2><span class="num">03</span> Lớp 3 — Execution policy fail-closed</h2>
+<p>Guardrail dạng văn bản là phán đoán; <code>policy_check.py</code> là thực thi.
+Deny-pattern hiện hành đọc từ <code>.dainexus/execution-policy.yaml</code>:</p>
+<ul class="rules"><li><code>rm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r)</code></li><li><code>git\s+push\s+.*(--force|\s-f(\s|$))</code></li><li><code>git\s+reset\s+--hard</code></li><li><code>git\s+clean\s+-[a-zA-Z]*f</code></li><li><code>DROP\s+(TABLE|DATABASE)</code></li><li><code>curl\s+[^|]*\|\s*(ba|z)?sh</code></li><li><code>wget\s+[^|]*\|\s*(ba|z)?sh</code></li><li><code>chmod\s+777</code></li><li><code>Remove-Item\s+.*-Recurse\s+.*-Force</code></li></ul>
+<p>Điểm quan trọng là <strong>hướng fail</strong>: file policy thiếu, rỗng, hỏng, hay mode lạ đều
+<em>chặn</em> chứ không cho qua:</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/policy_check.py:85</span></div><pre><code>def cmd_check(tool: str, args: list[str]) -&gt; int:
+    policy = load_policy()
+    if policy is None:
+        print(f"[POLICY] ERROR: policy file missing/empty/malformed at {POLICY_FILE} — "
+              f"DENY (fail-closed).", file=sys.stderr)
+        _log_event("deny-failclosed", tool, " ".join(args))
+        return 1
+
+    mode = policy.get("mode", "strict")
+    if mode not in VALID_MODES:
+        mode = "strict"  # unknown mode fails closed</code></pre></div>
+
+<h2><span class="num">04</span> Lớp 4 — Runtime ledger</h2>
+<p>Một dev server bị bỏ quên vô hình với mọi loại test: build xanh, test pass, RAM cứ leo.
+Mọi process dài hạn phải khởi động qua lease:</p>
+<div class="code-block"><div class="code-head"><span class="file">VERIFY Template 4</span></div><pre><code>RUNTIME LEDGER
+OPENED:  &lt;lease_id&gt; role=&lt;..&gt; pid=&lt;..&gt;
+CLOSED:  &lt;lease_id&gt;
+LEAKED:  none | &lt;lease_id list&gt;
+COMMAND: python scripts/lite/runtime_lease.py status
+VERDICT: CLEAN | LEAKED</code></pre></div>
+<p>Lệnh <code>run</code> tái dùng instance đang sống thay vì mở cái thứ hai; <code>reap</code> dọn mọi lease
+không phải <code>policy=keep</code>. Trên Windows, kiểm tra process sống <strong>không</strong> được dùng
+<code>os.kill(pid, 0)</code> — nó gọi TerminateProcess và giết thật:</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/runtime_lease.py:39</span></div><pre><code>def pid_alive(pid: int) -&gt; bool:
+    if pid &lt;= 0:
+        return False
+    if os.name == "nt":
+        r = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/NH", "/FO", "CSV"],
+            capture_output=True, text=True, timeout=10,
+        )
+        return f'"{pid}"' in r.stdout
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False</code></pre></div>
+
+<h2><span class="num">05</span> Lớp bổ sung — linter overlay &amp; contract test</h2>
+<p>Hai nguồn bằng chứng giả tinh vi hơn, đều đã bị bịt:</p>
+<table><thead><tr><th>Nguồn</th><th>Vấn đề</th><th>Cách chặn</th></tr></thead><tbody><tr><td>Overlay có worked example</td><td>Nhúng sẵn <code>VERDICT: PASS</code> → dạy agent bịa VERIFY</td><td><code>validate_overlays.py</code> chặn verdict cứng, transcript giả, path chết</td></tr><tr><td>Test harness sinh output giả</td><td>Hàm mock tự sinh output rồi tự assert → luôn xanh</td><td>Thay bằng contract validator; adapter im lặng là FAIL, kỳ vọng không kiểm chứng được cũng FAIL</td></tr></tbody></table>
+<div class="callout warn"><div class="title">Nguyên tắc</div>Một kỳ vọng <em>không kiểm chứng được</em> phải là FAIL, không phải pass im lặng. Mọi cơ chế trong trang này đều theo hướng đó.</div>
+
+<h2><span class="num">06</span> Tự kiểm tra</h2>
+<p><code>tests/smoke.py</code> — 37 phép kiểm tra, 291 dòng, không gọi model,
+không cần dịch vụ ngoài. Trong đó có cả các test <em>meta</em>: gate có thật sự chặn evidence giả không,
+adapter im lặng có fail không, mọi đường dẫn skill trong routing có tồn tại không.</p>
+<div class="code-block"><div class="code-head"><span class="file">chạy</span></div><pre><code>python scripts/lite/run_check.py -- python tests/smoke.py</code></pre></div>
+
+</main>
+<footer>
+  <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
+  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+</footer>
+</body>
+</html>

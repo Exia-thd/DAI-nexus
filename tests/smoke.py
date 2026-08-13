@@ -176,7 +176,8 @@ def test_skill_overlays_clean() -> None:
     skip_parts = {".git", ".dainexus", ".worktrees", "__pycache__"}
     stale = []
     for p in ROOT.rglob("*"):
-        if not p.is_file() or p.suffix.lower() not in {".md", ".py", ".json", ".yaml", ".yml", ".ts", ".sh"}:
+        if not p.is_file() or p.suffix.lower() not in {".md", ".py", ".json", ".yaml", ".yml", ".ts", ".sh",
+                                          ".html", ".css"}:
             continue
         if any(part in skip_parts for part in p.parts) or p.name == "smoke.py":
             continue
@@ -189,6 +190,12 @@ def test_skill_overlays_clean() -> None:
             if bad.lower() in lower:
                 stale.append(f"{p.relative_to(ROOT)}: {bad}")
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
+
+
+def test_docs_fresh() -> None:
+    """Docs are generated from source — a stale committed page is a lie about the code."""
+    r = run(PY + ["docs/build_docs.py", "--check"])
+    check("generated docs match current source", r.returncode == 0, (r.stdout + r.stderr)[-300:])
 
 
 def test_overlay_validator() -> None:
@@ -265,7 +272,7 @@ def main() -> None:
                test_escalate_dry_run, test_mcp_server, test_mcp_gate_discipline,
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
-               test_overlay_validator, test_escalate_timeout_and_lease,
+               test_overlay_validator, test_docs_fresh, test_escalate_timeout_and_lease,
                test_skill_test_contracts, test_rule_ledger):
         try:
             fn()

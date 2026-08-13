@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Runtime — DAI Nexus</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<nav class="nav"><div class="nav-inner">
+  <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
+  <div class="nav-links"><a href="./index.html">Tổng quan</a><a href="./kernel.html">Kernel</a><a href="./skills.html">Skills</a><a href="./evidence.html">Bằng chứng</a><a href="./runtime.html" class=current>Runtime</a><a href="./memory.html">Memory</a><a href="./patterns.html">Tinh túy</a></div>
+</div></nav>
+<main>
+
+<section class="hero compact">
+  <span class="tag">TẦNG 3</span>
+  <h1>Runtime — <span class="accent">10 công cụ, 2422 dòng</span></h1>
+  <p class="lead">Python thuần, <strong>zero-dependency</strong>, chạy trên Windows/macOS/Linux.
+  Không cần npm install, không cần venv, không có gói ngoài nào.</p>
+</section>
+
+<h2><span class="num">01</span> Bộ công cụ</h2>
+<table><thead><tr><th>Script</th><th>Vai trò</th><th>Kích thước</th></tr></thead><tbody><tr><td><code>escalate.py</code></td><td>Leo thang bước HARD sang expert CLI, có ngân sách + timeout + lease</td><td>366 dòng</td></tr><tr><td><code>memory.py</code></td><td>SQLite+FTS5, BM25 fuse RRF, auto-tag, redaction, GC theo giá trị</td><td>506 dòng</td></tr><tr><td><code>policy_check.py</code></td><td>Cổng execution policy, fail-closed, hot-reload</td><td>155 dòng</td></tr><tr><td><code>rule_ledger.py</code></td><td>Sổ tự khai vi phạm rule (JSONL) + thống kê ứng viên cần siết</td><td>83 dòng</td></tr><tr><td><code>run_check.py</code></td><td>Ghi evidence JSON nguyên tử (schema v1, redact secret, cap 16KB)</td><td>192 dòng</td></tr><tr><td><code>runtime_lease.py</code></td><td>Lease cho process dài hạn: run/status/release/reap</td><td>223 dòng</td></tr><tr><td><code>sync-kernel.py</code></td><td>Sinh CLAUDE/AGENTS/GEMINI.md từ kernel, ép ngân sách 7k token</td><td>97 dòng</td></tr><tr><td><code>validate_overlays.py</code></td><td>Linter overlay: chặn evidence giả, path chết, bảng hỏng</td><td>156 dòng</td></tr><tr><td><code>verify_gate.py</code></td><td>Stop-hook: xác thực evidence, chặn stub, quyết định mở/chặn lượt</td><td>393 dòng</td></tr><tr><td><code>worktree_manager.py</code></td><td>Vòng đời parallel dispatch + merge arbiter</td><td>251 dòng</td></tr></tbody></table>
+
+<div class="callout tip"><div class="title">Vì sao zero-dependency</div>Một agent OS mà cài đặt phức tạp thì sẽ không được dùng. Toàn bộ tầng runtime chỉ cần Python trong stdlib — kể cả MCP server (tự viết JSON-RPC) và bộ đọc YAML (parser giới hạn cho đúng schema policy/contract).</div>
+
+<h2><span class="num">02</span> Escalation có kỷ luật</h2>
+<p>Bước HARD được giao cho một expert CLI trong ngữ cảnh sạch, kèm packet đã redact
+(task + evidence gần nhất + diff). Ba ràng buộc:</p>
+<ul class="rules">
+  <li><strong>Ngân sách</strong> — quá số lần cho phép thì dừng và đợi người dùng, không "cố làm hết sức".</li>
+  <li><strong>Timeout</strong> — cấu hình được, kẹp trong [1, 3600] giây.</li>
+  <li><strong>Lease</strong> — provider chạy dưới lease; treo thì bị giết, trả 124, và gỡ lease.</li>
+</ul>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/escalate.py:171</span></div><pre><code>def provider_timeout_seconds(cfg: dict) -&gt; int:
+    """Provider wall-clock cap. Env wins over config; always clamped to [1, 3600]."""
+    raw = os.environ.get("DAINEXUS_ESCALATION_TIMEOUT_SECS")
+    try:
+        value = int(raw) if raw is not None else int(cfg.get("providerTimeoutSeconds", 120))
+    except (TypeError, ValueError):
+        value = 120
+    return max(1, min(value, 3600))</code></pre></div>
+<div class="callout warn"><div class="title">Bẫy Windows đã gặp</div>Prompt nhiều dòng truyền qua argv bị cmd.exe nghiền nát khi CLI là shim <code>.CMD</code> của npm — lần gọi đầu tiên expert nhận được prompt rỗng và trả lời lạc đề. Nay prompt đi qua stdin.</div>
+
+<h2><span class="num">03</span> Parallel dispatch</h2>
+<p>Worker chạy trên git worktree riêng, mỗi worker bị ràng bởi một task contract khai báo
+glob được phép sửa và glob cấm. Merge arbiter từ chối mọi thứ ngoài phạm vi:</p>
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/worktree_manager.py:127</span><span class=cap>merge arbiter</span></div><pre><code>def _validate(task_id: str) -&gt; tuple[bool, list[str]]:
+    """Merge-arbiter scope check. Returns (ok, errors)."""
+    path = wt_path(task_id)
+    errors: list[str] = []
+    contract_file = path / "CONTRACT.json"
+    delivery_file = path / "DELIVERY.json"
+    if not contract_file.is_file():
+        return False, ["CONTRACT.json missing — worker had no contracted scope"]
+    if not delivery_file.is_file():
+        return False, ["DELIVERY.json missing — worker did not declare completion"]
+    contract = json.loads(contract_file.read_text(encoding="utf-8"))
+    delivery = json.loads(delivery_file.read_text(encoding="utf-8"))
+    if delivery.get("status") != "done":
+        errors.append(f"delivery status is '{delivery.get('status')}', expected 'done'")
+
+    changed = _changed_files(path, contract["base_commit"])</code></pre></div>
+
+<h2><span class="num">04</span> MCP server</h2>
+<p>301 dòng, stdio JSON-RPC tự viết, không dùng SDK. Đăng ký sẵn trong <code>.mcp.json</code>.</p>
+<table><thead><tr><th>Tool</th><th>Việc</th></tr></thead><tbody><tr><td><code>dn_start_pipeline</code></td><td>Bắt đầu một lượt chạy, reset state</td></tr><tr><td><code>dn_get_state</code></td><td>Đọc toàn bộ state: phase, gate, status</td></tr><tr><td><code>dn_advance_phase</code></td><td>Sang phase kế — <strong>bị chặn nếu gate của phase hiện tại chưa được duyệt</strong></td></tr><tr><td><code>dn_request_gate_approval</code></td><td>Đăng ký yêu cầu duyệt gate</td></tr><tr><td><code>dn_approve_gate</code></td><td>Ghi quyết định của người dùng (chỉ gọi SAU khi họ đã quyết)</td></tr><tr><td><code>dn_fail_pipeline</code></td><td>Đánh dấu thất bại kèm lý do</td></tr><tr><td><code>dn_memory_add</code></td><td>Ghi quan sát vào memory dự án</td></tr><tr><td><code>dn_memory_search</code></td><td>Tìm trong memory (BM25 + RRF)</td></tr></tbody></table>
+<p>Kỷ luật gate được cưỡng bức ngay trong state machine — không phải bằng lời nhắc:</p>
+<div class="code-block"><div class="code-head"><span class="file">mcp/server.py:93</span></div><pre><code>def tool_advance_phase(_args: dict) -&gt; dict:
+    state = load_state()
+    if state["status"] != "running":
+        return {"error": f"cannot advance: status is '{state['status']}'"}
+    idx = state["phase_index"]
+    current_key = PHASE_KEYS[idx] if 0 &lt;= idx &lt; len(PHASE_KEYS) else None
+    # Gate discipline: phases with gates need all their gates approved first
+    for gate in GATES.get(current_key, []):
+        if not state["gates"].get(gate, {}).get("approved"):
+            state["status"] = "blocked_on_gate"
+            state["pending_gate"] = gate
+            save_state(state)
+            return {"error": f"gate '{gate}' not approved — call dn_request_gate_approval first"}
+    state["phases"][idx]["status"] = "passed"
+    if idx + 1 &gt;= len(PHASE_KEYS):
+        state["status"] = "done"</code></pre></div>
+
+</main>
+<footer>
+  <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
+  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+</footer>
+</body>
+</html>

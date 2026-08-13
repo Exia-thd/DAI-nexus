@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tổng quan — DAI Nexus</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<nav class="nav"><div class="nav-inner">
+  <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
+  <div class="nav-links"><a href="./index.html" class=current>Tổng quan</a><a href="./kernel.html">Kernel</a><a href="./skills.html">Skills</a><a href="./evidence.html">Bằng chứng</a><a href="./runtime.html">Runtime</a><a href="./memory.html">Memory</a><a href="./patterns.html">Tinh túy</a></div>
+</div></nav>
+<main>
+
+<section class="hero">
+  <span class="tag">TÀI LIỆU SINH TỪ SOURCE · v0.7.0</span>
+  <h1>DAI Nexus — <span class="accent">hệ điều hành cho AI coding agent</span></h1>
+  <p class="lead">
+    Không phải một tập prompt. Đây là một <strong>bộ luật + runtime</strong>: kernel bất biến nạp mỗi phiên,
+    thư viện 86 skill overlay load theo nhu cầu, và một tầng runtime Python thuần
+    <strong>cưỡng bức bằng chứng</strong> — agent không được phép nói "xong rồi" nếu không có evidence do máy sinh ra.
+  </p>
+  <div class="callout tip"><div class="title">Vì sao trang này không bao giờ lệch với code</div>Toàn bộ số liệu, danh sách file và đoạn code trích dẫn dưới đây được <strong>đọc trực tiếp từ working tree lúc build</strong> (<code>docs/build_docs.py</code>). Nếu một script bị đổi tên hay một rule bị xoá, lần build kế tiếp phản ánh ngay — hoặc fail. Đây chính là bài học rút ra từ bộ tài liệu tiền nhiệm: nó phải kèm một mục 'đính chính' vì các con số chép tay đã drift khỏi code.</div>
+  <div class="hero-meta">
+    <span>Kernel <strong>7 file</strong></span>
+    <span>Overlay <strong>86</strong></span>
+    <span>Protocol <strong>51</strong></span>
+    <span>Runtime <strong>10 script</strong></span>
+    <span>MCP tool <strong>8</strong></span>
+    <span>Self-test <strong>37</strong></span>
+  </div>
+</section>
+
+<h2><span class="num">01</span> Vấn đề nó giải</h2>
+<p>
+  Một LLM viết code giỏi vẫn thất bại ở ba chỗ: <strong>nói dối về kết quả</strong> ("đã sửa xong" mà chưa chạy thử),
+  <strong>quên bối cảnh</strong> giữa các phiên, và <strong>làm bừa</strong> những thao tác không thể hoàn tác.
+  DAI Nexus xử lý cả ba bằng cơ chế máy móc, không bằng lời khuyên trong prompt.
+</p>
+<div class="grid cols-3">
+  <div class="card"><h4 class="mt-0">🧾 Bằng chứng, không phải lời hứa</h4>
+    <p class="small">Mọi claim thành công cần một <strong>VERIFY block</strong> dựa trên evidence JSON do
+    <code>run_check.py</code> ghi (kèm exit code, tree-sha, timestamp). Stop-hook chặn kết thúc lượt nếu thiếu.</p></div>
+  <div class="card"><h4 class="mt-0">🧠 Trí nhớ có kỷ luật</h4>
+    <p class="small">Boot bắt buộc nạp memory (≤500 token), turn-close bắt buộc lưu lại.
+    SQLite+FTS5 local, BM25 fuse RRF — không phụ thuộc dịch vụ ngoài.</p></div>
+  <div class="card"><h4 class="mt-0">🛑 Cổng chặn fail-closed</h4>
+    <p class="small">Deny-pattern cho lệnh phá hoại; file policy hỏng hay thiếu thì <em>chặn</em>,
+    không phải cho qua. Process dài hạn phải có lease, cuối lượt phải sạch.</p></div>
+</div>
+
+<h2><span class="num">02</span> Ba tầng</h2>
+<div class="diagram">┌────────────────────────────────────────────────────────────────────────────┐
+│ TẦNG 1 — KERNEL (7 file, ~5823 token, luôn nạp)                            │
+│ kernel/{AUDIT, CLARIFY, ENTRY, ESCALATE, POLICY, SOLVE, VERIFY}            │
+│ → 6 Hard Rules · SOLVE loop · VERIFY/AUDIT · Execution policy              │
+└────────────────────────────────────────────────────────────────────────────┘
+                        ⇓ overlay khi cần
+┌────────────────────────────────────────────────────────────────────────────┐
+│ TẦNG 2 — SKILLS (86 overlay + 51 protocol, load on-demand)                 │
+│ skills/pipeline/          → orchestrator: DEFINE | BUILD | HARDEN | SHIP   │
+│ skills/&lt;role&gt;/LITE.md     → GROUND/DECOMPOSE slot theo domain              │
+│ skills/_shared/protocols/ → guardrail, parallel-dispatch, …                │
+└────────────────────────────────────────────────────────────────────────────┘
+                        ⇓ được cưỡng bức bởi
+┌────────────────────────────────────────────────────────────────────────────┐
+│ TẦNG 3 — RUNTIME (10 script, 2422 dòng Python thuần)                       │
+│ run_check · verify_gate · policy_check · runtime_lease                     │
+│ memory · escalate · worktree_manager · validate_overlays                   │
+│ mcp/server.py → 8 tool cho IDE                                             │
+└────────────────────────────────────────────────────────────────────────────┘</div>
+
+<h2><span class="num">03</span> 6 Hard Rules</h2>
+<p class="muted small">Đọc thẳng từ <code>kernel/ENTRY.md</code> lúc build:</p>
+<ol class="rules"><li>Never claim something works without a `VERIFY` block (VERIFY section).</li><li>Never edit a symbol before running impact analysis on it (or stating why unavailable).</li><li>Never invent file paths, APIs, or version numbers — verify them, or mark them `UNVERIFIED`.</li><li>If the same step fails twice, STOP and follow the Stuck rule in SOLVE section.</li><li>Stay inside the user's stated scope; list anything extra under "Out of scope".</li><li>Never bypass guardrail rules for destructive or security-sensitive operations — see `skills/_shared/protocols/guardrail.md`.</li></ol>
+
+<h2><span class="num">04</span> Đi sâu từng mảng</h2>
+<div class="grid cols-3">
+  <a href="./kernel.html" class="nav-card"><div class="idx">01 · kernel/</div>
+    <h3>Kernel</h3><p>Bộ luật bất biến: boot sequence, SOLVE loop, VERIFY/AUDIT contract, execution policy.</p></a>
+  <a href="./skills.html" class="nav-card"><div class="idx">02 · skills/</div>
+    <h3>Skills &amp; Pipeline</h3><p>Orchestrator 6 mode, 4 phase với gate, 86 overlay chuyên gia.</p></a>
+  <a href="./evidence.html" class="nav-card"><div class="idx">03 · chống ảo giác</div>
+    <h3>Chuỗi bằng chứng</h3><p>4 lớp: evidence writer → stop gate → policy fail-closed → runtime ledger.</p></a>
+  <a href="./runtime.html" class="nav-card"><div class="idx">04 · scripts/ + mcp/</div>
+    <h3>Runtime</h3><p>10 công cụ Python zero-dependency + MCP server 8 tool.</p></a>
+  <a href="./memory.html" class="nav-card"><div class="idx">05 · memory.py</div>
+    <h3>Memory</h3><p>SQLite+FTS5, BM25 fuse RRF, auto-tag, redaction, GC theo giá trị.</p></a>
+  <a href="./patterns.html" class="nav-card"><div class="idx">06 · TINH TÚY</div>
+    <h3>⭐ Pattern đáng mang đi</h3><p>Những cơ chế có thể copy sang project khác, kèm code thật.</p></a>
+</div>
+
+<h2><span class="num">05</span> Một yêu cầu chạy qua hệ thống thế nào</h2>
+<div class="diagram">User: "build me a todo API with auth"
+        ⇓
+CLAUDE.md (sinh từ kernel) được nạp tự động
+        ⇓
+Boot: CLARIFY? → restate → classify → FULL_BUILD → nạp memory (≤500 token)
+        ⇓
+skills/pipeline/LITE.md → mode FULL_BUILD
+        ⇓
+DEFINE → BUILD → HARDEN → SHIP
+   DEFINE   product-manager → BRD          [Gate 1: user duyệt]
+            solution-architect → ADR/API   [Gate 2: user duyệt]
+   BUILD    software-engineer (TDD) ∥ frontend-engineer → devops
+   HARDEN   qa-engineer → security-engineer → code-reviewer (fresh context)
+   SHIP     staging → smoke test có evidence [Gate 3] → production
+        ⇓
+Mỗi bước: SOLVE loop · guardrail + policy_check trước tool call
+        ⇓
+Turn-close: VERIFY block · AUDIT coverage matrix · lưu memory · runtime ledger
+        ⇓
+Stop hook: verify_gate.py — thiếu/giả/hết hạn evidence ⇒ CHẶN</div>
+
+<h2><span class="num">06</span> Số liệu (đọc từ repo)</h2>
+<div class="grid cols-4"><div class="stat"><div class="val">7</div><div class="lbl">kernel file</div></div><div class="stat"><div class="val">5823</div><div class="lbl">token boot</div></div><div class="stat"><div class="val">86</div><div class="lbl">skill overlay</div></div><div class="stat"><div class="val">51</div><div class="lbl">protocol</div></div><div class="stat"><div class="val">10</div><div class="lbl">runtime script</div></div><div class="stat"><div class="val">2422</div><div class="lbl">dòng runtime</div></div><div class="stat"><div class="val">8</div><div class="lbl">MCP tool</div></div><div class="stat"><div class="val">37</div><div class="lbl">self-test</div></div></div>
+
+</main>
+<footer>
+  <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
+  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+</footer>
+</body>
+</html>

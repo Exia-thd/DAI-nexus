@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills — DAI Nexus</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<nav class="nav"><div class="nav-inner">
+  <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
+  <div class="nav-links"><a href="./index.html">Tổng quan</a><a href="./kernel.html">Kernel</a><a href="./skills.html" class=current>Skills</a><a href="./evidence.html">Bằng chứng</a><a href="./runtime.html">Runtime</a><a href="./memory.html">Memory</a><a href="./patterns.html">Tinh túy</a></div>
+</div></nav>
+<main>
+
+<section class="hero compact">
+  <span class="tag">TẦNG 2</span>
+  <h1>Skills — <span class="accent">một orchestrator, 86 chuyên gia</span></h1>
+  <p class="lead">Kernel chọn <em>mode</em>; pipeline chọn <em>phase</em>; overlay cung cấp
+  kiến thức domain dưới dạng slot GROUND/DECOMPOSE. Không có gì được nạp trước khi cần.</p>
+</section>
+
+<h2><span class="num">01</span> Routing lúc boot</h2>
+<p>Bảng nén trong <code>kernel/ENTRY.md</code> — không phải đọc index lớn nào:</p>
+<div class="code-block"><div class="code-head"><span class="file">kernel/ENTRY.md:20</span></div><pre><code>## Compact Routing (Boot-time)
+| Task class | Skill overlay | Pipeline mode |
+|---|---|---|
+| `DEBUG` | `skills/debugger/LITE.md` | QUICK |
+| `FEATURE` affecting UI | `skills/ui-designer/LITE.md` + `skills/frontend-engineer/LITE.md` | FEATURE |
+| `FEATURE` otherwise | `skills/software-engineer/LITE.md` | FEATURE |
+| `REVIEW` | `skills/code-reviewer/LITE.md` | REVIEW |
+| `TEST` | `skills/qa-engineer/LITE.md` | TEST |
+| `SHIP` | `skills/devops/LITE.md` | SHIP |
+| `FULL_BUILD` ("build me a …" — a whole product from one requirement) | `skills/pipeline/LITE.md` | FULL_BUILD |
+| `OTHER` | *(none — proceed with kernel only)* |</code></pre></div>
+
+<h2><span class="num">02</span> Mode → phase</h2>
+<p>Yêu cầu nhỏ không phải trả giá cho nghi thức lớn. Chỉ <code>FULL_BUILD</code> chạy đủ 4 phase và 3 gate:</p>
+<div class="code-block"><div class="code-head"><span class="file">skills/pipeline/LITE.md:12</span></div><pre><code>| Mode | Phases executed | Gates |
+|---|---|---|
+| `QUICK` (debug/small fix) | SOLVE loop only — no pipeline ceremony | none |
+| `REVIEW` | HARDEN (review checklist only, no edits) | none |
+| `TEST` | HARDEN (test authoring only) | none |
+| `FEATURE` | DEFINE (mini) → BUILD → HARDEN | Gate 2 optional |
+| `SHIP` | SHIP only | Gate 3 |
+| `FULL_BUILD` | DEFINE → BUILD → HARDEN → SHIP | Gates 1, 2, 3 |</code></pre></div>
+
+<h2><span class="num">03</span> Bốn phase</h2>
+<table><thead><tr><th>Phase</th><th>Việc</th><th>Chốt chặn</th></tr></thead><tbody><tr><td><code>define.md</code></td><td>product-manager → BRD; solution-architect → ADR + API contract</td><td>Gate 1, Gate 2</td></tr><tr><td><code>build.md</code></td><td>backend (TDD bắt buộc) · frontend (design contract) · containerization</td><td>quality gate mỗi task</td></tr><tr><td><code>harden.md</code></td><td>qa-engineer → security-engineer → code-reviewer (fresh context)</td><td>VERIFY + findings</td></tr><tr><td><code>ship.md</code></td><td>staging + smoke có evidence → production, kèm đường rollback</td><td>Gate 3</td></tr></tbody></table>
+
+<div class="callout tip"><div class="title">Gate là chỗ dừng thật</div>Tại mỗi gate: trình bày tóm tắt ≤10 dòng + vị trí artifact, rồi <strong>ĐỢI</strong> người dùng quyết. Agent không bao giờ tự duyệt gate của chính mình. Quyết định được ghi vào <code>decisions-log.md</code>, lưu vào memory, và mirror qua MCP để dashboard theo dõi.</div>
+
+<h2><span class="num">04</span> Giải phẫu một overlay</h2>
+<p>Mỗi overlay là một file LITE.md nhỏ: frontmatter + slot GROUND + slot DECOMPOSE + checklist lỗi hay gặp.
+Ví dụ overlay debugger:</p>
+<div class="code-block"><div class="code-head"><span class="file">skills/debugger/LITE.md:9</span></div><pre><code>## SOLVE Step 2: GROUND (Debugger Domain Slots)
+| Assumption | Check command / file read | Result | Script-produced evidence |
+|---|---|---|---|
+| Bug reproduces on main/branch | Run tests or execute repro script | ... | run the check command and paste output |
+| Location of error trace / log | Read log file or check CLI output | ... | run the check command and paste output |
+| Target file exists at `&lt;path&gt;` | `ls` / View file `&lt;path&gt;` | ... | run the check command and paste output |
+| Current state of offending variables | View file / add print/debug statement | ... | run the check command and paste output |</code></pre></div>
+
+<div class="callout warn"><div class="title">Overlay không được chứa bằng chứng giả</div>Bản đầu của các overlay này có kèm 'worked example' kết thúc bằng <code>EXIT CODE: 0 / VERDICT: PASS</code> cứng. Overlay là thứ agent bắt chước — nhúng sẵn một kết quả PASS chính là dạy nó <em>viết ra</em> VERIFY thay vì <em>chạy</em> check, phá thẳng Hard Rule 1. Toàn bộ đã bị cắt và <code>validate_overlays.py</code> nay chặn chúng quay lại.</div>
+
+<h2><span class="num">05</span> Thư viện overlay</h2>
+<p class="muted small">86 overlay, gồm: <code>3d-spatial-engineer</code>, <code>accessibility-engineer</code>, <code>ai-behavior-engineer</code>, <code>ai-engineer</code>, <code>animation-engineer</code>, <code>api-designer</code>, <code>art-director</code>, <code>auto-publish</code>, <code>autonomous-testing</code>, <code>backend</code>, <code>build-release-engineer</code>, <code>business-analyst</code>, <code>code-quality-engineer</code>, <code>code-reviewer</code>, <code>code-reviewer-go</code>, <code>code-reviewer-python</code>, <code>code-reviewer-rust</code>, <code>conversion-optimizer</code> …</p>
+<p>Nhóm theo vai trò: <strong>routing lõi</strong> (debugger, software-engineer, ui-designer, code-reviewer,
+qa-engineer, devops) · <strong>vai trò pipeline</strong> (product-manager, solution-architect,
+security-engineer, frontend-engineer) · <strong>domain</strong> (game engine, data/AI, mobile,
+per-language, growth…).</p>
+
+<h2><span class="num">06</span> Protocol dùng chung</h2>
+<p>51 protocol trong <code>skills/_shared/protocols/</code>. Hai cái quan trọng nhất:</p>
+<table><thead><tr><th>Protocol</th><th>Vai trò</th></tr></thead><tbody><tr><td><code>guardrail.md</code></td><td>Kill switch: 13 nhóm luật (destructive, secrets, RCE, publishing, path traversal, resource exhaustion…) + cổng cơ học <code>policy_check.py</code></td></tr><tr><td><code>parallel-dispatch.md</code></td><td>Worker chạy song song trên git worktree, mỗi worker bị ràng bởi task contract; merge arbiter từ chối mọi thay đổi ngoài phạm vi</td></tr></tbody></table>
+
+</main>
+<footer>
+  <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
+  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+</footer>
+</body>
+</html>

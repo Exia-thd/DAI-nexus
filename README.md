@@ -48,7 +48,7 @@ TẦNG 3 — RUNTIME (Python thuần, zero-dependency, Windows/macOS/Linux)
 # 1. Sinh boot files từ kernel (chạy lại mỗi khi sửa kernel/)
 python scripts/lite/sync-kernel.py
 
-# 2. Tự kiểm tra toàn hệ thống (34 checks)
+# 2. Tự kiểm tra toàn hệ thống (35 checks)
 python tests/smoke.py
 
 # 3. Dùng: mở Claude Code (hoặc Cursor/Gemini CLI) tại repo này.
@@ -61,6 +61,18 @@ Trong lúc agent làm việc, mọi claim "đã xong" phải kèm evidence:
 ```bash
 python scripts/lite/run_check.py -- <lệnh kiểm chứng, ví dụ: npm test>
 ```
+
+## Tài liệu
+
+Site tài liệu nằm ở `docs/` — mở `docs/index.html` bằng browser, hoặc:
+
+```bash
+python -m http.server 8000 --directory docs
+```
+
+Toàn bộ số liệu và code excerpt trong đó được **sinh từ source lúc build** (`docs/build_docs.py`),
+nên không thể drift khỏi code. `python docs/build_docs.py --check` sẽ fail nếu trang đã cũ —
+smoke suite kiểm tra điều này mỗi lần chạy.
 
 ## Chống ảo giác — 4 lớp
 

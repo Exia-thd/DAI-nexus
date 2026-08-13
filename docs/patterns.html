@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tinh túy — DAI Nexus</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<nav class="nav"><div class="nav-inner">
+  <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
+  <div class="nav-links"><a href="./index.html">Tổng quan</a><a href="./kernel.html">Kernel</a><a href="./skills.html">Skills</a><a href="./evidence.html">Bằng chứng</a><a href="./runtime.html">Runtime</a><a href="./memory.html">Memory</a><a href="./patterns.html" class=current>Tinh túy</a></div>
+</div></nav>
+<main>
+
+<section class="hero compact">
+  <span class="tag">TINH TÚY</span>
+  <h1>12 pattern <span class="accent">đáng mang sang project khác</span></h1>
+  <p class="lead">Phần lớn giá trị của DAI Nexus không nằm ở lượng file, mà ở vài cơ chế nhỏ
+  buộc một agent phải trung thực. Đây là danh sách rút gọn — mỗi cái đều đang chạy thật trong repo này.</p>
+</section>
+
+<div class="grid cols-2"><div class="card pattern">
+  <div class="pattern-num">01</div>
+  <h4 class="mt-0">Evidence do máy ghi, không phải do agent kể</h4>
+  <p class="small">Tách <em>chạy kiểm chứng</em> khỏi <em>báo cáo kết quả</em>. Script chạy lệnh và ghi JSON kèm exit code + tree-sha + timestamp; agent chỉ được trích dẫn. Bằng chứng gõ tay bị coi là giả theo định nghĩa.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Mọi hệ có AI tự báo cáo kết quả.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">02</div>
+  <h4 class="mt-0">Cổng hoàn thành lượt (stop hook)</h4>
+  <p class="small">Một hook chạy lúc agent định kết thúc, kiểm tra evidence tương ứng với thay đổi thực tế trong cây làm việc. Đây là chỗ duy nhất không thể nói vòng qua bằng ngôn từ.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Claude Code / Codex / bất kỳ harness nào có hook.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">03</div>
+  <h4 class="mt-0">Fail-closed cho luật bảo mật</h4>
+  <p class="small">Config thiếu, hỏng, hoặc giá trị lạ ⇒ <em>chặn</em>. Chỉ luật không-bảo-mật mới được fail-open. Ngược lại với thói quen 'lỗi config thì bỏ qua cho chạy'.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Bất kỳ policy engine nào.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">04</div>
+  <h4 class="mt-0">Runtime lease cho process dài hạn</h4>
+  <p class="small">Dev server, watcher, emulator phải đăng ký lease; cuối lượt bắt buộc CLEAN hoặc giải thích <code>policy=keep</code>. Process không lease = leak, không phải ngoại lệ.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Agent được phép chạy server.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">05</div>
+  <h4 class="mt-0">Ngân sách token cứng cho prompt hệ thống</h4>
+  <p class="small">Sinh prompt boot từ nguồn duy nhất và <strong>fail build</strong> khi vượt ngưỡng. Không có bước này, prompt hệ thống phình dần cho tới khi nuốt hết context window.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Mọi agent có system prompt dài.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">06</div>
+  <h4 class="mt-0">Overlay không được chứa kết quả mẫu</h4>
+  <p class="small">Tài liệu mà agent bắt chước tuyệt đối không được nhúng output thành công dựng sẵn — nó dạy agent <em>viết ra</em> kết quả thay vì <em>tạo ra</em> kết quả. Có linter chặn.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Thư viện prompt/skill bất kỳ.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">07</div>
+  <h4 class="mt-0">Kỳ vọng không kiểm chứng được ⇒ FAIL</h4>
+  <p class="small">Khi harness không có cách xác minh một khẳng định, nó phải báo lỗi chứ không im lặng cho qua. Test luôn xanh còn tệ hơn không có test.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Test harness, eval, CI.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">08</div>
+  <h4 class="mt-0">Task contract + merge arbiter</h4>
+  <p class="small">Worker song song khai báo trước glob được sửa và glob cấm; trọng tài từ chối merge mọi thay đổi ngoài phạm vi. Ngăn worker giẫm chân nhau mà không cần khoá.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Multi-agent chạy song song.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">09</div>
+  <h4 class="mt-0">Fresh-context review</h4>
+  <p class="small">Người review chỉ thấy diff + yêu cầu gốc, không thấy chuỗi suy luận đã tạo ra diff. Bối cảnh xây dựng chính là thứ làm mù người review.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Code review, self-critique.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">10</div>
+  <h4 class="mt-0">Progressive disclosure cho memory</h4>
+  <p class="small">Ba lớp truy xuất (tiêu đề → tóm tắt → đầy đủ) với trần token rõ ràng, thay vì nạp hết vào context.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Bất kỳ hệ RAG/memory nào.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">11</div>
+  <h4 class="mt-0">Sổ vi phạm rule</h4>
+  <p class="small">Ghi lại mỗi lần agent tự nhận (hoặc bị nhắc) là quên rule. Rule bị quên ≥3 lần là ứng viên cần siết bằng cơ chế máy, không phải bằng câu chữ mạnh hơn.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Cải tiến prompt dựa trên dữ liệu.</span></div>
+</div><div class="card pattern">
+  <div class="pattern-num">12</div>
+  <h4 class="mt-0">Tài liệu sinh từ source</h4>
+  <p class="small">Chính trang bạn đang đọc: mọi số liệu và code excerpt đọc từ working tree lúc build, và build fail nếu anchor biến mất. Tài liệu chép tay luôn drift.</p>
+  <div class="tags"><span class="tag-sm">Dùng được cho: Mọi tài liệu kiến trúc.</span></div>
+</div></div>
+
+<h2><span class="num">01</span> Bộ tối thiểu nếu chỉ lấy 3 thứ</h2>
+<div class="callout tip"><div class="title">Thứ tự ưu tiên</div>1. <strong>Evidence writer + stop gate</strong> — không có nó, mọi luật khác chỉ là lời khuyên.<br>2. <strong>Ngân sách token cho kernel</strong> — giữ bộ luật đủ nhỏ để luôn được nạp.<br>3. <strong>Runtime lease</strong> — rẻ nhất để làm, và cứu máy bạn khỏi chết dần vì process mồ côi.</div>
+
+<h2><span class="num">02</span> Cái không nên copy</h2>
+<p>Số lượng. Repo này có 86 overlay và 51 protocol vì được chưng cất
+từ một hệ lớn hơn — nhưng chi phí bảo trì tăng theo số file, còn giá trị thì không.
+Bắt đầu từ kernel + một orchestrator, thêm overlay khi thật sự đụng domain đó.</p>
+
+</main>
+<footer>
+  <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
+  <div>v0.7.0 · commit <code>5d0c36f</code> · build 2026-08-13</div>
+</footer>
+</body>
+</html>
