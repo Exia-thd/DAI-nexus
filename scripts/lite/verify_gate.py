@@ -14,9 +14,11 @@ Gate logic:
   3. Otherwise require a fresh, machine-written evidence file under
      .dainexus/verify/ (written by run_check.py) that passes all checks:
 
-  Evidence contract (schema_version "1"):
-    schema_version, turn, command, exit_code, output, timestamp_utc,
-    workspace, tree_sha
+  Evidence contract (schema_version "1" or "2"):
+    v1: schema_version, turn, command, exit_code, output, timestamp_utc,
+        workspace, tree_sha
+    v2: the above plus output_sha256 (integrity digest of `output`),
+        tier (quick|standard|deep), acceptance, negative_paths
 
   Rejection reasons:
     MISSING   - no evidence file found
@@ -33,6 +35,7 @@ convention, stderr is fed back to the agent), 1 otherwise.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -167,10 +170,20 @@ def _find_evidence(project_root: Path, turn_env: str) -> Path | None:
     return None
 
 
+SUPPORTED_SCHEMAS = {"1", "2"}
+
+
 def _validate_schema(ev: dict) -> list[str]:
     errors: list[str] = []
-    if ev.get("schema_version") != "1":
-        errors.append(f"FORGED: schema_version must be '1', got {ev.get('schema_version')!r}")
+    if ev.get("schema_version") not in SUPPORTED_SCHEMAS:
+        errors.append(f"FORGED: schema_version must be one of "
+                      f"{sorted(SUPPORTED_SCHEMAS)}, got {ev.get('schema_version')!r}")
+    if ev.get("schema_version") == "2":
+        tier = ev.get("tier")
+        if tier not in ("quick", "standard", "deep"):
+            errors.append(f"FORGED: v2 'tier' must be quick|standard|deep, got {tier!r}")
+        if not isinstance(ev.get("negative_paths", []), list):
+            errors.append("FORGED: v2 'negative_paths' must be a list")
     if not isinstance(ev.get("command"), list) or not ev["command"]:
         errors.append("FORGED: 'command' must be a non-empty list")
     if not isinstance(ev.get("turn"), str) or not ev["turn"]:
@@ -193,6 +206,19 @@ def _validate_output(ev: dict) -> list[str]:
     for pat in _SECRET_PATTERNS:
         if pat.search(output):
             errors.append(f"SECRETS: evidence output contains unredacted secret matching {pat.pattern!r}")
+    # v2 integrity: the writer stored a digest of the output it captured. If the
+    # two disagree, the record was edited after the command ran.
+    digest = ev.get("output_sha256")
+    if ev.get("schema_version") == "2":
+        if not digest:
+            errors.append("FORGED: v2 evidence is missing 'output_sha256'")
+        else:
+            actual = hashlib.sha256(output.encode("utf-8")).hexdigest()
+            if actual != digest:
+                errors.append(
+                    f"FORGED: output_sha256 mismatch — stored {digest[:12]}…, "
+                    f"actual {actual[:12]}…; the output field was modified after capture"
+                )
     return errors
 
 
@@ -320,23 +346,44 @@ def _selftest() -> int:
             "workspace": str(tmp),
             "tree_sha": "NONGIT:selftest",
         }
-        errs = (
-            _validate_schema(ev)
-            + _validate_output(ev)
-            + _validate_staleness(ev)
-            + _validate_workspace(ev, tmp)
-            + _validate_exit_code(ev)
+        def validate(record: dict) -> list[str]:
+            return (
+                _validate_schema(record)
+                + _validate_output(record)
+                + _validate_staleness(record)
+                + _validate_workspace(record, tmp)
+                + _validate_exit_code(record)
+            )
+
+        v2 = dict(
+            ev,
+            schema_version="2",
+            tier="quick",
+            acceptance="selftest proves the validators accept a well-formed record",
+            negative_paths=[],
+            output_sha256=hashlib.sha256(ev["output"].encode("utf-8")).hexdigest(),
         )
-        # Negative case: a forged evidence must be rejected
-        forged = dict(ev, output="", exit_code=1)
-        neg = _validate_output(forged) + _validate_exit_code(forged)
-        if errs:
-            _err(f"selftest FAILED (valid evidence rejected): {errs}")
-            return 1
-        if not neg:
-            _err("selftest FAILED (forged evidence accepted)")
-            return 1
-        _ok("selftest PASSED")
+
+        cases = [
+            ("v1 record accepted", validate(ev), True),
+            ("v2 record accepted", validate(v2), True),
+            ("empty output + nonzero exit rejected",
+             _validate_output(dict(ev, output="")) + _validate_exit_code(dict(ev, exit_code=1)), False),
+            ("v2 with edited output rejected",
+             _validate_output(dict(v2, output="doctored\n")), False),
+            ("v2 missing digest rejected",
+             _validate_output({k: v for k, v in v2.items() if k != "output_sha256"}), False),
+            ("v2 bad tier rejected", _validate_schema(dict(v2, tier="turbo")), False),
+            ("unknown schema rejected", _validate_schema(dict(ev, schema_version="9")), False),
+        ]
+        for name, errors, want_clean in cases:
+            if want_clean and errors:
+                _err(f"selftest FAILED — {name}: {errors}")
+                return 1
+            if not want_clean and not errors:
+                _err(f"selftest FAILED — {name}: expected rejection, got none")
+                return 1
+        _ok(f"selftest PASSED ({len(cases)} validator cases)")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

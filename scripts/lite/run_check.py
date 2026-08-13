@@ -4,9 +4,16 @@ scripts/lite/run_check.py
 Atomic evidence writer for the DAI Nexus verify-gate. Cross-platform (no bash needed).
 
 Usage:
-    python scripts/lite/run_check.py [--turn ID] [--out DIR] [--redact 1|0] -- CMD [ARGS...]
+    python scripts/lite/run_check.py [--turn ID] [--out DIR] [--redact 1|0]
+                                     [--tier quick|standard|deep]
+                                     [--acceptance "what this proves"]
+                                     [--negative-path "observed failure case"] ...
+                                     -- CMD [ARGS...]
 
-Writes: <out>/<turn>.json  (schema_version "1")
+Writes: <out>/<turn>.json  (schema_version "2")
+  v2 adds: output_sha256 (integrity), tier, acceptance, negative_paths.
+  The gate still accepts v1 evidence; v2 additionally fails on a digest mismatch,
+  so an edited `output` field no longer passes.
 Always exits 0.  Callers inspect exit_code inside the JSON.
 Security: source files are NEVER mutated. Redaction acts on the in-memory copy only.
 """
@@ -14,6 +21,7 @@ Security: source files are NEVER mutated. Redaction acts on the in-memory copy o
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -110,6 +118,9 @@ def main() -> None:
     parser.add_argument("--turn", default=None)
     parser.add_argument("--out", default=None)
     parser.add_argument("--redact", default="1")
+    parser.add_argument("--tier", choices=["quick", "standard", "deep"], default="standard")
+    parser.add_argument("--acceptance", default="")
+    parser.add_argument("--negative-path", action="append", default=[])
     parser.add_argument("--help", "-h", action="store_true")
     parser.add_argument("cmd", nargs=argparse.REMAINDER)
 
@@ -168,15 +179,23 @@ def main() -> None:
     evidence_file = out_dir / f"{turn}.json"
 
     ev = {
-        "schema_version": "1",
+        "schema_version": "2",
         "turn": turn,
         "command": cmd_argv,
         "exit_code": exit_code,
         "output": output,
+        # Digest of the stored output: editing `output` by hand breaks it, so the
+        # gate can tell a machine-written record from a doctored one.
+        "output_sha256": hashlib.sha256(output.encode("utf-8")).hexdigest(),
         "output_truncated": output_truncated,
         "timestamp_utc": timestamp_utc,
         "workspace": str(workspace),
         "tree_sha": tree_sha,
+        "tier": args.tier,
+        # What this check is meant to prove, and which failure paths were actually
+        # observed. Empty means "not claimed" — never assume a negative path held.
+        "acceptance": args.acceptance,
+        "negative_paths": args.negative_path,
     }
 
     fd, tmp_path = tempfile.mkstemp(prefix=".ev_", suffix=".json", dir=str(out_dir))

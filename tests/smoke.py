@@ -192,6 +192,39 @@ def test_skill_overlays_clean() -> None:
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
 
 
+def test_evidence_schema_v2() -> None:
+    """v2 records carry an integrity digest; a doctored output must not survive it."""
+    import importlib
+    sys.path.insert(0, str(ROOT / "scripts" / "lite"))
+    vg = importlib.import_module("verify_gate")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        r = run(PY + ["scripts/lite/run_check.py", "--turn", "smoke_v2", "--out", tmp,
+                      "--tier", "quick", "--acceptance", "digest covers output",
+                      "--negative-path", "tampered output rejected",
+                      "--", sys.executable, "-c", "print('hello v2')"])
+        check("run_check writes v2 evidence", r.returncode == 0, r.stderr[-200:])
+        ev = json.loads((Path(tmp) / "smoke_v2.json").read_text(encoding="utf-8"))
+
+    check("v2 schema_version", ev.get("schema_version") == "2", str(ev.get("schema_version")))
+    check("v2 carries tier/acceptance/negative_paths",
+          ev.get("tier") == "quick" and ev.get("acceptance")
+          and ev.get("negative_paths") == ["tampered output rejected"], str(ev)[:150])
+    check("v2 clean record validates", not vg._validate_output(ev), str(vg._validate_output(ev))[:150])
+    check("v2 tampered output is FORGED",
+          any("output_sha256 mismatch" in e for e in vg._validate_output(dict(ev, output="all green\n"))))
+    check("v2 missing digest is FORGED",
+          bool(vg._validate_output({k: v for k, v in ev.items() if k != "output_sha256"})))
+    check("v2 bad tier is FORGED", bool(vg._validate_schema(dict(ev, tier="turbo"))))
+    # v1 must still be accepted: old evidence files stay valid.
+    v1 = {k: v for k, v in ev.items()
+          if k not in ("output_sha256", "tier", "acceptance", "negative_paths")}
+    v1["schema_version"] = "1"
+    check("v1 evidence still accepted",
+          not (vg._validate_schema(v1) + vg._validate_output(v1)),
+          str(vg._validate_schema(v1) + vg._validate_output(v1))[:150])
+
+
 def test_stub_check_precision() -> None:
     """Real stubs must be caught; documentation *about* stub markers must not be."""
     sys.path.insert(0, str(ROOT / "scripts" / "lite"))
@@ -311,7 +344,8 @@ def main() -> None:
                test_escalate_dry_run, test_mcp_server, test_mcp_gate_discipline,
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
-               test_overlay_validator, test_docs_fresh, test_stub_check_precision,
+               test_overlay_validator, test_docs_fresh, test_evidence_schema_v2,
+               test_stub_check_precision,
                test_utf8_cli_output, test_escalate_timeout_and_lease,
                test_skill_test_contracts, test_rule_ledger):
         try:

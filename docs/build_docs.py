@@ -475,12 +475,33 @@ def page_evidence(f: dict) -> str:
   mà là bốn cổng cơ học mà agent không thể nói vòng qua.</p>
 </section>
 
+<h2><span class="num">00</span> Nguyên tắc: bằng chứng theo tỉ lệ</h2>
+<p>Bằng chứng luôn bắt buộc <em>về bản chất</em>; nghi thức thì không. Một lần sửa lỗi chính tả và một thay đổi
+hệ thống thanh toán không phải cùng một loại việc — bắt chúng theo cùng một quy trình là cách nhanh nhất
+khiến người ta bỏ qua đúng những chỗ quan trọng.</p>
+{table(["Tier", "Khi nào", "Ngân sách", "Bằng chứng"], [
+  ["<code>QUICK</code>", "rõ ràng, cục bộ, đảo ngược được, không có tín hiệu HARD", "1–3 action",
+   "một dòng gọn: <code>CHECK | EXIT | RESULT</code>"],
+  ["<code>STANDARD</code>", "feature/debug/refactor bình thường có giới hạn", "≤7 action",
+   "từng behavior trọng yếu + regression có mục tiêu"],
+  ["<code>DEEP</code>", "bảo mật · public contract/schema · concurrency · migration · release không đảo ngược · lỗi lặp lại",
+   "≤10 action", "kiểm tra biên chặt hơn, bằng chứng rollback, review độc lập"],
+])}
+{callout("warn", "Luật thanh toán (bắt buộc)",
+ "Bất kỳ việc gì đụng tới payment, billing, in-app purchase, receipt validation, entitlements, "
+ "subscription hay checkout đều là <code>HARD</code> + <code>DEEP</code> <strong>bất kể số file</strong>. "
+ "Một diff một dòng không hạ cấp được nó.")}
+
 <h2><span class="num">01</span> Lớp 1 — Evidence do máy ghi</h2>
 <p>Agent không tự viết bằng chứng. Nó chạy lệnh kiểm chứng qua <code>run_check.py</code>,
 script này thực thi, thu output, <strong>redact secret trong bộ nhớ</strong>, rồi ghi JSON nguyên tử:</p>
 {code("scripts/lite/run_check.py", r'^\s+ev = \{', 12, "schema bằng chứng")}
-<p>Ba trường quyết định tính không-thể-giả: <code>tree_sha</code> (trạng thái cây làm việc lúc chạy),
-<code>timestamp_utc</code>, và <code>exit_code</code> thật của tiến trình con.</p>
+<p>Bốn trường quyết định tính không-thể-giả: <code>tree_sha</code> (trạng thái cây làm việc lúc chạy),
+<code>timestamp_utc</code>, <code>exit_code</code> thật của tiến trình con, và <code>output_sha256</code> —
+digest của chính output đã thu. Sửa tay trường <code>output</code> là digest lệch ngay, gate bắt được.</p>
+<p>Schema v2 còn mang <code>tier</code> (<code>quick|standard|deep</code>), <code>acceptance</code>
+(check này dùng để chứng minh điều gì) và <code>negative_paths</code> (đường thất bại đã <em>thực sự quan sát</em>,
+không phải giả định). Gate vẫn nhận evidence v1 cũ.</p>
 
 <h2><span class="num">02</span> Lớp 2 — Stop-hook gate</h2>
 <p>Cuối mỗi lượt, hook gọi <code>verify_gate.py</code>. Nếu có file code thay đổi, gate đòi
@@ -512,6 +533,13 @@ VERDICT: CLEAN | LEAKED</code></pre></div>
 không phải <code>policy=keep</code>. Trên Windows, kiểm tra process sống <strong>không</strong> được dùng
 <code>os.kill(pid, 0)</code> — nó gọi TerminateProcess và giết thật:</p>
 {code("scripts/lite/runtime_lease.py", r"^def pid_alive", 14)}
+
+<h2><span class="num">04b</span> Sửa lỗi: phải thấy ĐỎ rồi mới XANH</h2>
+<p>Một bản vá không được chứng minh bằng một test xanh. Chạy <strong>đúng cùng một lệnh</strong> và cho thấy:
+<strong>RED</strong> — check thất bại <em>trước</em> khi sửa (chứng minh check thật sự phát hiện được lỗi), rồi
+<strong>GREEN</strong> — cũng check đó pass sau khi sửa.</p>
+<p>Một test chưa từng được nhìn thấy fail không phải bằng chứng rằng nó sẽ bắt được regression.
+Nếu không dựng được RED, phải nói thẳng và nêu rõ điều đó để lại phần nào chưa được chứng minh.</p>
 
 <h2><span class="num">05</span> Lớp bổ sung — linter overlay &amp; contract test</h2>
 <p>Hai nguồn bằng chứng giả tinh vi hơn, đều đã bị bịt:</p>

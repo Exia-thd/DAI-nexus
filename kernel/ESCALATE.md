@@ -2,18 +2,20 @@
 
 Tag each task step during SOLVE section planning.
 
-## Classification Checklist
-Model self-tag is only a hint. A step is **HARD** if ANY of these objective runtime signals or conditions apply:
-- [ ] Repeated verification failure (runtime signal).
-- [ ] Independent-sample disagreement (runtime signal).
+`EASY` and `HARD` describe **risk and uncertainty**, not seniority or task size. Every tier stays accountable for judgment and evidence.
+
+## HARD Signals
+Model self-tag is only a hint. A step is **HARD** if ANY of these objective signals apply:
+- [ ] Repeated verification failure, or the Stuck rule fired on this step.
+- [ ] Independent evidence materially disagrees.
 - [ ] Security-sensitive context (auth, secrets, injection surface, permissions).
 - [ ] Changes a public interface, schema, or public exports.
-- [ ] Concurrency, locking, or asynchronous ordering paths.
-- [ ] The Stuck rule fired on this step.
-- [ ] Guardrail or execution policy (`policy_check.py`) flagged a DENY or WARN on this step.
+- [ ] Concurrency, locking, ordering, migration, or an irreversible release path.
+- [ ] **Payment, billing, in-app purchase, receipt validation, entitlements, subscription, or checkout — mandatory HARD regardless of file count.**
+- [ ] Guardrail or execution policy (`policy_check.py`) returned DENY/WARN that changes the feasible approach.
 - [ ] The step would signal or kill a process that holds no runtime lease, or would reap a `policy=keep` lease.
 
-Otherwise, the step is **EASY**.
+Otherwise the step is **EASY**. `QUICK` work does not need per-line tagging ceremony.
 
 ## Execution Protocol
 - **EASY**: Execute the step yourself.
@@ -24,11 +26,10 @@ Otherwise, the step is **EASY**.
   It builds a redacted context packet (task + latest verify evidence + git diff) and delegates to the expert CLI configured in `.dainexus.yaml` (`expertMode.activeCli`, default `claude`) in fresh-context non-interactive mode. You must integrate and verify the answer.
   If no expert CLI is available: (1) dispatch a fresh-context subagent if the host supports one, else (2) pause and present the step + evidence + 2–3 options to the user.
 
-## Agreement-Based Cascade Rules
-When a step is escalated (to a subagent or, later, a stronger model):
-1. Verify the generated output matches all constraints and local coding patterns.
-2. If the escalated output introduces any ambiguity or contradicts other parts of the plan, run another escalation to cross-validate or ask the user for confirmation.
-3. Integrate and run a `VERIFY` check immediately. Never merge unverified escalated output.
+## Review After Escalation
+1. Treat escalated output as a **proposal, not truth**; verify it against current constraints and project evidence.
+2. Cross-validate only when disagreement or risk remains material — do not trigger a second model merely to satisfy a cascade.
+3. Integrate only verified output, and run a `VERIFY` check immediately.
 
 ## Budget Limit
 - **Cost Budget Rules Apply**: Escalations are bound by token and cost budget rules, not a fixed escalation limit.

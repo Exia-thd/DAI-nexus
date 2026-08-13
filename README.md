@@ -48,7 +48,7 @@ TẦNG 3 — RUNTIME (Python thuần, zero-dependency, Windows/macOS/Linux)
 # 1. Sinh boot files từ kernel (chạy lại mỗi khi sửa kernel/)
 python scripts/lite/sync-kernel.py
 
-# 2. Tự kiểm tra toàn hệ thống (45 checks)
+# 2. Tự kiểm tra toàn hệ thống (53 checks)
 python tests/smoke.py
 
 # 3. Dùng: mở Claude Code (hoặc Cursor/Gemini CLI) tại repo này.
@@ -76,7 +76,10 @@ smoke suite kiểm tra điều này mỗi lần chạy.
 
 ## Chống ảo giác — 4 lớp
 
-1. **Evidence-first**: VERIFY block bắt buộc, evidence do `run_check.py` ghi (schema, tree-sha, timestamp) — evidence gõ tay bị coi là FORGED.
+> Bằng chứng theo **tỉ lệ rủi ro**: `QUICK` (1–3 action, một check gọn) · `STANDARD` (≤7 action) · `DEEP` (≤10 action, review độc lập).
+> Payment/billing/checkout luôn là `DEEP` bất kể số file. Sửa lỗi phải cho thấy **RED rồi mới GREEN** — cùng một lệnh.
+
+1. **Evidence-first**: VERIFY bắt buộc, evidence do `run_check.py` ghi theo schema v2 (tree-sha, timestamp, `output_sha256`) — gõ tay hoặc sửa tay đều bị bắt là FORGED.
 2. **Stop-hook gate**: `verify_gate.py` chặn kết thúc turn khi có code đổi mà thiếu/giả/hết hạn evidence, hoặc còn stub TODO/FIXME.
 3. **Execution policy fail-closed**: `policy_check.py` chặn lệnh phá hoại theo deny-pattern; file policy hỏng = chặn luôn.
 4. **Runtime ledger**: process dài hạn phải có lease; cuối turn `status` phải CLEAN — "tests passed" không chứng minh máy sạch.
@@ -90,3 +93,5 @@ smoke suite kiểm tra điều này mỗi lần chạy.
 1. **Vector search** — nhánh embedding thứ hai cho RRF fusion (hiện fuse BM25 + importance/recency).
 2. **ASIP** — self-improving loop: extract lessons từ failure, evolve skill.
 3. **Dashboard** — UI đọc `.dainexus/pipeline-state.json` qua MCP.
+4. **Reviewer attestation** — chữ ký Ed25519 cho review độc lập ở tier `DEEP` (hiện review là fresh-context, chưa ký).
+5. **Mutation backcheck** — tự động hoá `RED → GREEN → đột biến phải fail → GREEN` để chứng minh test không rỗng.

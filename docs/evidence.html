@@ -21,28 +21,40 @@
   mà là bốn cổng cơ học mà agent không thể nói vòng qua.</p>
 </section>
 
+<h2><span class="num">00</span> Nguyên tắc: bằng chứng theo tỉ lệ</h2>
+<p>Bằng chứng luôn bắt buộc <em>về bản chất</em>; nghi thức thì không. Một lần sửa lỗi chính tả và một thay đổi
+hệ thống thanh toán không phải cùng một loại việc — bắt chúng theo cùng một quy trình là cách nhanh nhất
+khiến người ta bỏ qua đúng những chỗ quan trọng.</p>
+<table><thead><tr><th>Tier</th><th>Khi nào</th><th>Ngân sách</th><th>Bằng chứng</th></tr></thead><tbody><tr><td><code>QUICK</code></td><td>rõ ràng, cục bộ, đảo ngược được, không có tín hiệu HARD</td><td>1–3 action</td><td>một dòng gọn: <code>CHECK | EXIT | RESULT</code></td></tr><tr><td><code>STANDARD</code></td><td>feature/debug/refactor bình thường có giới hạn</td><td>≤7 action</td><td>từng behavior trọng yếu + regression có mục tiêu</td></tr><tr><td><code>DEEP</code></td><td>bảo mật · public contract/schema · concurrency · migration · release không đảo ngược · lỗi lặp lại</td><td>≤10 action</td><td>kiểm tra biên chặt hơn, bằng chứng rollback, review độc lập</td></tr></tbody></table>
+<div class="callout warn"><div class="title">Luật thanh toán (bắt buộc)</div>Bất kỳ việc gì đụng tới payment, billing, in-app purchase, receipt validation, entitlements, subscription hay checkout đều là <code>HARD</code> + <code>DEEP</code> <strong>bất kể số file</strong>. Một diff một dòng không hạ cấp được nó.</div>
+
 <h2><span class="num">01</span> Lớp 1 — Evidence do máy ghi</h2>
 <p>Agent không tự viết bằng chứng. Nó chạy lệnh kiểm chứng qua <code>run_check.py</code>,
 script này thực thi, thu output, <strong>redact secret trong bộ nhớ</strong>, rồi ghi JSON nguyên tử:</p>
-<div class="code-block"><div class="code-head"><span class="file">scripts/lite/run_check.py:170</span><span class=cap>schema bằng chứng</span></div><pre><code>ev = {
-    "schema_version": "1",
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/run_check.py:181</span><span class=cap>schema bằng chứng</span></div><pre><code>ev = {
+    "schema_version": "2",
     "turn": turn,
     "command": cmd_argv,
     "exit_code": exit_code,
     "output": output,
+    # Digest of the stored output: editing `output` by hand breaks it, so the
+    # gate can tell a machine-written record from a doctored one.
+    "output_sha256": hashlib.sha256(output.encode("utf-8")).hexdigest(),
     "output_truncated": output_truncated,
     "timestamp_utc": timestamp_utc,
-    "workspace": str(workspace),
-    "tree_sha": tree_sha,
-}</code></pre></div>
-<p>Ba trường quyết định tính không-thể-giả: <code>tree_sha</code> (trạng thái cây làm việc lúc chạy),
-<code>timestamp_utc</code>, và <code>exit_code</code> thật của tiến trình con.</p>
+    "workspace": str(workspace),</code></pre></div>
+<p>Bốn trường quyết định tính không-thể-giả: <code>tree_sha</code> (trạng thái cây làm việc lúc chạy),
+<code>timestamp_utc</code>, <code>exit_code</code> thật của tiến trình con, và <code>output_sha256</code> —
+digest của chính output đã thu. Sửa tay trường <code>output</code> là digest lệch ngay, gate bắt được.</p>
+<p>Schema v2 còn mang <code>tier</code> (<code>quick|standard|deep</code>), <code>acceptance</code>
+(check này dùng để chứng minh điều gì) và <code>negative_paths</code> (đường thất bại đã <em>thực sự quan sát</em>,
+không phải giả định). Gate vẫn nhận evidence v1 cũ.</p>
 
 <h2><span class="num">02</span> Lớp 2 — Stop-hook gate</h2>
 <p>Cuối mỗi lượt, hook gọi <code>verify_gate.py</code>. Nếu có file code thay đổi, gate đòi
 một evidence hợp lệ. 7 phép kiểm tra độc lập:</p>
 <table><thead><tr><th>Lý do từ chối</th><th>Nghĩa là</th></tr></thead><tbody><tr><td><code>MISSING</code></td><td>Không có file evidence nào</td></tr><tr><td><code>STALE</code></td><td>Evidence quá cũ (mặc định &gt;1 giờ, đổi qua <code>DAINEXUS_STALENESS_SECS</code>)</td></tr><tr><td><code>MISMATCH</code></td><td>Workspace hoặc tree-sha đã đổi từ lúc ghi — tức là code bị sửa <em>sau</em> khi test chạy</td></tr><tr><td><code>FAILED</code></td><td><code>exit_code</code> ≠ 0 — lệnh kiểm chứng thật sự trượt</td></tr><tr><td><code>FORGED</code></td><td>Sai schema, command rỗng, hoặc output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)</td></tr><tr><td><code>SECRETS</code></td><td>Output chứa secret chưa che (API key, token, private key) — chính file evidence đã nhiễm</td></tr><tr><td><code>STUBS</code></td><td>File đã sửa còn TODO/FIXME/NotImplementedError</td></tr></tbody></table>
-<div class="code-block"><div class="code-head"><span class="file">scripts/lite/verify_gate.py:224</span><span class=cap>so khớp tree-sha</span></div><pre><code>def _validate_tree(ev: dict, current_tree: str) -&gt; list[str]:
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/verify_gate.py:250</span><span class=cap>so khớp tree-sha</span></div><pre><code>def _validate_tree(ev: dict, current_tree: str) -&gt; list[str]:
     ev_tree = ev.get("tree_sha", "")
     if not ev_tree:
         return ["MISMATCH: tree_sha missing in evidence"]
@@ -105,13 +117,20 @@ không phải <code>policy=keep</code>. Trên Windows, kiểm tra process sống
     except ProcessLookupError:
         return False</code></pre></div>
 
+<h2><span class="num">04b</span> Sửa lỗi: phải thấy ĐỎ rồi mới XANH</h2>
+<p>Một bản vá không được chứng minh bằng một test xanh. Chạy <strong>đúng cùng một lệnh</strong> và cho thấy:
+<strong>RED</strong> — check thất bại <em>trước</em> khi sửa (chứng minh check thật sự phát hiện được lỗi), rồi
+<strong>GREEN</strong> — cũng check đó pass sau khi sửa.</p>
+<p>Một test chưa từng được nhìn thấy fail không phải bằng chứng rằng nó sẽ bắt được regression.
+Nếu không dựng được RED, phải nói thẳng và nêu rõ điều đó để lại phần nào chưa được chứng minh.</p>
+
 <h2><span class="num">05</span> Lớp bổ sung — linter overlay &amp; contract test</h2>
 <p>Hai nguồn bằng chứng giả tinh vi hơn, đều đã bị bịt:</p>
 <table><thead><tr><th>Nguồn</th><th>Vấn đề</th><th>Cách chặn</th></tr></thead><tbody><tr><td>Overlay có worked example</td><td>Nhúng sẵn <code>VERDICT: PASS</code> → dạy agent bịa VERIFY</td><td><code>validate_overlays.py</code> chặn verdict cứng, transcript giả, path chết</td></tr><tr><td>Test harness sinh output giả</td><td>Hàm mock tự sinh output rồi tự assert → luôn xanh</td><td>Thay bằng contract validator; adapter im lặng là FAIL, kỳ vọng không kiểm chứng được cũng FAIL</td></tr></tbody></table>
 <div class="callout warn"><div class="title">Nguyên tắc</div>Một kỳ vọng <em>không kiểm chứng được</em> phải là FAIL, không phải pass im lặng. Mọi cơ chế trong trang này đều theo hướng đó.</div>
 
 <h2><span class="num">06</span> Tự kiểm tra</h2>
-<p><code>tests/smoke.py</code> — 42 phép kiểm tra, 331 dòng, không gọi model,
+<p><code>tests/smoke.py</code> — 50 phép kiểm tra, 365 dòng, không gọi model,
 không cần dịch vụ ngoài. Trong đó có cả các test <em>meta</em>: gate có thật sự chặn evidence giả không,
 adapter im lặng có fail không, mọi đường dẫn skill trong routing có tồn tại không.</p>
 <div class="code-block"><div class="code-head"><span class="file">chạy</span></div><pre><code>python scripts/lite/run_check.py -- python tests/smoke.py</code></pre></div>
@@ -119,7 +138,7 @@ adapter im lặng có fail không, mọi đường dẫn skill trong routing có
 </main>
 <footer>
   <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
-  <div>v0.7.1 · commit <code>dd7cd33</code> · build 2026-08-13</div>
+  <div>v0.8.0 · commit <code>f33694a</code> · build 2026-08-13</div>
 </footer>
 </body>
 </html>
