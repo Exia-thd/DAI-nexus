@@ -27,5 +27,5 @@
 | PHASE_COMPLETE | Phase ends | Update session-log, save to memory |
 | TASK_COMPLETE | Task ends | Update session-log |
 | GATE_DECISION | Gate approved/rejected | Save decision to memory |
-| ARCH_DECISION | Architecture approved | Save to mem0 |
+| ARCH_DECISION | Architecture approved | Save to memory |
 | ERROR | Any error | Save blocker to memory |

@@ -30,14 +30,31 @@ EVENTS = {"violation", "near-miss", "corrected"}
 
 
 def read_entries() -> list[dict]:
+    """Read the ledger, tolerating foreign or partial records.
+
+    An append-only log accumulates lines from older tools and interrupted
+    writes. A reader that dies on the first unfamiliar record makes the whole
+    history unreadable, so unknown shapes are normalised instead — `ts`/`rule`/
+    `outcome` are the field names used by earlier writers.
+    """
     if not LEDGER.is_file():
         return []
     entries = []
-    for line in LEDGER.read_text(encoding="utf-8").splitlines():
+    for line in LEDGER.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line.strip():
+            continue
         try:
-            entries.append(json.loads(line))
+            raw = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if not isinstance(raw, dict):
+            continue
+        entries.append({
+            "timestamp": raw.get("timestamp") or raw.get("ts") or "?",
+            "rule_id": raw.get("rule_id") or raw.get("rule") or "?",
+            "event": raw.get("event") or raw.get("outcome") or "?",
+            "note": raw.get("note", ""),
+        })
     return entries
 
 

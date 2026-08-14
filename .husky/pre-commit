@@ -1,0 +1,5 @@
+#!/bin/sh
+# Thin git adapter. Canonical quality logic lives in scripts/ci/local-ci.py.
+set -eu
+
+exec node scripts/ci/local-ci.mjs precommit

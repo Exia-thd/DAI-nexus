@@ -171,8 +171,12 @@ def test_routing_targets_exist() -> None:
 
 def test_skill_overlays_clean() -> None:
     """No file in the repo may reference upstream-origin paths or names."""
-    bad_tokens = (".forge" + "wright", "forge" + "wright", "Forge" + "wright",
-                  "buiphucminhtam", "mem0-cli", "mem0-v2", "FORGE" + "WRIGHT_")
+    # Assembled from fragments on purpose. A repo-wide rename pass once rewrote
+    # this very list, so the guard started checking for the *new* name and
+    # reported every file as dirty. Fragments survive that.
+    _w = "".join(("wr", "ight"))
+    bad_tokens = ("forge" + _w, "Forge" + _w, "FORGE" + _w.upper() + "_",
+                  "buiphuc" + "minhtam", "mem" + "0-cli", "mem" + "0-v2")
     skip_parts = {".git", ".dainexus", ".worktrees", "__pycache__"}
     stale = []
     for p in ROOT.rglob("*"):

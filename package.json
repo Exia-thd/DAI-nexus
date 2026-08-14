@@ -1,0 +1,67 @@
+{
+  "name": "dai-nexus",
+  "version": "8.7.0",
+  "description": "Adaptive AI Orchestrator — 84 skills, 24 modes. SaaS, game dev, XR, AI/ML, data engineering. Pipeline: INTERPRET → DEFINE → BUILD → HARDEN → SHIP → SUSTAIN",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "workspaces": [
+    "mcp",
+    "src/cli"
+  ],
+  "scripts": {
+    "prepare": "git config core.hooksPath .husky",
+    "build": "cd mcp && npm run build",
+    "test": "cd mcp && npm run test",
+    "lint": "cd mcp && npm run lint",
+    "build:cli": "npm run build --workspace src/cli",
+    "dev:cli": "cd src/cli && npm run dev",
+    "typecheck:cli": "cd src/cli && npx tsc --noEmit",
+    "ci:docs": "npm run typecheck:cli && npm run build:cli && node src/cli/dist/index.js docs gate . --worktree --json && npm test --workspace src/cli -- --run docs && python3 -m pytest -q tests/unit_tests/test_docs_manifest_schema.py tests/unit_tests/test_docs_project_state_schema.py",
+    "test:golden": "node tests/golden/forge-init-onboard.test.mjs",
+    "verify:product-truth": "python3 scripts/ci/verify-product-truth.py",
+    "ci:bootstrap": "node scripts/ci/local-ci.mjs bootstrap",
+    "ci:local": "node scripts/ci/local-ci.mjs all",
+    "ci:quick": "node scripts/ci/local-ci.mjs quick",
+    "ci:security": "node scripts/ci/local-ci.mjs security",
+    "ci:compat": "node scripts/ci/local-ci.mjs compat",
+    "ci:review": "node scripts/ci/local-ci.mjs review",
+    "ci:deps": "node scripts/ci/local-ci.mjs deps",
+    "ci:wiki": "node scripts/ci/local-ci.mjs wiki",
+    "ci:schedule:install": "node scripts/ci/local-scheduler.mjs install",
+    "ci:schedule:uninstall": "node scripts/ci/local-scheduler.mjs uninstall"
+  },
+  "devDependencies": {
+    "handlebars": "^4.7.8",
+    "husky": "^9.1.7",
+    "js-yaml": "^4.2.0",
+    "lint-staged": "^15.4.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6"
+  },
+  "overrides": {
+    "@hono/node-server": "2.0.12",
+    "fast-uri": "3.1.5"
+  },
+  "lint-staged": {
+    "mcp/src/**/*.ts": [
+      "npx --prefix mcp eslint --fix --cache --cache-location mcp/node_modules/.cache/eslint",
+      "npx --prefix mcp prettier --write"
+    ],
+    "src/cli/**/*.ts": [
+      "npx --prefix mcp prettier --write"
+    ],
+    "**/*.py": [
+      "ruff check --fix",
+      "ruff format"
+    ],
+    "scripts/**/*.sh": [
+      "shellcheck -e SC2296,SC2034,SC2155,SC2329,SC2005,SC2206,SC2221,SC2222,SC2030,SC2031,SC2295,SC2148,SC1037,SC2012,SC2016,SC2001,SC2086,SC2115,SC2126,SC2064,SC2015,SC2162,SC2207,SC2129,SC2038,SC2116,SC2044,SC2059,SC2120,SC2119,SC2216,SC2320,SC2181,SC2178,SC2128,SC2164"
+    ]
+  }
+}

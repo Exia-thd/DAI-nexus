@@ -112,7 +112,7 @@ add_section "ACTIVE CONTEXT" "$ACTIVECONTEXT_CONTENT" "$MAX_ACTIVECONTEXT_TOKENS
 # =============================================================================
 MEM0_CONTENT="NOT_FOUND"
 
-# Guardrail: Check if mem0 CLI is available
+# Guardrail: Check if memory CLI is available
 if command -v python3 &>/dev/null && [ -f "python scripts/lite/memory.py" ]; then
   # Attempt to fetch recent memories (suppress errors if unconfigured)
   MEM0_RAW=$(python scripts/lite/memory.py search "session recent" --limit 3 2>/dev/null)

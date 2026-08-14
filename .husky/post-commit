@@ -1,0 +1,22 @@
+#!/bin/sh
+# Post-commit must stay lightweight: record maintenance needs, never spawn hidden work.
+set -eu
+
+CACHE_DIR=".dainexus/cache"
+mkdir -p "$CACHE_DIR"
+CHANGED="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+
+if printf '%s\n' "$CHANGED" | grep -q '^mcp/'; then
+  : > "$CACHE_DIR/mcp-sync-needed"
+  echo "[DAI Nexus] MCP changed; explicit local MCP sync is pending."
+fi
+
+if printf '%s\n' "$CHANGED" | grep -q -E '^(docs/|README\.md|README\.vi\.md|TASKS\.md|\.dainexus/project-profile\.json|\.dainexus/code-conventions\.md)'; then
+  : > "$CACHE_DIR/wiki-sync-needed"
+  echo "[DAI Nexus] Documentation changed; local wiki verification is pending."
+fi
+
+if printf '%s\n' "$CHANGED" | grep -E '^(src/|mcp/|scripts/).*\.(ts|py|js|cs|gd|go|rs)' | grep -v -E '(test|spec)' >/dev/null; then
+  : > "$CACHE_DIR/reindex-needed"
+  echo "[DAI Nexus] Logic changed; local GitNexus reindex is pending."
+fi

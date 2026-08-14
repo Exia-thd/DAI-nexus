@@ -1,0 +1,370 @@
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, join } from "node:path";
+import { z } from "zod";
+import { canonicalProjectRoot, normalizeRelativePath } from "./privacy.js";
+import { createDefaultProjectState } from "./project-state.js";
+import {
+  DOCS_SCHEMA_VERSION,
+  DOCS_PROJECT_STATE_SCHEMA_VERSION,
+  type DocsDiagnostic,
+  type DocsManifest,
+  type DocsSource,
+  type ManifestLoadResult,
+} from "./types.js";
+
+export const DOCS_MANIFEST_PATH = join(".dainexus", "docs-manifest.json");
+
+const relativePathSchema = z
+  .string()
+  .min(1)
+  .refine((value) => !value.includes("\\"), "backslashes are not allowed")
+  .refine((value) => {
+    try {
+      normalizeRelativePath(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "must be a project-relative path without '..' traversal");
+
+const sourceSchema = z
+  .object({
+    path: relativePathSchema,
+    type: z.enum([
+      "documentation",
+      "overview",
+      "architecture",
+      "product",
+      "testing",
+      "operations",
+      "assets",
+      "metadata",
+    ]),
+    include: z.array(z.string().min(1)).optional(),
+    exclude: z.array(z.string().min(1)).optional(),
+  })
+  .strict();
+
+export const docsManifestSchema = z
+  .object({
+    schema_version: z.literal(DOCS_SCHEMA_VERSION),
+    project: z
+      .object({
+        id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+        title: z.string().min(1),
+      })
+      .strict(),
+    sources: z.array(sourceSchema).min(1),
+    project_docs: z
+      .object({
+        schema_version: z.literal(DOCS_PROJECT_STATE_SCHEMA_VERSION),
+        state: relativePathSchema,
+        max_stale_days: z.number().int().min(1).max(365).optional(),
+      })
+      .strict()
+      .optional(),
+    truth: z.array(relativePathSchema).optional(),
+    adapters: z
+      .object({
+        git: z.boolean().optional(),
+        gitnexus: z.boolean().optional(),
+        evidence_summary: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
+    privacy: z
+      .object({
+        mode: z.literal("allowlist"),
+        allow: z.array(relativePathSchema).optional(),
+        exclude: z.array(relativePathSchema).optional(),
+      })
+      .strict(),
+  })
+  .strict();
+
+export class DocsManifestError extends Error {
+  readonly details: string[];
+
+  constructor(message: string, details: string[] = []) {
+    super(message);
+    this.name = "DocsManifestError";
+    this.details = details;
+  }
+}
+
+function slugifyProjectId(input: string): string {
+  const slug = input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "project";
+}
+
+function humanizeProjectTitle(input: string): string {
+  return input
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function readPackageIdentity(
+  projectRoot: string,
+): { id: string; title: string } | null {
+  const packagePath = join(projectRoot, "package.json");
+  if (!existsSync(packagePath)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      name?: unknown;
+      displayName?: unknown;
+    };
+    const rawName =
+      typeof parsed.name === "string"
+        ? parsed.name.replace(/^@[^/]+\//, "")
+        : basename(projectRoot);
+    const title =
+      typeof parsed.displayName === "string"
+        ? parsed.displayName
+        : humanizeProjectTitle(rawName);
+    return { id: slugifyProjectId(rawName), title };
+  } catch {
+    return null;
+  }
+}
+
+function discoverSources(projectRoot: string): DocsSource[] {
+  const directoryNames = new Set(["Docs", "docs", "documentation", "wiki"]);
+  const sources: DocsSource[] = readdirSync(projectRoot, {
+    withFileTypes: true,
+  })
+    .filter((entry) => entry.isDirectory() && directoryNames.has(entry.name))
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map((entry) => ({
+      path: entry.name,
+      type: "documentation" as const,
+      include: [
+        "**/*.md",
+        "**/*.markdown",
+        "**/*.json",
+        "**/*.yaml",
+        "**/*.yml",
+        "**/*.svg",
+        "**/*.png",
+        "**/*.jpg",
+        "**/*.jpeg",
+        "**/*.gif",
+        "**/*.webp",
+      ],
+    }));
+
+  for (const readme of ["README.md", "README.vi.md"]) {
+    if (existsSync(join(projectRoot, readme))) {
+      sources.push({ path: readme, type: "overview" });
+    }
+  }
+
+  if (existsSync(join(projectRoot, ".dainexus", "project-profile.json"))) {
+    sources.push({
+      path: ".dainexus/project-profile.json",
+      type: "metadata",
+    });
+  }
+
+  if (sources.length === 0) {
+    sources.push({ path: "README.md", type: "overview" });
+  }
+  return sources;
+}
+
+export function createDefaultManifest(projectRootInput: string): DocsManifest {
+  const projectRoot = canonicalProjectRoot(projectRootInput);
+  const identity = readPackageIdentity(projectRoot) ?? {
+    id: slugifyProjectId(basename(projectRoot)),
+    title: humanizeProjectTitle(basename(projectRoot)),
+  };
+  const sources = discoverSources(projectRoot);
+  const projectStatePath = join("docs", "project-state.json");
+  if (!sources.some((source) => source.path === projectStatePath)) {
+    sources.push({ path: projectStatePath, type: "metadata" });
+  }
+
+  return {
+    schema_version: DOCS_SCHEMA_VERSION,
+    project: identity,
+    sources,
+    project_docs: {
+      schema_version: DOCS_PROJECT_STATE_SCHEMA_VERSION,
+      state: projectStatePath,
+      max_stale_days: 30,
+    },
+    truth: [
+      ...sources
+        .filter((source) => source.type === "overview")
+        .map((source) => source.path),
+      projectStatePath,
+    ],
+    adapters: {
+      git: true,
+      gitnexus: existsSync(join(projectRoot, ".gitnexus", "meta.json")),
+      evidence_summary: false,
+    },
+    privacy: {
+      mode: "allowlist",
+      allow: sources.map((source) => source.path),
+      exclude: [
+        "**/.env*",
+        "**/credentials/**",
+        "**/secrets/**",
+        "**/node_modules/**",
+        "**/.worktrees/**",
+      ],
+    },
+  };
+}
+
+export function validateManifest(input: unknown): DocsManifest {
+  const parsed = docsManifestSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new DocsManifestError(
+      "Invalid DAI Nexus docs manifest.",
+      parsed.error.issues.map(
+        (issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`,
+      ),
+    );
+  }
+  return parsed.data;
+}
+
+export function initManifest(
+  projectRootInput: string,
+  options: { force?: boolean } = {},
+): {
+  path: string;
+  status: "created" | "already_exists" | "migrated" | "overwritten";
+  manifest: DocsManifest;
+} {
+  const projectRoot = canonicalProjectRoot(projectRootInput);
+  const manifestPath = join(projectRoot, DOCS_MANIFEST_PATH);
+  if (existsSync(manifestPath) && !options.force) {
+    const existing = validateManifest(
+      JSON.parse(readFileSync(manifestPath, "utf8")),
+    );
+    if (!existing.project_docs) {
+      const statePath = join("docs", "project-state.json");
+      const sources = existing.sources.some(
+        (source) => source.path === statePath,
+      )
+        ? existing.sources
+        : [...existing.sources, { path: statePath, type: "metadata" as const }];
+      const allow = existing.privacy.allow
+        ? [...new Set([...existing.privacy.allow, statePath])]
+        : undefined;
+      const migrated: DocsManifest = {
+        ...existing,
+        sources,
+        project_docs: {
+          schema_version: DOCS_PROJECT_STATE_SCHEMA_VERSION,
+          state: statePath,
+          max_stale_days: 30,
+        },
+        truth: [...new Set([...(existing.truth ?? []), statePath])],
+        privacy: {
+          ...existing.privacy,
+          ...(allow ? { allow } : {}),
+        },
+      };
+      writeFileSync(
+        manifestPath,
+        `${JSON.stringify(migrated, null, 2)}\n`,
+        "utf8",
+      );
+      const absoluteStatePath = join(projectRoot, statePath);
+      if (!existsSync(absoluteStatePath)) {
+        mkdirSync(join(projectRoot, "docs"), { recursive: true });
+        writeFileSync(
+          absoluteStatePath,
+          `${JSON.stringify(createDefaultProjectState(projectRoot), null, 2)}\n`,
+          "utf8",
+        );
+      }
+      return {
+        path: manifestPath,
+        status: "migrated",
+        manifest: migrated,
+      };
+    }
+    return {
+      path: manifestPath,
+      status: "already_exists",
+      manifest: existing,
+    };
+  }
+
+  const manifest = createDefaultManifest(projectRoot);
+  mkdirSync(join(projectRoot, ".dainexus"), { recursive: true });
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  const statePath = join(projectRoot, manifest.project_docs!.state);
+  if (!existsSync(statePath)) {
+    mkdirSync(join(projectRoot, "docs"), { recursive: true });
+    writeFileSync(
+      statePath,
+      `${JSON.stringify(createDefaultProjectState(projectRoot), null, 2)}\n`,
+      "utf8",
+    );
+  }
+  return {
+    path: manifestPath,
+    status: options.force ? "overwritten" : "created",
+    manifest,
+  };
+}
+
+export function loadManifest(projectRootInput: string): ManifestLoadResult {
+  const projectRoot = canonicalProjectRoot(projectRootInput);
+  const manifestPath = join(projectRoot, DOCS_MANIFEST_PATH);
+  if (existsSync(manifestPath)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(manifestPath, "utf8"));
+    } catch (error) {
+      throw new DocsManifestError(
+        `Docs manifest is not valid JSON: ${manifestPath}`,
+        [error instanceof Error ? error.message : String(error)],
+      );
+    }
+    return {
+      manifest: validateManifest(parsed),
+      manifestPath,
+      legacy: false,
+      diagnostics: [],
+    };
+  }
+
+  const manifest = createDefaultManifest(projectRoot);
+  const diagnostics: DocsDiagnostic[] = [
+    {
+      severity: "warning",
+      code: "LEGACY_MANIFEST_FALLBACK",
+      projectId: manifest.project.id,
+      message:
+        "No .dainexus/docs-manifest.json was found; using safe legacy source discovery.",
+      suggestion:
+        "Run `forge docs init` to make the documentation contract explicit.",
+    },
+  ];
+  return {
+    manifest,
+    manifestPath: null,
+    legacy: true,
+    diagnostics,
+  };
+}

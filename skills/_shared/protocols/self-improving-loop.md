@@ -297,7 +297,7 @@ Each project using DAI Nexus develops:
 2. **Skill Adaptations** (`.dainexus/skill-adaptations/`)
    - Project-specific patterns and conventions
 
-3. **Memory** (mem0)
+3. **Memory** (memory)
    - Long-term facts about the project
    - Lessons learned
 

@@ -1,0 +1,51 @@
+{
+  "name": "dai-nexus-mcp-global",
+  "version": "1.0.0",
+  "description": "Global MCP Server for DAI Nexus — works across all projects",
+  "type": "module",
+  "main": "build/index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "format:write": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run --reporter=basic",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --reporter=basic"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "js-yaml": "4.3.1",
+    "jsonc-parser": "^3.3.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
+    "@stryker-mutator/core": "^8.7.1",
+    "@stryker-mutator/vitest-runner": "^8.7.1",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.16",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "@vitest/coverage-v8": "^1.2.2",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-prettier": "^5.5.5",
+    "fast-check": "^4.8.0",
+    "prettier": "^3.2.4",
+    "tsx": "^4.22.4",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2"
+  },
+  "overrides": {
+    "@hono/node-server": "2.0.12",
+    "fast-uri": "3.1.5",
+    "esbuild": "^0.25.0"
+  }
+}

@@ -119,7 +119,7 @@ IF index is stale (>24h old):
 
 ## Auto-Reindex (Session Lifecycle Integration)
 
-ForgeNexus auto-reindexes at three lifecycle points — **no user action required:**
+DAI Nexus Node auto-reindexes at three lifecycle points — **no user action required:**
 
 ### At Session Start (Step 3.5)
 

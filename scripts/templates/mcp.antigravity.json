@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "name": "DAI Nexus MCP",
+  "description": "DAI Nexus + DAI Nexus Node MCP Configuration for Antigravity",
+  "servers": {
+    "dai-nexus-workspace": {
+      "command": "bash",
+      "args": ["DAI-NEXUS/scripts/dai-nexus-mcp-launcher.sh"],
+      "description": "DAI Nexus project intelligence with workspace isolation"
+    },
+    "dainexus-node-workspace": {
+      "command": "bash",
+      "args": ["DAI-NEXUS/scripts/dainexus-node-mcp-launcher.sh"],
+      "description": "Code intelligence with workspace isolation"
+    }
+  },
+  "notes": {
+    "installation": "Run 'dai-nexus-mcp-setup.sh setup' from your project to auto-generate this config",
+    "workspace": "MCP server auto-detects workspace from cwd (no ${workspaceFolder} needed — Antigravity does not resolve it)",
+    "restart": "Restart Antigravity after modifying this file",
+    "multi_project": "One config works for ALL projects with Antigravity"
+  }
+}

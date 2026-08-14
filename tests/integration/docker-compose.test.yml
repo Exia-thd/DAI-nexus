@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  # ── Forgenexus Integration Tests ──────────────────────────────────
+  postgres-dainexus-node:
+    image: postgres:16-alpine
+    container_name: dai-nexus-dainexus-node-postgres
+    environment:
+      POSTGRES_DB: dainexus-node_test
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dainexus-node_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d dainexus-node_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── MCP Integration Tests ─────────────────────────────────────────
+  postgres-mcp:
+    image: postgres:16-alpine
+    container_name: dai-nexus-mcp-postgres
+    environment:
+      POSTGRES_DB: mcp_test
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_mcp_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d mcp_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_dainexus-node_data:
+  postgres_mcp_data:
