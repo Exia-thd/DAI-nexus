@@ -5,9 +5,9 @@
 # Purpose: Diagnose hook health and configuration across all AI IDEs
 #
 # Usage:
-#   bash dai-nexus/scripts/dai-nexus-hook-doctor.sh          # Full diagnosis
-#   bash dai-nexus/scripts/dai-nexus-hook-doctor.sh --quick  # Quick check
-#   bash dai-nexus/scripts/dai-nexus-hook-doctor.sh --fix     # Auto-fix issues
+#   bash dai-nexus/scripts/dainexus-hook-doctor.sh          # Full diagnosis
+#   bash dai-nexus/scripts/dainexus-hook-doctor.sh --quick  # Quick check
+#   bash dai-nexus/scripts/dainexus-hook-doctor.sh --fix     # Auto-fix issues
 #
 # Checks:
 #   - Hook script exists and is executable
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOK_SCRIPT="${SCRIPT_DIR}/dai-nexus-memory-hook.sh"
+HOOK_SCRIPT="${SCRIPT_DIR}/dainexus-memory-hook.sh"
 MEMORY_SESSION="${SCRIPT_DIR}/../memory/memory-session.sh"
 MEMORY_DB_DIR="${HOME}/.dainexus/sessions"
 

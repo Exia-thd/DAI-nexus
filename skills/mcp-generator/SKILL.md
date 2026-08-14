@@ -362,7 +362,7 @@ const prompts = [
 // Server Implementation
 // ============================================
 
-class DAI NexusMCPServer {
+class DaiNexusMCPServer {
   private server: Server;
 
   constructor() {
@@ -516,7 +516,7 @@ class DAI NexusMCPServer {
 }
 
 // Start server
-const server = new DAI NexusMCPServer();
+const server = new DaiNexusMCPServer();
 server.start().catch(console.error);
 ```
 
@@ -600,7 +600,7 @@ cat > "$PROJECT_ROOT/.antigravity/mcp-manifest.json" << EOF
   "workspace": "$PROJECT_ROOT",
   "generated_at": "$GENERATED_AT",
   "generated_by": "dai-nexus/mcp-generator",
-  "dai-nexus_version": "$DAINEXUS_VERSION",
+  "dai_nexus_version": "$DAINEXUS_VERSION",
   "servers": [
     {
       "name": "${PROJECT_SLUG}-dai-nexus",
@@ -638,7 +638,7 @@ echo "Manifest generated at: $PROJECT_ROOT/.antigravity/mcp-manifest.json"
     "dai-nexus-workspace": {
       "command": "bash",
       "args": [
-        "/path/to/dai-nexus/scripts/dai-nexus-mcp-launcher.sh"
+        "/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"
       ],
       "env": {
         "DAINEXUS_WORKSPACE": "${workspaceFolder}"

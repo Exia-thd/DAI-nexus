@@ -8,10 +8,10 @@
 #   3. System without DAI Nexus → Install DAI Nexus first
 #
 # USAGE:
-#   bash dai-nexus-setup.sh              # Full setup
-#   bash dai-nexus-setup.sh --check      # Check status
-#   bash dai-nexus-setup.sh --diagnose   # Diagnostics
-#   bash dai-nexus-setup.sh --force       # Reinstall everything
+#   bash dainexus-setup.sh              # Full setup
+#   bash dainexus-setup.sh --check      # Check status
+#   bash dainexus-setup.sh --diagnose   # Diagnostics
+#   bash dainexus-setup.sh --force       # Reinstall everything
 # ═══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
@@ -147,7 +147,7 @@ PY
     [[ "$path" == */opencode/opencode.json || "$path" == */opencode/opencode.jsonc ]] && schema="opencode"
     [[ "$path" == */zed/settings.json || "$path" == */Zed/settings.json ]] && schema="zed"
     fw_dir="$(detect_fw_dir 2>/dev/null || true)"
-    canonical_setup="${fw_dir}/scripts/mcp/dai-nexus-mcp-setup.sh"
+    canonical_setup="${fw_dir}/scripts/mcp/dainexus-mcp-setup.sh"
     [[ -f "$canonical_setup" ]] || return 1
     if ! bash -c 'source "$1"; jsonc_self_contained verify "$2" "" "$3" dai-nexus "$4" "$5"' \
         _ "$canonical_setup" "$path" "$schema" \
@@ -376,7 +376,7 @@ setup_mcp() {
     local fw_dir="$2"
     local force_refresh="$3"
     shift 3
-    local canonical_setup="${fw_dir}/scripts/mcp/dai-nexus-mcp-setup.sh"
+    local canonical_setup="${fw_dir}/scripts/mcp/dainexus-mcp-setup.sh"
     local client platform_flag
     local canonical_args=()
     
@@ -573,7 +573,7 @@ show_help() {
 DAI Nexus Setup — One-command setup for any project
 
 USAGE:
-  dai-nexus-setup.sh [OPTIONS] [PROJECT_PATH]
+  dainexus-setup.sh [OPTIONS] [PROJECT_PATH]
 
 OPTIONS:
   --check         Check status only
@@ -583,10 +583,10 @@ OPTIONS:
   --help          Show this help
 
 EXAMPLES:
-  bash dai-nexus-setup.sh                  # Full setup
-  bash dai-nexus-setup.sh --check         # Check status
-  bash dai-nexus-setup.sh --diagnose     # Diagnostics
-  bash dai-nexus-setup.sh --install-fw   # Install FW then setup
+  bash dainexus-setup.sh                  # Full setup
+  bash dainexus-setup.sh --check         # Check status
+  bash dainexus-setup.sh --diagnose     # Diagnostics
+  bash dainexus-setup.sh --install-fw   # Install FW then setup
 EOF
 }
 

@@ -14,13 +14,13 @@
 #     "mcpServers": {
 #       "dai-nexus": {
 #         "command": "bash",
-#         "args": ["/path/to/scripts/dai-nexus-mcp-launcher.sh"]
+#         "args": ["/path/to/scripts/dainexus-mcp-launcher.sh"]
 #       }
 #     }
 #   }
 #
 # DEBUG MODE:
-#   DAINEXUS_DEBUG=1 dai-nexus-mcp-launcher.sh
+#   DAINEXUS_DEBUG=1 dainexus-mcp-launcher.sh
 # ─────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -368,7 +368,7 @@ main() {
     # Step 2: Find dai-nexus
     dai-nexus="$(find_dai-nexus "$workspace")" || {
         log_error "DAI Nexus not found in workspace: $workspace"
-        log_info "To fix: Run 'dai-nexus-mcp-setup.sh' in the project directory"
+        log_info "To fix: Run 'dainexus-mcp-setup.sh' in the project directory"
         exit 1
     }
 
@@ -393,7 +393,7 @@ main() {
         log_error "Could not find MCP server in workspace: $workspace"
         log_info ""
         log_info "Possible solutions:"
-        log_info "  1. Run 'dai-nexus-mcp-setup.sh' in the project"
+        log_info "  1. Run 'dainexus-mcp-setup.sh' in the project"
         log_info "  2. Ensure canonical src/index.ts and node_modules/.bin/tsx exist"
         log_info "  3. Check that the project has been onboarded"
         exit 1

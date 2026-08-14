@@ -235,7 +235,7 @@ PY
 
 # ── codex: TOML, append-with-guard ───────────────────────────────────────────
 # No TOML writer in the stdlib, so install appends a self-contained block (the
-# same approach dai-nexus-install.sh already uses) and uninstall strips it
+# same approach dainexus-install.sh already uses) and uninstall strips it
 # between explicit markers. Markers make removal exact instead of regex-guessy.
 CODEX_BEGIN="# >>> dai-nexus runtime-lifecycle-guard >>>"
 CODEX_END="# <<< dai-nexus runtime-lifecycle-guard <<<"

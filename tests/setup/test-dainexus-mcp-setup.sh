@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────
-# test-dai-nexus-mcp-setup.sh — Automated Test Suite for DAI Nexus MCP Setup
+# test-dainexus-mcp-setup.sh — Automated Test Suite for DAI Nexus MCP Setup
 # ─────────────────────────────────────────────────────────────────
 
 set -uo pipefail
@@ -129,8 +129,8 @@ test_help() {
     echo ""
     echo -e "${CYAN}━━━ Help Commands ━━━${NC}"
 
-    bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --help > /dev/null 2>&1
-    [[ $? -eq 0 ]] && pass "dai-nexus-mcp-setup.sh --help" || fail "dai-nexus-mcp-setup.sh --help"
+    bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --help > /dev/null 2>&1
+    [[ $? -eq 0 ]] && pass "dainexus-mcp-setup.sh --help" || fail "dainexus-mcp-setup.sh --help"
 }
 
 test_check() {
@@ -139,8 +139,8 @@ test_check() {
 
     cd "$PROJECT_ROOT"
     mkdir -p "$TEST_HOME"
-    info "Testing dai-nexus-mcp-setup.sh --check"
-    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check > /dev/null 2>&1 && pass "dai-nexus-mcp-setup.sh --check" || fail "dai-nexus-mcp-setup.sh --check"
+    info "Testing dainexus-mcp-setup.sh --check"
+    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check > /dev/null 2>&1 && pass "dainexus-mcp-setup.sh --check" || fail "dainexus-mcp-setup.sh --check"
 }
 
 test_diagnose() {
@@ -148,16 +148,16 @@ test_diagnose() {
     echo -e "${CYAN}━━━ Diagnose Command ━━━${NC}"
 
     cd "$PROJECT_ROOT"
-    info "Testing dai-nexus-mcp-setup.sh --diagnose"
+    info "Testing dainexus-mcp-setup.sh --diagnose"
     local output
-    if output="$(bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --diagnose 2>&1)"; then
-        pass "dai-nexus-mcp-setup.sh --diagnose"
+    if output="$(bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --diagnose 2>&1)"; then
+        pass "dainexus-mcp-setup.sh --diagnose"
     else
-        fail "dai-nexus-mcp-setup.sh --diagnose"
+        fail "dainexus-mcp-setup.sh --diagnose"
         return
     fi
     grep -Fq "DIR:     ${DAINEXUS_DIR}" <<< "$output" && pass "diagnose: repository root" || fail "diagnose: wrong repository root"
-    grep -Fq "dai-nexus: ${DAINEXUS_DIR}/scripts/dai-nexus-mcp-launcher.sh" <<< "$output" && pass "diagnose: canonical launcher path" || fail "diagnose: wrong launcher path"
+    grep -Fq "dai-nexus: ${DAINEXUS_DIR}/scripts/dainexus-mcp-launcher.sh" <<< "$output" && pass "diagnose: canonical launcher path" || fail "diagnose: wrong launcher path"
     grep -Fq "PATH:  ${DAINEXUS_DIR}/mcp" <<< "$output" && pass "diagnose: canonical MCP path" || fail "diagnose: wrong MCP path"
     if grep -Fq "/scripts/scripts/" <<< "$output"; then
         fail "diagnose: duplicated scripts path"
@@ -184,7 +184,7 @@ test_setup() {
     info "Testing fresh setup (--cursor only)"
     local output
     if output="$(HOME="$TEST_HOME" DAINEXUS_MANIFEST_GENERATED_AT="2026-01-01T00:00:00Z" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --cursor 2>&1)"; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --cursor 2>&1)"; then
         pass "Setup completed"
     else
         fail "Setup failed:
@@ -236,7 +236,7 @@ NODE
     printf '#!/usr/bin/env sh\nexit 42\n' > "$fake_npm_bin/npm"
     chmod +x "$fake_npm_bin/npm"
     if HOME="$TEST_HOME" PATH="$fake_npm_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor ; then
         fail "Failed staged install unexpectedly succeeded"
     elif diff -qr "$runtime_before" "${TEST_HOME}/.dainexus/mcp-server" >/dev/null && \
         cmp -s "$manifest_before" "${TEST_PROJECT}/.antigravity/mcp-manifest.json" && \
@@ -250,7 +250,7 @@ NODE
     printf '{"unrelated":true,"mcpServers":{' > "${TEST_HOME}/.cursor/mcp.json"
     malformed_before="${TEST_PROJECT}/malformed-cursor.json"
     cp "${TEST_HOME}/.cursor/mcp.json" "$malformed_before"
-    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --cursor ; then
+    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --cursor ; then
         fail "Malformed Cursor config was accepted"
     elif cmp -s "$malformed_before" "${TEST_HOME}/.cursor/mcp.json"; then
         pass "Malformed Cursor config fails closed without overwrite"
@@ -276,7 +276,7 @@ EOF
 EOF
     cp "${TEST_HOME}/.cursor/mcp.json" "${TEST_PROJECT}/jsonc-before.json"
     if HOME="$TEST_HOME" PATH="$portable_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --cursor  && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --cursor  && \
         grep -Fq 'Strict JSON policy must not erase this comment.' "${TEST_HOME}/.cursor/mcp.json" && \
         grep -Fq '"theme": "high-contrast"' "${TEST_HOME}/.cursor/mcp.json"; then
         pass "Valid JSONC config is structurally edited without erasing comments"
@@ -287,7 +287,7 @@ EOF
     printf '{\n  /* unterminated JSONC comment\n  "mcpServers": {}\n}\n' > "${TEST_HOME}/.cursor/mcp.json"
     cp "${TEST_HOME}/.cursor/mcp.json" "${TEST_PROJECT}/malformed-jsonc-before.json"
     if HOME="$TEST_HOME" PATH="$portable_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --cursor ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --cursor ; then
         fail "Malformed JSONC config was accepted"
     elif cmp -s "${TEST_PROJECT}/malformed-jsonc-before.json" "${TEST_HOME}/.cursor/mcp.json"; then
         pass "Malformed JSONC fails closed byte-identical"
@@ -304,7 +304,7 @@ EOF
 }
 EOF
     if HOME="$TEST_HOME" PATH="$portable_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --cursor  && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --cursor  && \
         node - "${TEST_HOME}/.cursor/mcp.json" "$portable_bin/gitnexus" <<'NODE'
 const fs = require('fs');
 const [path, gitnexus] = process.argv.slice(2);
@@ -328,7 +328,7 @@ NODE
     cp "$manifest_path" "${TEST_PROJECT}/manifest-before-preflight.json"
     cp "${TEST_HOME}/.cursor/mcp.json" "${TEST_PROJECT}/cursor-before-preflight.json"
     if HOME="$TEST_HOME" DAINEXUS_TEST_UNSUPPORTED_ATOMIC=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor ; then
         fail "Unsupported atomic exchange preflight was accepted"
     elif diff -qr "${TEST_PROJECT}/runtime-before-preflight" "${TEST_HOME}/.dainexus/mcp-server" >/dev/null && \
         cmp -s "${TEST_PROJECT}/manifest-before-preflight.json" "$manifest_path" && \
@@ -344,7 +344,7 @@ NODE
     printf 'transaction-settings-sentinel\n' > "${TEST_PROJECT}/.dainexus/settings.env"
     cp "${TEST_PROJECT}/.dainexus/settings.env" "${TEST_PROJECT}/settings-before-publish-failure.env"
     if HOME="$TEST_HOME" DAINEXUS_TEST_FAIL_MANIFEST=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor ; then
         fail "Injected manifest publication failure unexpectedly succeeded"
     elif diff -qr "${TEST_PROJECT}/runtime-before-manifest-failure" "${TEST_HOME}/.dainexus/mcp-server" >/dev/null && \
         cmp -s "${TEST_PROJECT}/manifest-before-publish-failure.json" "$manifest_path" && \
@@ -368,7 +368,7 @@ NODE
     cp "$manifest_path" "${TEST_PROJECT}/manifest-before-crash.json"
     cp "${TEST_HOME}/.cursor/mcp.json" "${TEST_PROJECT}/cursor-before-crash.json"
     if HOME="$TEST_HOME" DAINEXUS_TEST_SIGKILL_AFTER_EXCHANGE=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor ; then
         fail "SIGKILL-after-exchange injection unexpectedly succeeded"
     elif [[ -f "${TEST_HOME}/.dainexus/.mcp-setup-transaction.json" ]] && \
         [[ ! -e "${TEST_HOME}/.dainexus/mcp-server/runtime-before-crash.marker" ]]; then
@@ -377,7 +377,7 @@ NODE
         fail "SIGKILL injection did not leave the expected recoverable state"
     fi
     if HOME="$TEST_HOME" DAINEXUS_TEST_SIGKILL_AFTER_RECOVERY_RUNTIME=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check ; then
         fail "SIGKILL-during-recovery injection unexpectedly succeeded"
     elif [[ -f "${TEST_HOME}/.dainexus/.mcp-setup-transaction.json" ]] && \
         [[ -e "${TEST_HOME}/.dainexus/mcp-server/runtime-before-crash.marker" ]] && \
@@ -398,7 +398,7 @@ NODE
     printf 'must-survive\n' > "$foreign_target/sentinel"
     ln -s "$foreign_target" "$foreign_trash/runtime"
     if HOME="$TEST_HOME" DAINEXUS_TEST_SIGKILL_DURING_TRASH_CLEANUP=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check ; then
         fail "SIGKILL-during-trash-cleanup injection unexpectedly succeeded"
     elif [[ ! -e "${TEST_HOME}/.dainexus/.mcp-setup-transaction.json" ]] && \
         [[ -f "$recovery_trash/owner.json" ]] && [[ -e "$recovery_trash/runtime" ]] && \
@@ -407,7 +407,7 @@ NODE
     else
         fail "Cleanup SIGKILL lost recovery ownership or touched foreign state"
     fi
-    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check  && \
+    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check  && \
         diff -qr "${TEST_PROJECT}/runtime-before-crash" "${TEST_HOME}/.dainexus/mcp-server" >/dev/null && \
         cmp -s "${TEST_PROJECT}/manifest-before-crash.json" "$manifest_path" && \
         cmp -s "${TEST_PROJECT}/cursor-before-crash.json" "${TEST_HOME}/.cursor/mcp.json" && \
@@ -424,7 +424,7 @@ NODE
 
     mkdir -p "${TEST_PROJECT}/.antigravity/cache/intermediate"
     if (cd "${TEST_PROJECT}/.antigravity/cache/intermediate" && \
-        HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor ) && \
+        HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor ) && \
         [[ -f "${TEST_PROJECT}/.antigravity/mcp-manifest.json" ]] && \
         [[ ! -e "${TEST_PROJECT}/.antigravity/.antigravity/mcp-manifest.json" ]]; then
         pass "Intermediate .antigravity invocation resolves Git project root"
@@ -465,7 +465,7 @@ NODE
     touch "${TEST_HOME}/.dainexus/mcp-server/src/stale/removed.ts"
     if HOME="$TEST_HOME" DAINEXUS_FORCE_PYTHON_SYNC=1 \
         DAINEXUS_MANIFEST_GENERATED_AT="2030-01-01T00:00:00Z" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor  && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor  && \
         [[ ! -e "${TEST_HOME}/.dainexus/mcp-server/src/stale/removed.ts" ]]; then
         pass "Python canonical refresh removes nested stale source files"
     else
@@ -491,7 +491,7 @@ manifest.workspace = '/changed/semantic/workspace';
 fs.writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);
 NODE
     if HOME="$TEST_HOME" DAINEXUS_MANIFEST_GENERATED_AT="2040-01-01T00:00:00Z" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor  && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor  && \
         node - "$manifest_path" "$project_root_real" <<'NODE'
 const fs = require('fs');
 const [path, workspace] = process.argv.slice(2);
@@ -506,7 +506,7 @@ NODE
 
     rm -f "$manifest_path"
     mkdir "$manifest_path"
-    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor ; then
+    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor ; then
         fail "Directory manifest target was accepted"
     else
         pass "Directory manifest target is rejected"
@@ -515,9 +515,9 @@ NODE
     cp "$expected_manifest" "$manifest_path"
 
     local concurrent_one concurrent_two
-    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor  &
+    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor  &
     concurrent_one=$!
-    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor  &
+    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor  &
     concurrent_two=$!
     if wait "$concurrent_one" && wait "$concurrent_two" && \
         [[ -f "${TEST_HOME}/.dainexus/mcp-server/build/runtime/tool-execution-gateway.js" ]] && \
@@ -531,11 +531,11 @@ NODE
     printf '{"mcpServers":{},"keep":"setting"}\n' > "$concurrent_config"
     HOME="$TEST_HOME" bash -c \
         'source "$1"; write_json_mcp_config "$2" cursor "" alpha one' \
-        _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$concurrent_config"  &
+        _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$concurrent_config"  &
     config_one=$!
     HOME="$TEST_HOME" bash -c \
         'source "$1"; write_json_mcp_config "$2" cursor "" beta two' \
-        _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$concurrent_config"  &
+        _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$concurrent_config"  &
     config_two=$!
     if wait "$config_one" && wait "$config_two" && \
         node - "$concurrent_config" <<'NODE'
@@ -558,7 +558,7 @@ NODE
         token="$(new_owner_token)"
         acquire_owned_lock "$2" "$token"
         release_owned_lock "$2" "$token"
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$identity_lock"  && \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$identity_lock"  && \
         [[ ! -e "$identity_lock" ]]; then
         pass "PID-reuse identity mismatch is reclaimed without trusting a live numeric PID"
     else
@@ -575,7 +575,7 @@ NODE
         token="$(new_owner_token)"
         acquire_owned_lock "$2" "$token"
         release_owned_lock "$2" "$token"
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$identity_lock"  && \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$identity_lock"  && \
         [[ ! -e "$identity_lock" ]]; then
         pass "Zombie process identity is reclaimed deterministically"
     else
@@ -584,7 +584,7 @@ NODE
 
     local abandoned_owner waiter_one waiter_two lock_owner
     HOME="$TEST_HOME" DAINEXUS_TEST_HOLD_RUNTIME_LOCK_SECONDS=30 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor  &
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor  &
     abandoned_owner=$!
     lock_owner="${TEST_HOME}/.dainexus/.mcp-server.setup.lock/owner.json"
     for _ in {1..100}; do
@@ -593,10 +593,10 @@ NODE
     done
     kill -9 "$abandoned_owner"  || true
     wait "$abandoned_owner"  || true
-    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor \
+    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor \
         >"${TEST_PROJECT}/waiter-one.log" 2>&1 &
     waiter_one=$!
-    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --cursor \
+    HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --cursor \
         >"${TEST_PROJECT}/waiter-two.log" 2>&1 &
     waiter_two=$!
     local waiter_one_status=0 waiter_two_status=0
@@ -633,7 +633,7 @@ test_settings_and_durability_transactions() {
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
         write_dai-nexus_settings
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Symlinked settings.env was accepted"
     elif [[ "$(cat "$external")" == "external-must-survive" ]] && [[ -L "$settings" ]]; then
@@ -652,7 +652,7 @@ test_settings_and_durability_transactions() {
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
         write_dai-nexus_settings
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Hard-linked settings.env was accepted"
     elif [[ "$(cat "$external")" == "external-hardlink-must-survive" ]] && \
@@ -672,10 +672,10 @@ test_settings_and_durability_transactions() {
             CANONICAL_LOCK_TOKEN="$(new_owner_token)"
             initialize_runtime_transaction
             write_dai-nexus_settings
-        ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
+        ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Injected fsync boundary failure unexpectedly succeeded"
-    elif HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check \
+    elif HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check \
          && [[ "$(cat "$settings")" == "rollback-original" ]]; then
         pass "Injected durability failure rolls settings back byte-identically"
     else
@@ -690,11 +690,11 @@ test_settings_and_durability_transactions() {
             CANONICAL_LOCK_TOKEN="$(new_owner_token)"
             initialize_runtime_transaction
             write_dai-nexus_settings
-        ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
+        ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Injected power-loss boundary unexpectedly succeeded"
     elif [[ -f "$TEST_HOME/.dainexus/.mcp-setup-transaction.json" ]] && \
-        HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check \
+        HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check \
              && [[ "$(cat "$settings")" == "rollback-original" ]] && \
         [[ ! -e "$TEST_HOME/.dainexus/.mcp-setup-transaction.json" ]]; then
         pass "Power loss after replacement is recovered from the durable journal"
@@ -714,7 +714,7 @@ test_platform_flags() {
     mkdir -p "$TEST_HOME"
     seed_canonical_dependencies
     cd "$TEST_PROJECT"
-    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --cursor \
+    if HOME="$TEST_HOME" bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --cursor \
         >"${TEST_PROJECT}/cursor-flag.log" 2>&1; then
         pass "--cursor flag"
     else
@@ -731,7 +731,7 @@ test_platform_flags() {
     cp "$TEST_HOME/.claude/settings.json" "$TEST_PROJECT/claude-settings-before.json"
     printf '{"mcpServers":{},"keep":"claude-user-state"}\n' > "$TEST_HOME/.claude.json"
     HOME="$TEST_HOME" PATH="$platform_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --claude-code > /dev/null 2>&1 && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --claude-code > /dev/null 2>&1 && \
         node - "$TEST_HOME/.claude.json" "$platform_bin/gitnexus" <<'NODE'
 const fs = require('fs');
 const [path, gitnexus] = process.argv.slice(2);
@@ -777,7 +777,7 @@ TOKEN = "inside-multiline-string"
 nested = [["[[mcp_servers.gitnexus.targets]]"], ["keep", "array"]]
 EOF
     if HOME="$TEST_HOME" PATH="$platform_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --codex > /dev/null 2>&1 && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --codex > /dev/null 2>&1 && \
         python3 - "$TEST_HOME/.codex/config.toml" "$TEST_HOME/.dainexus/mcp-server" "$platform_bin/gitnexus" <<'PY'
 import sys, tomllib
 path, runtime, gitnexus = sys.argv[1:]
@@ -821,7 +821,7 @@ PY
 }
 EOF
     if HOME="$TEST_HOME" PATH="$platform_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --zed > /dev/null 2>&1 && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --zed > /dev/null 2>&1 && \
         node - "$zed_dir/settings.json" "$TEST_HOME/.dainexus/mcp-server" "$platform_bin/gitnexus" \
             "$TEST_HOME/.dainexus/mcp-server/node_modules/jsonc-parser" <<'NODE'
 const fs = require('fs');
@@ -861,7 +861,7 @@ NODE
 }
 EOF
     if HOME="$TEST_HOME" PATH="$platform_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --opencode > /dev/null 2>&1 && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --opencode > /dev/null 2>&1 && \
         node - "$TEST_HOME/.config/opencode/opencode.jsonc" "$TEST_HOME/.dainexus/mcp-server" \
             "$platform_bin/gitnexus" "$TEST_HOME/.dainexus/mcp-server/node_modules/jsonc-parser" \
             "$TEST_PROJECT/.antigravity/mcp-manifest.json" <<'NODE' && \
@@ -888,7 +888,7 @@ NODE
     fi
     cp "$TEST_HOME/.config/opencode/opencode.jsonc" "$TEST_PROJECT/opencode-jsonc-before-rollback.jsonc"
     if HOME="$TEST_HOME" PATH="$platform_bin:$PATH" DAINEXUS_TEST_FAIL_MANIFEST=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --opencode ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --opencode ; then
         fail "Injected OpenCode JSONC rollback failure unexpectedly succeeded"
     elif cmp -s "$TEST_PROJECT/opencode-jsonc-before-rollback.jsonc" \
         "$TEST_HOME/.config/opencode/opencode.jsonc"; then
@@ -904,7 +904,7 @@ NODE
 EOF
     if HOME="$TEST_HOME" bash -c \
         'source "$1"; has_canonical_mcp_config "$2"' \
-        _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$TEST_HOME/.codex/comment-only.toml"; then
+        _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_HOME/.codex/comment-only.toml"; then
         fail "TOML comments were mistaken for a configured MCP server"
     else
         pass "TOML verification ignores comment-only false positives"
@@ -914,7 +914,7 @@ EOF
     mkdir -p "$quoted_home/.codex"
     if HOME="$quoted_home" PATH="$platform_bin:$PATH" bash -c \
         'source "$1"; write_toml_mcp_config "$2"' \
-        _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$quoted_home/.codex/config.toml"  && \
+        _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$quoted_home/.codex/config.toml"  && \
         python3 - "$quoted_home/.codex/config.toml" "$quoted_home/.dainexus/mcp-server" <<'PY'
 import sys, tomllib
 path, runtime = sys.argv[1:]
@@ -944,9 +944,9 @@ PY
         > "$TEST_HOME/.config/opencode/opencode.jsonc"
     local check_output diagnose_output
     check_output="$(HOME="$TEST_HOME" PATH="$platform_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --check 2>&1)"
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --check 2>&1)"
     diagnose_output="$(HOME="$TEST_HOME" PATH="$platform_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --diagnose 2>&1)"
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --diagnose 2>&1)"
     if ! grep -Fq 'dai-nexus: CONFIGURED' <<< "$check_output" && \
         ! grep -Fq 'dai-nexus: CONFIGURED' <<< "$diagnose_output" && \
         grep -Fq 'dai-nexus: NOT configured with canonical server' <<< "$check_output" && \
@@ -992,7 +992,7 @@ EOF
         ! has_canonical_mcp_config "$6" &&
         ! has_canonical_mcp_config "$7" &&
         ! has_canonical_mcp_config "$8"
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" \
         "$TEST_HOME/.codex/config.toml" "$TEST_HOME/.cursor/mcp.json" \
         "$zed_dir/settings.json" "$TEST_HOME/.config/opencode/opencode.jsonc" \
         "$TEST_HOME/.gemini/settings.json" "$TEST_HOME/.gemini/config/mcp_config.json" \
@@ -1023,7 +1023,7 @@ test_gemini_isolated() {
     cp "$gemini_home/.gemini/config/mcp_config.json" "$TEST_PROJECT/antigravity-before.json"
     local output
     if output="$(HOME="$gemini_home" PATH="$gemini_bin:$PATH" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --gemini 2>&1)" && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --gemini 2>&1)" && \
         node - "$gemini_home/.gemini/settings.json" \
             "$gemini_home/.gemini/mcp-server-enablement.json" \
             "$project_real" "$gemini_bin/gitnexus" "$TEST_PROJECT/.antigravity/mcp-manifest.json" <<'NODE' &&
@@ -1081,7 +1081,7 @@ test_all_isolated() {
     printf '{"desktopSetting":true}\n' > "$desktop_dir/claude_desktop_config.json"
 
     if HOME="$all_home" PATH="$all_bin:$PATH" XDG_CONFIG_HOME="$all_home/.config" \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --all  && \
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --all  && \
         node - "$all_home" "$zed_dir/settings.json" "$desktop_dir/claude_desktop_config.json" \
             "$TEST_PROJECT/.antigravity/mcp-manifest.json" <<'NODE' && \
         python3 - "$all_home/.codex/config.toml" <<'PY'
@@ -1141,7 +1141,7 @@ PY
 EOF
     cp "$desktop_dir/claude_desktop_config.json" "$TEST_PROJECT/desktop-before-rollback.jsonc"
     if HOME="$all_home" PATH="$all_bin:$PATH" DAINEXUS_TEST_FAIL_MANIFEST=1 \
-        bash "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" --force --claude-desktop ; then
+        bash "${SCRIPT_DIR}/dainexus-mcp-setup.sh" --force --claude-desktop ; then
         fail "Injected Claude Desktop rollback failure unexpectedly succeeded"
     elif cmp -s "$TEST_PROJECT/desktop-before-rollback.jsonc" \
         "$desktop_dir/claude_desktop_config.json"; then
@@ -1163,9 +1163,9 @@ test_uninstall_contracts() {
     local uninstall_xdg="${TEST_PROJECT}/xdg-o'clock"
     local zed_config desktop_config opencode_root="$uninstall_xdg/opencode"
     local fresh_root="$TEST_PROJECT/fresh-checkout" fresh_script
-    fresh_script="$fresh_root/scripts/mcp/dai-nexus-mcp-setup.sh"
+    fresh_script="$fresh_root/scripts/mcp/dainexus-mcp-setup.sh"
     mkdir -p "$(dirname "$fresh_script")"
-    cp "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$fresh_script"
+    cp "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$fresh_script"
     mkdir -p "$uninstall_home/.cursor" "$uninstall_home/.gemini/config" \
         "$uninstall_home/.codex" "$opencode_root" "${TEST_PROJECT}/.antigravity"
     uninstall_home="$(cd "$uninstall_home" && pwd -P)"
@@ -1464,7 +1464,7 @@ test_round7_safety_boundaries() {
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
         publish_manifest
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" ; then
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" ; then
         fail "Symlinked project .antigravity parent accepted a manifest write"
     elif [[ "$(cat "$external/project-sentinel")" == "external-project-state" ]] && \
         [[ ! -e "$external/mcp-manifest.json" ]]; then
@@ -1480,7 +1480,7 @@ test_round7_safety_boundaries() {
         PROJECT_ROOT="$2"
         DAINEXUS_DIR="$3"
         write_json_mcp_config "$4" cursor
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" \
         "$json_parent/config/mcp.json" ; then
         fail "Symlinked client config parent accepted a write"
     elif [[ "$(cat "$external/client-sentinel")" == "external-client-state" ]] && \
@@ -1498,7 +1498,7 @@ test_round7_safety_boundaries() {
         PROJECT_ROOT="$2"
         DAINEXUS_DIR="$3"
         write_json_mcp_config "$4" cursor
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" \
         "$safety_home/.cursor/mcp.json" ; then
         fail "JSON writer overwrote a non-cooperative external update"
     elif [[ "$(cat "$safety_home/.cursor/mcp.json")" == '{"external":true}' ]]; then
@@ -1514,7 +1514,7 @@ test_round7_safety_boundaries() {
         PROJECT_ROOT="$2"
         DAINEXUS_DIR="$3"
         write_toml_mcp_config "$4"
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" \
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$project" "$DAINEXUS_DIR" \
         "$safety_home/.codex/config.toml" ; then
         fail "TOML writer overwrote a non-cooperative external update"
     elif grep -Fq '[external]' "$safety_home/.codex/config.toml" && \
@@ -1531,12 +1531,12 @@ test_round7_safety_boundaries() {
         node_version_is_supported v24.0.0
         ! node_version_is_supported v21.99.99
         ! node_version_is_supported v22.0
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" && bash -c '
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" && bash -c '
         source "$1"
         node_version_is_supported v22.0.0
         ! node_version_is_supported v21.99.99
         ! node_version_is_supported invalid
-    ' _ "$DAINEXUS_DIR/scripts/bootstrap/dai-nexus-setup.sh"; then
+    ' _ "$DAINEXUS_DIR/scripts/bootstrap/dainexus-setup.sh"; then
         pass "Canonical and bootstrap Node preflights enforce exact >=22.0.0 semantics"
     else
         fail "Node minimum-version comparison is inconsistent"
@@ -1568,10 +1568,10 @@ test_docs() {
     [[ -f "${DAINEXUS_DIR}/docs/SETUP-REFERENCE.md" ]] && pass "SETUP-REFERENCE.md exists" || fail "SETUP-REFERENCE.md missing"
 
     info "Checking SETUP.md uses correct script name"
-    grep -q "dai-nexus-mcp-setup.sh" "${DAINEXUS_DIR}/docs/SETUP.md" && pass "SETUP.md: dai-nexus-mcp-setup.sh" || fail "SETUP.md: wrong script name"
+    grep -q "dainexus-mcp-setup.sh" "${DAINEXUS_DIR}/docs/SETUP.md" && pass "SETUP.md: dainexus-mcp-setup.sh" || fail "SETUP.md: wrong script name"
 
     info "Checking SETUP-QUICK.md uses correct script name"
-    grep -q "dai-nexus-mcp-setup.sh" "${DAINEXUS_DIR}/docs/SETUP-QUICK.md" && pass "SETUP-QUICK.md: dai-nexus-mcp-setup.sh" || fail "SETUP-QUICK.md: wrong script name"
+    grep -q "dainexus-mcp-setup.sh" "${DAINEXUS_DIR}/docs/SETUP-QUICK.md" && pass "SETUP-QUICK.md: dainexus-mcp-setup.sh" || fail "SETUP-QUICK.md: wrong script name"
 }
 
 test_templates() {
@@ -1583,7 +1583,7 @@ test_templates() {
     [[ -f "${TEMPLATE_DIR}/mcp.antigravity.json" ]] && pass "mcp.antigravity.json exists" || fail "mcp.antigravity.json missing"
 
     info "Checking templates use correct script name"
-    grep -q "dai-nexus-mcp-setup.sh" "${TEMPLATE_DIR}/mcp.cursor.json" && pass "mcp.cursor.json: correct script name" || fail "mcp.cursor.json: wrong script name"
+    grep -q "dainexus-mcp-setup.sh" "${TEMPLATE_DIR}/mcp.cursor.json" && pass "mcp.cursor.json: correct script name" || fail "mcp.cursor.json: wrong script name"
 }
 
 # ─── Main ─────────────────────────────────────────────────────
@@ -1603,7 +1603,7 @@ test_round8_fixes() {
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
         write_dai-nexus_settings
-    ' _ "${SCRIPT_DIR}/dai-nexus-mcp-setup.sh" "$TEST_PROJECT" 'a;$(echo bad)>sentinel'  || true
+    ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" 'a;$(echo bad)>sentinel'  || true
     if [[ ! -f "$settings_env" ]]; then
         fail "Settings env was not created"
     else
@@ -1613,7 +1613,7 @@ test_round8_fixes() {
         fi
         local filter_val
         filter_val="$(bash -c "source '$settings_env'; echo \"\$DAINEXUS_SHELL_FILTER_PATH\"")"
-        if [[ "$filter_val" != 'a;$(echo bad)>sentinel/scripts/dai-nexus-shell-filter.sh' ]]; then
+        if [[ "$filter_val" != 'a;$(echo bad)>sentinel/scripts/dainexus-shell-filter.sh' ]]; then
             fail "Settings env value round trip failed: $filter_val"
         fi
         pass "Settings serialization is shell-safe and round-trips correctly"
@@ -1630,7 +1630,7 @@ test_round8_fixes() {
     mkdir -p "$foreign_server/src" "$foreign_server/node_modules/.bin"
     touch "$foreign_server/src/index.ts" "$foreign_server/package-lock.json" "$foreign_server/node_modules/.bin/tsx"
     echo "foreign content" > "$foreign_server/src/index.ts"
-    if bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" >/dev/null 2>&1; then
+    if bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" >/dev/null 2>&1; then
         fail "Setup succeeded on unmarked foreign runtime"
     else
         if [[ "$(cat "$foreign_server/src/index.ts")" != "foreign content" ]]; then
@@ -1651,7 +1651,7 @@ test_round8_fixes() {
     cat > "$marker_file" <<EOF
 {"kind": "dai-nexus-mcp-runtime", "version": 1, "token": "12345-00000000000000000000000000000000", "path": "$foreign_server", "lockfile_sha256": "$sha256"}
 EOF
-    if bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" >/dev/null 2>&1; then
+    if bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" >/dev/null 2>&1; then
         fail "Setup succeeded with symlinked node_modules"
     else
         pass "Setup rejected symlinked node_modules"
@@ -1679,7 +1679,7 @@ multi
 """}]
 EOF
     local toml_tmp="${TEST_PROJECT}/config_tmp.toml"
-    source "$SCRIPT_DIR/dai-nexus-mcp-setup.sh"  || true
+    source "$SCRIPT_DIR/dainexus-mcp-setup.sh"  || true
     export DAINEXUS_RUNTIME_TOKEN="12345-0123456789abcdef0123456789abcdef"
     export DAINEXUS_LEDGER_PATH="${TEST_PROJECT}/toml-ledger.json"
     export DAINEXUS_LEDGER_TMP="${TEST_PROJECT}/toml-ledger.tmp.json"
@@ -1729,7 +1729,7 @@ test_snapshot_toctou_race() {
     export DAINEXUS_TEST_INJECT_SNAPSHOT_RACE_TARGET="$config_file"
     printf '{"mcpServers":{"hacker":{}}}' > "$DAINEXUS_TEST_INJECT_SNAPSHOT_RACE_PATH"
 
-    if bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --cursor >/dev/null 2>&1; then
+    if bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --cursor >/dev/null 2>&1; then
         fail "Setup should have failed due to snapshot TOCTOU detection"
     else
         pass "Setup rejected transaction with noncooperative writer"
@@ -1760,7 +1760,7 @@ ${BLUE}▶ Testing Durable Client-Config Ownership Ledger${NC}"
     mkdir -p "$(dirname "$cursor_config")"
     printf '{"mcpServers":{"dai-nexus":null,"unrelated":false}}\n' > "$cursor_config"
     cp "$cursor_config" "$TEST_PROJECT/falsey-cursor-before.json"
-    if bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --cursor >/dev/null 2>&1; then
+    if bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --cursor >/dev/null 2>&1; then
         fail "Setup claimed a falsey foreign managed entry"
         return
     elif ! cmp -s "$cursor_config" "$TEST_PROJECT/falsey-cursor-before.json"; then
@@ -1790,7 +1790,7 @@ command = "$gitnexus_path"
 args = ["mcp"]
 EOF
     cp "$codex_config" "$TEST_PROJECT/unowned-codex-before.toml"
-    if ! bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --codex >/dev/null 2>&1; then
+    if ! bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --codex >/dev/null 2>&1; then
         fail "Setup rejected exact foreign Codex entries"
         return
     elif ! cmp -s "$codex_config" "$TEST_PROJECT/unowned-codex-before.toml"; then
@@ -1812,7 +1812,7 @@ PY
     rm -rf "$TEST_HOME/.dainexus" "$TEST_HOME/.codex"
 
     # Install initial config
-    bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --cursor --gemini >/dev/null 2>&1 || fail "Initial setup failed"
+    bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --cursor --gemini >/dev/null 2>&1 || fail "Initial setup failed"
 
     # Verify the strict, deterministic ownership ledger contract.
     if [[ ! -f "$ledger_path" ]]; then
@@ -1875,7 +1875,7 @@ with open(ledger_path, "w", encoding="utf-8") as handle:
     json.dump(ledger, handle)
 PY
     cp "$ledger_path" "$TEST_PROJECT/ledger-with-stale-record.json"
-    if bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --uninstall >/dev/null 2>&1; then
+    if bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --uninstall >/dev/null 2>&1; then
         fail "Uninstall removed runtime while ownership ledger still had records"
         return
     elif [[ ! -d "$TEST_HOME/.dainexus/mcp-server" ]] || \
@@ -1889,7 +1889,7 @@ PY
 
     # Presence and candidate bytes must come from the journaled snapshot, not a live re-read.
     if DAINEXUS_TEST_UNLINK_LEDGER_AFTER_SNAPSHOT=1 \
-        bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --uninstall >/dev/null 2>&1; then
+        bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --uninstall >/dev/null 2>&1; then
         fail "Ledger unlink after snapshot bypassed required removal CAS"
         return
     elif [[ ! -d "$TEST_HOME/.dainexus/mcp-server" ]] || \
@@ -1902,7 +1902,7 @@ PY
 
     # An external unlink after candidate publication must not bypass the empty-ledger gate.
     if DAINEXUS_TEST_UNLINK_LEDGER_AFTER_CANDIDATES=1 \
-        bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --uninstall >/dev/null 2>&1; then
+        bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --uninstall >/dev/null 2>&1; then
         fail "External ledger unlink bypassed required removal CAS"
         return
     elif [[ ! -d "$TEST_HOME/.dainexus/mcp-server" ]] || \
@@ -1914,7 +1914,7 @@ PY
     cp "$TEST_PROJECT/ledger-before-stale-record.json" "$ledger_path"
 
     # Test that uninstall removes owned entries
-    bash "$SCRIPT_DIR/dai-nexus-mcp-setup.sh" --uninstall >/dev/null 2>&1 || fail "Uninstall failed"
+    bash "$SCRIPT_DIR/dainexus-mcp-setup.sh" --uninstall >/dev/null 2>&1 || fail "Uninstall failed"
     if grep -Fq "dai-nexus" "$cursor_config" 2>/dev/null; then
         fail "Uninstall did not remove dai-nexus from cursor config"
         return
@@ -1964,7 +1964,7 @@ PY
             --fast|-f) FAST=1 ;;
             --verbose|-v) VERBOSE=1 ;;
             --help|-h)
-                echo "Usage: test-dai-nexus-mcp-setup.sh [--fast] [--verbose]"
+                echo "Usage: test-dainexus-mcp-setup.sh [--fast] [--verbose]"
                 exit 0
                 ;;
         esac
@@ -1978,10 +1978,10 @@ PY
 
     echo ""
     echo -e "${CYAN}━━━ Syntax Checks ━━━${NC}"
-    if bash -n "$SCRIPT_DIR/dai-nexus-mcp-setup.sh"; then
-        pass "bash -n dai-nexus-mcp-setup.sh"
+    if bash -n "$SCRIPT_DIR/dainexus-mcp-setup.sh"; then
+        pass "bash -n dainexus-mcp-setup.sh"
     else
-        fail "bash -n dai-nexus-mcp-setup.sh failed"
+        fail "bash -n dainexus-mcp-setup.sh failed"
         exit 1
     fi
 

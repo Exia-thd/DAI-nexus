@@ -8,8 +8,8 @@
 # Claude Code hooks config example:
 # {
 #   "hooks": {
-#     "PostToolUse": "./scripts/dai-nexus-memory-hook.sh",
-#     "PostMessage": "./scripts/dai-nexus-memory-hook.sh tick"
+#     "PostToolUse": "./scripts/dainexus-memory-hook.sh",
+#     "PostMessage": "./scripts/dainexus-memory-hook.sh tick"
 #   }
 # }
 #

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: dai-nexus-hook-doctor.sh has been moved to hooks/dai-nexus-hook-doctor.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dainexus-hook-doctor.sh has been moved to hooks/dainexus-hook-doctor.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/hooks/dai-nexus-hook-doctor.sh" "$@"
+    source "$DIR/hooks/dainexus-hook-doctor.sh" "$@"
 else
-    exec "$DIR/hooks/dai-nexus-hook-doctor.sh" "$@"
+    exec "$DIR/hooks/dainexus-hook-doctor.sh" "$@"
 fi

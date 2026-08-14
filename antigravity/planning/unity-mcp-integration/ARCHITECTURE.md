@@ -245,7 +245,7 @@ DAI Nexus có thể recommend tạo custom tools cho project-specific automation
 
 ```csharp
 [McpPluginToolType]
-public class Tool_DAI Nexus
+public class Tool_DaiNexus
 {
     [McpPluginTool("dai-nexus-create-so-framework")]
     public string CreateSOFramework()

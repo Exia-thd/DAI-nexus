@@ -51,7 +51,7 @@
 
 ### 3. [MEDIUM] Setup Warnings Treated as Successful Completion
 - **File:** [multica-hub/src/app/api/projects/setup/route.ts](multica-hub/src/app/api/projects/setup/route.ts#L55-L63)
-- **Description:** When running `dai-nexus-mcp-setup.sh`, if the script encounters an error, it is caught in a try/catch block and logged as a warning in `result.details`. However, the overall API response still reports `success: true` and `message: 'DAI Nexus and MCP setup completed'`. If the script fails critically, the user is misled into thinking setup succeeded.
+- **Description:** When running `dainexus-mcp-setup.sh`, if the script encounters an error, it is caught in a try/catch block and logged as a warning in `result.details`. However, the overall API response still reports `success: true` and `message: 'DAI Nexus and MCP setup completed'`. If the script fails critically, the user is misled into thinking setup succeeded.
 - **Recommendation:** Check if the script executed correctly, and if not, report `success: false` or a status indicating partial success/warning, so the UI can display appropriate warnings.
 
 ---

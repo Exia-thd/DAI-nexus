@@ -206,8 +206,8 @@ Mỗi máy dev hoặc CI dùng `agy` cần cài hook Antigravity cấp máy và 
 nhật trong repository cha một lần:
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-install.sh --profile minimal --yes
-bash dai-nexus/scripts/dai-nexus-hook-doctor.sh --quick --fix
+bash dai-nexus/scripts/dainexus-install.sh --profile minimal --yes
+bash dai-nexus/scripts/dainexus-hook-doctor.sh --quick --fix
 bash dai-nexus/scripts/lite/install-submodule-update-hooks.sh "$PWD"
 ```
 
@@ -218,7 +218,7 @@ cũng tự tạo `.dainexus/execution-policy.yaml` ở workspace cha khi còn th
 nếu đã có file hoặc symlink tùy biến thì luôn giữ nguyên. Kiểm tra lại bằng:
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-hook-doctor.sh --quick
+bash dai-nexus/scripts/dainexus-hook-doctor.sh --quick
 ```
 
 Sau bước cài một lần này, `post-merge` và `post-checkout` của repository cha sẽ
@@ -1031,7 +1031,7 @@ bash dai-nexus/scripts/ensure-memory.sh "$(pwd)"
 Chạy 1 lệnh:
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh
+bash dai-nexus/scripts/dainexus-mcp-setup.sh
 ```
 
 Sau đó khởi động lại Cursor/VS Code.
@@ -1167,10 +1167,10 @@ DAI Nexus tích hợp với [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki
 Các lệnh thực thi:
 ```bash
 # Đồng bộ dự án hiện tại vào Vault chung
-./scripts/dai-nexus-wiki-sync.sh
+./scripts/dainexus-wiki-sync.sh
 
 # Quét và đồng bộ hàng loạt tất cả dự án trong thư mục GitHub
-./scripts/dai-nexus-wiki-sync-all.sh
+./scripts/dainexus-wiki-sync-all.sh
 ```
 
 ### Chuẩn hóa cấu trúc tài liệu dự án

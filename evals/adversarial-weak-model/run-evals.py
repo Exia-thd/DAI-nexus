@@ -31,7 +31,7 @@ REPORT_SCHEMA_VERSION = 2
 LIVE_HARNESS_SEMANTICS_VERSION = "agy-isolated-least-privilege-v2"
 SUITE_FILE = Path(__file__).with_name("suite.json")
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ORCHESTRATOR = REPO_ROOT / "scripts" / "runtime" / "dai-nexus-orchestrator.py"
+ORCHESTRATOR = REPO_ROOT / "scripts" / "runtime" / "dainexus-orchestrator.py"
 EXECUTION_POLICY = REPO_ROOT / ".dainexus" / "execution-policy.yaml"
 
 

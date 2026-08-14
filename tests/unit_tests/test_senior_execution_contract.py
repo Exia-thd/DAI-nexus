@@ -177,8 +177,8 @@ def test_full_mode_and_activation_cannot_override_runtime_contract():
 
 
 def test_runtime_recovery_cannot_auto_mutate_framework_skills():
-    tracker = _read("scripts/runtime/dai-nexus-session-tracker.sh")
-    migrator = _read("scripts/skills/dai-nexus-lesson-migrator.sh")
+    tracker = _read("scripts/runtime/dainexus-session-tracker.sh")
+    migrator = _read("scripts/skills/dainexus-lesson-migrator.sh")
     recovery = _read("skills/production-grade/middleware/10-asip.md")
     memory = _read("skills/production-grade/middleware/09-memory.md")
     graceful = _read("skills/_shared/protocols/graceful-failure.md")
@@ -187,7 +187,7 @@ def test_runtime_recovery_cannot_auto_mutate_framework_skills():
 
     assert "Triggering forced ASIP evolution" not in tracker
     assert (
-        'bash "$PROJECT_DIR/scripts/dai-nexus-lesson-migrator.sh" migrate'
+        'bash "$PROJECT_DIR/scripts/dainexus-lesson-migrator.sh" migrate'
         not in tracker
     )
     assert "DAINEXUS_ALLOW_FRAMEWORK_MUTATION" in migrator

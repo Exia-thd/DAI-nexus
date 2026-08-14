@@ -6,15 +6,15 @@ services:
     image: postgres:16-alpine
     container_name: dai-nexus-dainexus-node-postgres
     environment:
-      POSTGRES_DB: dainexus-node_test
+      POSTGRES_DB: dainexus_node_test
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
     ports:
       - "5433:5432"
     volumes:
-      - postgres_dainexus-node_data:/var/lib/postgresql/data
+      - postgres_dainexus_node_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U testuser -d dainexus-node_test"]
+      test: ["CMD-SHELL", "pg_isready -U testuser -d dainexus_node_test"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -40,5 +40,5 @@ services:
       start_period: 10s
 
 volumes:
-  postgres_dainexus-node_data:
+  postgres_dainexus_node_data:
   postgres_mcp_data:

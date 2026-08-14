@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / ".dainexus" / "execution-policy.yaml"
 SEEDER = ROOT / "scripts" / "lite" / "ensure-project-policy.sh"
 SETUP_PROJECT = ROOT / "scripts" / "bootstrap" / "setup-project.sh"
-SETUP_CLI = ROOT / "scripts" / "bootstrap" / "dai-nexus-setup.sh"
-MCP_SETUP = ROOT / "scripts" / "mcp" / "dai-nexus-mcp-setup.sh"
-DOCTOR = ROOT / "scripts" / "hooks" / "dai-nexus-hook-doctor.sh"
+SETUP_CLI = ROOT / "scripts" / "bootstrap" / "dainexus-setup.sh"
+MCP_SETUP = ROOT / "scripts" / "mcp" / "dainexus-mcp-setup.sh"
+DOCTOR = ROOT / "scripts" / "hooks" / "dainexus-hook-doctor.sh"
 GATE = ROOT / "scripts" / "lite" / "antigravity-pre-tool-gate.sh"
 GIT_LOCAL_ENV_VARS = subprocess.run(
     ("git", "rev-parse", "--local-env-vars"),
@@ -416,7 +416,7 @@ def test_bootstrap_delegates_canonical_mcp_setup_and_manifest_contract(
     xdg = home / "xdg"
     fake_bin = tmp_path / "bin"
     bootstrap = fw / "scripts" / "bootstrap" / SETUP_CLI.name
-    canonical = fw / "scripts" / "mcp" / "dai-nexus-mcp-setup.sh"
+    canonical = fw / "scripts" / "mcp" / "dainexus-mcp-setup.sh"
     seeder = fw / "scripts" / "lite" / "ensure-project-policy.sh"
     bootstrap.parent.mkdir(parents=True)
     canonical.parent.mkdir(parents=True)
@@ -532,7 +532,7 @@ def test_bootstrap_delegates_canonical_mcp_setup_and_manifest_contract(
     assert not (project / ".dainexus" / "mcp-server" / "server.ts").exists()
     source = bootstrap.read_text(encoding="utf-8")
     assert ".dainexus/mcp-server/server.ts" not in source
-    assert "scripts/mcp/dai-nexus-mcp-setup.sh" in source
+    assert "scripts/mcp/dainexus-mcp-setup.sh" in source
     assert "local client platform_flag" in source
     assert 'claude-desktop) platform_flag="--claude-desktop"' in source
 
@@ -910,7 +910,7 @@ def test_hook_doctor_repairs_policy_into_superproject(tmp_path: Path) -> None:
     (seed / "scripts" / "lite").mkdir(parents=True)
     shutil.copy2(DOCTOR, seed / "scripts" / "hooks" / DOCTOR.name)
     shutil.copy2(SEEDER, seed / "scripts" / "lite" / SEEDER.name)
-    for name in ("dai-nexus-memory-hook.sh", "memory-session.sh"):
+    for name in ("dainexus-memory-hook.sh", "memory-session.sh"):
         stub = seed / "scripts" / "hooks" / name
         stub.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
         stub.chmod(0o755)

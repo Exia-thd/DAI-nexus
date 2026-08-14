@@ -6,9 +6,9 @@
 # Install: Add to Claude Code hooks or call from MCP server
 #
 # Usage:
-#   ./dai-nexus-instinct-hook.sh observe <tool> <args_json> <success>
-#   ./dai-nexus-instinct-hook.sh promote <session_id>
-#   ./dai-nexus-instinct-hook.sh status
+#   ./dainexus-instinct-hook.sh observe <tool> <args_json> <success>
+#   ./dainexus-instinct-hook.sh promote <session_id>
+#   ./dainexus-instinct-hook.sh status
 #────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail

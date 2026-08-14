@@ -105,6 +105,21 @@ pipeline:
   execution: "parallel"    # sequential|parallel
   max_workers: 4
 
+# Native Codex subagent model preferences. Apply a value only when the active
+# spawn_agent schema advertises it for the selected model.
+subagents:
+  codex:
+    default:
+      model: "gpt-5.6-luna"
+      reasoning_effort: "high"
+    tiers: {  # tiers: {} when no overrides are configured
+      # Examples (uncomment to configure):
+      # expert: { model: "gpt-5.6-sol", reasoning_effort: "xhigh" }
+    }
+    agent_types: {}
+    # Examples (uncomment to configure):
+    # explorer: { model: "gpt-5.6-luna", reasoning_effort: "high" }
+
 # Review settings
 review:
   mode: "lean"           # full|lean|solo
@@ -268,115 +283,34 @@ Track skill performance over time:
 - Avg quality < 70%: Update skill guidance
 - Avg duration > 60 min: Optimize skill
 
-### Test Pyramid Implementation
+### Test Portfolio Guidance
 
-```
-                    ▲
-                   /█\      E2E: 5-10 tests
-                  / █ \     - Critical user flows
-                 /  █  \   - Login, purchase, core loop
-                /────█────\
-               /     █     \  Integration: 15-20 tests
-              /      █      \ - Service interactions
-             /───────█────────\ - Database operations
-            /        █         \ Unit: 50-100 tests
-           /         █          \ - Pure functions
-          /──────────█───────────\ - Formula calculations
-```
+Use more low-cost deterministic tests where branching logic exists, integration tests at material boundaries, and a small set of E2E tests for release-critical journeys. **Counts and coverage percentages come from risk and acceptance criteria, not fixed quotas.**
 
-**Unit test coverage targets:**
-- Business logic: 90%
-- Utility functions: 95%
-- State machines: 85%
-- Formatters/validators: 100%
+- Unit/property tests: pure logic, formulas, parsers, state machines, edge cases.
+- Integration tests: persistence, messaging, SDK/API boundaries, scene/service interactions.
+- E2E: only the user journeys whose failure would materially block release or revenue/core use.
 
-**Integration test coverage:**
-- API endpoints: 80%
-- Database operations: 70%
-- Message queues: 60%
-- External services (mocked): 90%
-
-**E2E test coverage:**
-- Critical paths: 100%
-- Happy path: 100%
-- Error recovery: 50%
-- Edge cases: 30%
+Coverage is diagnostic telemetry. Prefer meaningful branch/behavior coverage over chasing a universal percentage. Raise rigor for security, billing, destructive data, public contracts, concurrency, and historically fragile code.
 
 ### Continuous Integration Template
 
-```yaml
-# .github/workflows/dai-nexus.yml
-name: DAI Nexus Pipeline
+Canonical CI is provider-neutral and local:
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  quality-gate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run unit tests
-        run: npm run test:unit
-
-      - name: Run integration tests
-        run: npm run test:integration
-
-      - name: Run e2e tests
-        run: npm run test:e2e
-
-      - name: Check coverage
-        run: npm run test:coverage
-
-      - name: Security scan
-        run: npm audit --audit-level=high
-
-  build:
-    needs: quality-gate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build
-        run: npm run build
-
-      - name: Docker build
-        run: docker build -t app:${{ github.sha }} .
-
-  deploy-staging:
-    needs: build
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Deploy to staging
-        run: ./scripts/deploy.sh staging
-
-  deploy-production:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Deploy to production
-        run: ./scripts/deploy.sh production
+```bash
+# scripts/ci/local-ci.sh or equivalent project-owned entrypoint
+set -euo pipefail
+npm ci
+npm run lint
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run test:coverage
+npm audit --omit=dev --audit-level=high
+npm run build
 ```
+
+Attach this command to local git hooks and/or an OS-native scheduler as appropriate. A hosted provider may invoke the same script only when explicitly requested; do not duplicate the gate logic into provider YAML.
 
 ### Deployment Checklist
 
@@ -448,101 +382,7 @@ When transitioning between sessions:
 
 ### Skill Catalog
 
-Complete list of 80 skills organized by category:
-
-**Orchestration & Meta:**
-1. Orchestrator (production-grade)
-2. Polymath
-3. Parallel Dispatch
-4. Memory Manager
-5. Skill Maker
-6. MCP Generator
-7. Token Tracker
-8. Instinct System
-9. Strategic Compaction
-10. Hook Expert (generated/hook-expert)
-
-**Engineering:**
-11. Business Analyst
-12. Product Manager
-13. Solution Architect
-14. Software Engineer
-15. Software Engineer (Go)
-16. Software Engineer (Python)
-17. Software Engineer (Rust)
-18. Frontend Engineer
-19. Fullstack Engineer
-20. QA Engineer
-21. Security Engineer
-22. Code Reviewer
-23. Code Reviewer (Go)
-24. Code Reviewer (Python)
-25. Code Reviewer (Rust)
-26. Code Quality Engineer
-27. DevOps
-28. SRE
-29. Build & Release Engineer
-30. Data Scientist
-31. Technical Writer
-32. UI Designer
-33. Interaction Designer
-34. Art Director
-35. Vision Review
-36. Mobile Engineer
-37. Mobile Tester
-38. API Designer
-39. Database Engineer
-40. Debugger
-41. Prompt Engineer
-42. Prompt Optimizer
-43. AI Engineer
-44. Accessibility Engineer
-45. Performance Engineer
-46. UX Researcher
-47. Data Engineer
-48. XLSX Engineer
-49. Project Manager
-50. Eval Engineer
-
-**Game Development:**
-51. Game Designer
-52. Game Engineer
-53. AI Behavior Engineer
-54. Animation Engineer
-55. Game Accessibility Engineer
-56. LiveOps Engineer
-57. Unity Engineer
-58. Unity MCP
-59. Unreal Engineer
-60. Godot Engineer
-61. Godot Multiplayer
-62. Roblox Engineer
-63. Phaser 3 Engineer
-64. Three.js Engineer
-65. Level Designer
-66. Narrative Designer
-67. Technical Artist
-68. Game Audio Engineer
-69. Game Asset & VFX
-70. Unity Shader Artist
-71. Unity Multiplayer
-72. Unreal Technical Artist
-73. Unreal Multiplayer
-74. XR Engineer
-
-**Growth & Marketing:**
-75. Growth Marketer
-76. Conversion Optimizer
-
-**Testing:**
-77. Autonomous Testing
-
-**Data Acquisition:**
-78. Web Scraper
-79. NotebookLM Researcher
-
-**Workflow:**
-80. Goal-Driven
+Resolve the live skill inventory from `product-manifest.json`, `skills-registry.yaml`, and `kernel/INDEX.md`. Do not duplicate a numbered skill list here: a stale catalog can cause weak models to route to removed/renamed roles or invent missing capabilities.
 
 ### Session Lifecycle Hooks
 

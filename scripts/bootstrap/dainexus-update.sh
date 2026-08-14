@@ -8,10 +8,10 @@
 #   3. Re-index codebases with GitNexus
 #
 # USAGE:
-#   bash dai-nexus-update.sh              # Update DAI Nexus
-#   bash dai-nexus-update.sh --migrate    # Force database migration
-#   bash dai-nexus-update.sh --reindex    # Full re-index after update
-#   bash dai-nexus-update.sh --check      # Check for updates
+#   bash dainexus-update.sh              # Update DAI Nexus
+#   bash dainexus-update.sh --migrate    # Force database migration
+#   bash dainexus-update.sh --reindex    # Full re-index after update
+#   bash dainexus-update.sh --check      # Check for updates
 # ═══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
@@ -284,7 +284,7 @@ show_help() {
 DAI Nexus Updater — Update existing installation
 
 USAGE:
-  dai-nexus-update.sh [OPTIONS]
+  dainexus-update.sh [OPTIONS]
 
 OPTIONS:
   --check       Check for updates only (don't update)
@@ -295,13 +295,13 @@ OPTIONS:
 
 EXAMPLES:
   # Check what needs updating
-  bash dai-nexus-update.sh --check
+  bash dainexus-update.sh --check
 
   # Update DAI Nexus
-  bash dai-nexus-update.sh
+  bash dainexus-update.sh
 
   # Update + migrate databases + reindex
-  bash dai-nexus-update.sh --all
+  bash dainexus-update.sh --all
 EOF
 }
 
@@ -364,7 +364,7 @@ main() {
 
     # Sync projects in the global registry
     info "Synchronizing registered projects..."
-    node "$DAINEXUS_DIR/scripts/dai-nexus-sync-projects.js"
+    node "$DAINEXUS_DIR/scripts/dainexus-sync-projects.js"
     echo ""
 
     echo -e "${GREEN}╔══════════════════════════════════════════════════╗${NC}"

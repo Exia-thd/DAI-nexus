@@ -3,8 +3,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-LAUNCHER="$ROOT_DIR/scripts/dai-nexus-mcp-launcher.sh"
-MCP_LAUNCHER="$ROOT_DIR/scripts/mcp/dai-nexus-mcp-launcher.sh"
+LAUNCHER="$ROOT_DIR/scripts/dainexus-mcp-launcher.sh"
+MCP_LAUNCHER="$ROOT_DIR/scripts/mcp/dainexus-mcp-launcher.sh"
 TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/dai-nexus-launcher.XXXXXX")"
 TEST_HOME="$TEST_ROOT/home"
 CANONICAL_SERVER="$TEST_HOME/.dainexus/mcp-server/src/index.ts"

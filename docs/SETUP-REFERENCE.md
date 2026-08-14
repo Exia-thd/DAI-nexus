@@ -27,7 +27,7 @@
                            │ MCP Protocol (stdio)
                            ▼
 ┌─────────────────────────────────────────────────────────┐
-│              dai-nexus-mcp-launcher.sh                │
+│              dainexus-mcp-launcher.sh                │
 │                                                         │
 │  Detects workspace:                                     │
 │  1. DAINEXUS_WORKSPACE env var                       │
@@ -51,7 +51,7 @@ Each project has isolated configuration:
 
 ```
 ~/.cursor/mcp.json (global)
-├── dai-nexus → dai-nexus-mcp-launcher.sh
+├── dai-nexus → dainexus-mcp-launcher.sh
 └── dainexus-node → dainexus-node-mcp-launcher.sh
 
 Project A/.antigravity/mcp-manifest.json
@@ -81,9 +81,9 @@ project/
 ```
 dai-nexus/
 ├── scripts/
-│   ├── dai-nexus-mcp-setup.sh                    # Unified MCP manager
+│   ├── dainexus-mcp-setup.sh                    # Unified MCP manager
 │   ├── dainexus-node-setup.sh          # DAI Nexus Node installer
-│   ├── dai-nexus-mcp-launcher.sh   # FW MCP launcher
+│   ├── dainexus-mcp-launcher.sh   # FW MCP launcher
 │   ├── dainexus-node-mcp-launcher.sh   # FNX MCP launcher
 │   └── templates/
 │       ├── mcp.cursor.json          # Cursor config template
@@ -95,7 +95,7 @@ dai-nexus/
 
 ## Launcher Scripts
 
-### dai-nexus-mcp-launcher.sh
+### dainexus-mcp-launcher.sh
 
 Main launcher that routes to DAI Nexus MCP server.
 
@@ -189,7 +189,7 @@ Launcher for DAI Nexus Node code intelligence.
   "mcpServers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["/path/to/dai-nexus/scripts/dai-nexus-mcp-launcher.sh"]
+      "args": ["/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"]
     },
     "dainexus-node": {
       "command": "bash",
@@ -208,7 +208,7 @@ Launcher for DAI Nexus Node code intelligence.
   "mcpServers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["/path/to/dai-nexus/scripts/dai-nexus-mcp-launcher.sh"]
+      "args": ["/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"]
     },
     "dainexus-node": {
       "command": "bash",
@@ -242,13 +242,13 @@ Antigravity uses the **canonical MCP server** at `~/.dainexus/mcp-server/src/ind
 #### Setup Command
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --antigravity
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --antigravity
 ```
 
 #### Verify
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 ### OpenAI Codex CLI
@@ -289,13 +289,13 @@ args = ["mcp"]
 #### Setup Command
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --codex
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --codex
 ```
 
 #### Verify
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 # or native
 codex mcp list
 ```
@@ -320,14 +320,14 @@ codex mcp list
 |----------|--------|--------|
 | `DAINEXUS_DEBUG` | 0, 1 | Enable debug output in launcher |
 | `FORGENEXUS_DEBUG` | 0, 1 | Enable DAI Nexus Node debug |
-| `FW_MCP_VERBOSE` | 0, 1 | Verbose output for dai-nexus-mcp-setup.sh |
+| `FW_MCP_VERBOSE` | 0, 1 | Verbose output for dainexus-mcp-setup.sh |
 | `FNX_VERBOSE` | 0, 1 | Verbose output for dainexus-node-setup.sh |
 
 ---
 
 ## Exit Codes
 
-### dai-nexus-mcp-setup.sh
+### dainexus-mcp-setup.sh
 
 | Code | Meaning |
 |------|---------|
@@ -401,25 +401,25 @@ set -- "item1" "item2"
 
 ```bash
 # Test help
-bash dai-nexus-mcp-setup.sh --help
+bash dainexus-mcp-setup.sh --help
 
 # Test check
-bash dai-nexus-mcp-setup.sh --check
+bash dainexus-mcp-setup.sh --check
 
 # Test diagnose
-bash dai-nexus-mcp-setup.sh --diagnose
+bash dainexus-mcp-setup.sh --diagnose
 
 # Test wizard (non-interactive)
-echo "" | bash dai-nexus-mcp-setup.sh wizard
+echo "" | bash dainexus-mcp-setup.sh wizard
 ```
 
 ### ShellCheck
 
 ```bash
 # Check scripts
-shellcheck scripts/dai-nexus-mcp-setup.sh
+shellcheck scripts/dainexus-mcp-setup.sh
 shellcheck scripts/dainexus-node-setup.sh
-shellcheck scripts/dai-nexus-mcp-launcher.sh
+shellcheck scripts/dainexus-mcp-launcher.sh
 shellcheck scripts/dainexus-node-mcp-launcher.sh
 ```
 
@@ -432,10 +432,10 @@ cd /tmp/fw-test
 git init
 
 # Run setup
-bash /path/to/dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
+bash /path/to/dai-nexus/scripts/dainexus-mcp-setup.sh setup
 
 # Verify
-bash /path/to/dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash /path/to/dai-nexus/scripts/dainexus-mcp-setup.sh --check
 
 # Clean up
 cd /
@@ -452,17 +452,17 @@ rm -rf /tmp/fw-test
 |-------|-------|-----|
 | `command not found: node` | Node.js not installed | Install from nodejs.org |
 | `launcher not found` | Wrong path | Re-run setup |
-| `workspace mismatch` | Manifest stale | `dai-nexus-mcp-setup.sh setup --force` |
+| `workspace mismatch` | Manifest stale | `dainexus-mcp-setup.sh setup --force` |
 | `npm install failed` | Network/proxy | Check npm config |
 
 ### Debug Commands
 
 ```bash
 # Verbose output
-FW_MCP_VERBOSE=1 bash dai-nexus-mcp-setup.sh --diagnose
+FW_MCP_VERBOSE=1 bash dainexus-mcp-setup.sh --diagnose
 
 # Debug launcher
-DAINEXUS_DEBUG=1 bash scripts/dai-nexus-mcp-launcher.sh
+DAINEXUS_DEBUG=1 bash scripts/dainexus-mcp-launcher.sh
 
 # Debug DAI Nexus Node
 FORGENEXUS_DEBUG=1 bash scripts/dainexus-node-mcp-launcher.sh

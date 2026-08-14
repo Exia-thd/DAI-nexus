@@ -28,10 +28,10 @@ cd dai-nexus
 
 ```bash
 # Run the setup script
-bash scripts/dai-nexus-mcp-setup.sh
+bash scripts/dainexus-mcp-setup.sh
 
 # Verify setup
-bash scripts/dai-nexus-mcp-setup.sh --check
+bash scripts/dainexus-mcp-setup.sh --check
 ```
 
 This enables MCP tools for enhanced code intelligence.
@@ -155,7 +155,7 @@ memory:
 ### "DAI Nexus didn't respond correctly"
 
 1. Check `.production-grade.yaml` exists
-2. Run `bash scripts/dai-nexus-mcp-setup.sh --diagnose`
+2. Run `bash scripts/dainexus-mcp-setup.sh --diagnose`
 3. Verify CLAUDE.md or AGENTS.md is in project root
 
 ### "Wrong mode selected"

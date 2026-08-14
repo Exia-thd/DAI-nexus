@@ -327,7 +327,7 @@ class DaiNexusAgent:
             )
             # Use the repo-relative mcp-setup script.
             mcp_setup_script = os.path.join(
-                _REPO_ROOT, "scripts", "dai-nexus-mcp-setup.sh"
+                _REPO_ROOT, "scripts", "dainexus-mcp-setup.sh"
             )
             try:
                 subprocess.run(
@@ -389,7 +389,7 @@ class DaiNexusAgent:
         ):
             # Use the repo-relative launcher script.
             mcp_launcher = os.path.join(
-                _REPO_ROOT, "scripts", "dai-nexus-mcp-launcher.sh"
+                _REPO_ROOT, "scripts", "dainexus-mcp-launcher.sh"
             )
             mcp_servers.append(
                 {
@@ -697,7 +697,7 @@ Khi bạn nghĩ rằng mình ĐÃ THỰC THI XONG VÀ HOÀN CHỈNH CODE, hãy t
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print(
-            "Usage: python3 dai-nexus-orchestrator.py <PROJECT_ID> <TASK_PROMPT> [CODE_DIR]"
+            "Usage: python3 dainexus-orchestrator.py <PROJECT_ID> <TASK_PROMPT> [CODE_DIR]"
         )
         sys.exit(1)
 

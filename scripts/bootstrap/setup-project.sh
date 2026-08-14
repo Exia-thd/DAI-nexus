@@ -313,10 +313,10 @@ setup_llm_wiki_integration() {
     local target_scripts_dir="${TARGET_PROJECT}/scripts"
     mkdir -p "$target_scripts_dir"
     
-    # 1. Copy dai-nexus-wiki-sync.sh to target project scripts
-    cp "${DAINEXUS_PATH}/scripts/dai-nexus-wiki-sync.sh" "${target_scripts_dir}/dai-nexus-wiki-sync.sh"
-    chmod +x "${target_scripts_dir}/dai-nexus-wiki-sync.sh"
-    log_ok "Copied dai-nexus-wiki-sync.sh to target project"
+    # 1. Copy dainexus-wiki-sync.sh to target project scripts
+    cp "${DAINEXUS_PATH}/scripts/dainexus-wiki-sync.sh" "${target_scripts_dir}/dainexus-wiki-sync.sh"
+    chmod +x "${target_scripts_dir}/dainexus-wiki-sync.sh"
+    log_ok "Copied dainexus-wiki-sync.sh to target project"
     
     # 2. Setup Git Hook (Husky or standard git)
     if [ -d "${TARGET_PROJECT}/.husky" ]; then
@@ -329,8 +329,8 @@ setup_llm_wiki_integration() {
 # Kiểm tra xem commit vừa rồi có thay đổi tài liệu không
 if git diff-tree --no-commit-id --name-only -r HEAD | grep -q -E '^(docs/|README\.md|README\.vi\.md|TASKS\.md|\.dainexus/project-profile\.json|\.dainexus/code-conventions\.md)'; then
   echo "📄 [DAI Nexus] Phát hiện thay đổi tài liệu. Đang tự động đồng bộ sang llm_wiki..."
-  if [ -x "./scripts/dai-nexus-wiki-sync.sh" ]; then
-    ./scripts/dai-nexus-wiki-sync.sh
+  if [ -x "./scripts/dainexus-wiki-sync.sh" ]; then
+    ./scripts/dainexus-wiki-sync.sh
   fi
 fi
 
@@ -355,8 +355,8 @@ EOF
 # Kiểm tra xem commit vừa rồi có thay đổi tài liệu không
 if git diff-tree --no-commit-id --name-only -r HEAD | grep -q -E '^(docs/|README\.md|README\.vi\.md|TASKS\.md|\.dainexus/project-profile\.json|\.dainexus/code-conventions\.md)'; then
   echo "📄 [DAI Nexus] Phát hiện thay đổi tài liệu. Đang tự động đồng bộ sang llm_wiki..."
-  if [ -x "./scripts/dai-nexus-wiki-sync.sh" ]; then
-    ./scripts/dai-nexus-wiki-sync.sh
+  if [ -x "./scripts/dainexus-wiki-sync.sh" ]; then
+    ./scripts/dainexus-wiki-sync.sh
   fi
 fi
 

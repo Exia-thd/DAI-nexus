@@ -182,7 +182,7 @@ fi
 echo "✓ Server entries valid ($SERVER_COUNT servers)"
 
 # 6. Test MCP setup script compatibility
-if bash scripts/dai-nexus-mcp-setup.sh --check 2>/dev/null; then
+if bash scripts/dainexus-mcp-setup.sh --check 2>/dev/null; then
     echo "✓ MCP setup script compatible"
 else
     echo "⚠ WARN: MCP setup script may need updates"
@@ -416,11 +416,11 @@ exit 0
 
 1. **Force ASIP trigger on plan failures:**
 ```bash
-# In dai-nexus-lesson-migrator.sh
+# In dainexus-lesson-migrator.sh
 if [ "$1" = "plan" ] && [ "$2" -lt 9.0 ]; then
     echo "⚠️ Plan score below threshold — triggering ASIP"
-    bash scripts/dai-nexus-lesson-migrator.sh migrate
-    bash scripts/dai-nexus-session-tracker.sh plan "$2"
+    bash scripts/dainexus-lesson-migrator.sh migrate
+    bash scripts/dainexus-session-tracker.sh plan "$2"
 fi
 ```
 

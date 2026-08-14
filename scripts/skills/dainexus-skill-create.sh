@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# dai-nexus-skill-create.sh — Git-based Skill Auto-Generator
+# dainexus-skill-create.sh — Git-based Skill Auto-Generator
 #
 # Analyzes git history to auto-generate DAI Nexus skills from real patterns.
 #
@@ -34,10 +34,10 @@ MIN_COMMITS=3
 #-------------------------------------------------------------------------------
 show_help() {
     cat << 'EOF'
-dai-nexus-skill-create.sh — Auto-generate skills from git history
+dainexus-skill-create.sh — Auto-generate skills from git history
 
 USAGE:
-    dai-nexus-skill-create.sh [OPTIONS]
+    dainexus-skill-create.sh [OPTIONS]
 
 OPTIONS:
     --from-git              Analyze local git repository (default)
@@ -51,13 +51,13 @@ OPTIONS:
 
 EXAMPLES:
     # Analyze local repo for auth-related commits
-    dai-nexus-skill-create.sh --pattern "auth" --name "auth-expert"
+    dainexus-skill-create.sh --pattern "auth" --name "auth-expert"
 
     # Analyze remote repo
-    dai-nexus-skill-create.sh --from-repo https://github.com/user/repo --name "user-repo"
+    dainexus-skill-create.sh --from-repo https://github.com/user/repo --name "user-repo"
 
     # Interactive mode
-    dai-nexus-skill-create.sh --interactive
+    dainexus-skill-create.sh --interactive
 
 EOF
 }

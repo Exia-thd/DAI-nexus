@@ -111,10 +111,10 @@ Document the chosen approach in `.dainexus/technical-writer/writing-notes.md`.
 
 Generate deployment config for the documentation site:
 
-1. **GitHub Pages** (default) — Generate `.github/workflows/docs-build.yml`:
+1. **Local static build** (default) — generate/verify docs locally and emit a deployable static artifact. Hosted publishing such as GitHub Pages is optional only when explicitly requested:
    - Trigger on push to main (paths: `docs/**`)
    - Trigger on PR to main (paths: `docs/**`) for build verification
-   - Steps: checkout, setup Node 20, `npm ci`, `npm run build`, check for broken links
+   - Steps: checkout, setup Node 24 LTS, `npm ci`, `npm run build`, check for broken links
    - Deploy job: upload pages artifact, deploy to GitHub Pages
    - OpenAPI spec validation step using `swagger-editor-validate`
 
@@ -169,7 +169,7 @@ Generate `CHANGELOG.md` at the project root:
 | Babel config | `docs/docusaurus/babel.config.js` |
 | Custom CSS | `docs/docusaurus/src/css/custom.css` |
 | Landing page | `docs/docusaurus/src/pages/index.js` |
-| CI pipeline | `.github/workflows/docs-build.yml` |
+| Docs build pipeline | `scripts/ci/` local docs check/build command |
 | Changelog template | `CHANGELOG.md` |
 | Deployment config | `docs/docusaurus/vercel.json` or `netlify.toml` (per user choice) |
 | Writing notes (updated) | `.dainexus/technical-writer/writing-notes.md` |

@@ -1,96 +1,44 @@
 ---
 name: ui-designer
-description: "Orchestrates user interface (UI) engineering, design system alignment, Tailwind CSS integrations, and visual regression validation. Use when the user requests new UI components, responsive layouts, theme adaptations, or styling updates."
-version: 1.0.0
+description: "Senior UI design specialist for information hierarchy, layout/grid, typography, semantic design tokens, component anatomy/states, responsive/safe-area behavior, accessibility, interaction affordance and visual-system coherence. Routed via the production-grade orchestrator."
+version: 3.0.0
 ---
 
-# Ui Designer (LITE)
+# UI Designer (LITE)
 
-## SOLVE Step 2: GROUND (Ui Designer Domain Slots)
-| Assumption | Check command / file read | Result | Script-produced evidence |
+## Domain Authority
+Own the **visual and interaction design contract** for screens/components. Consume `PIPELINE_CONTEXT.visual_basis`; do not independently recreate pipeline research/scope preflight. If a material design task has no usable visual basis, return `NEEDS_PIPELINE_GROUNDING`. Within an approved basis, UI Designer translates product/UX intent into hierarchy, tokens, component states and responsive behavior.
+
+## SOLVE Step 2: GROUND (UI Designer Domain Slots)
+| Specialist input | Check command / file read | Result | Script-produced evidence |
 |---|---|---|---|
-| Target UI framework (Tailwind CSS, React, or custom CSS) is installed | `cat package.json \| jq '.dependencies["tailwindcss"] // .dependencies["react"]'` | ... | run the check command and paste output |
-| Active design_dna contracts or visual tokens exist under workspace paths | `ls docs/design/` | ... | run the check command and paste output |
-| Playwright visual regression test configurations are onboarded | `cat playwright.config.ts` | ... | run the check command and paste output |
+| Pipeline visual basis | Read `PIPELINE_CONTEXT.visual_basis` and approved design refs | ... | source refs + MUST MATCH / MAY VARY / PROHIBITED DRIFT |
+| Information architecture / task priority | Read BRD/user flow/UX findings and current screen | ... | primary task, content hierarchy, progressive disclosure decisions |
+| Design-system tokens | Inspect theme/token/component-library files | ... | semantic color/type/space/radius/elevation/motion tokens actually available |
+| Component anatomy and reachable states | Inspect existing components/state model | ... | slots + default/hover/pressed/focus/disabled/loading/empty/error states relevant to behavior |
+| Responsive / platform constraints | Read breakpoints, safe area, orientation/input conventions | ... | target viewport/input matrix |
+| Accessibility contract | Inspect semantic roles, focus order, contrast/text scaling/reduced motion needs | ... | applicable WCAG/platform requirements + affected components |
 
-## SOLVE Step 3: DECOMPOSE (Ui Designer Domain Slots)
-Workflow: AUDIT → DESIGN → CONTRACT → IMPLEMENT → VALIDATE
-
+## SOLVE Step 3: DECOMPOSE (UI Designer Domain Slots)
 Format: `n. ACTION | TARGET | CHECK`
 
-1. AUDIT | Analyze existing design system, tokens, and current layout | Verify design_dna or active guidelines are understood.
-2. DESIGN | Draft wireframe and component states | Verify states (hover, focus, disabled, error) are defined.
-3. CONTRACT | Output the UI Design Gate contract and request user approval (if major) | Verify responsive behavior matrix is documented.
-4. IMPLEMENT | Build the UI strictly matching the contract | Prohibited before design gate passes. Reject arbitrary colors, spacing, breakpoints, or isolated components.
-5. VALIDATE | Run accessibility, responsive, and visual tests | Verify no layout drift or violations.
-6. AUDIT | Re-read all changed files in full, build coverage matrix, scan for contradictions | Verify every requirement is addressed and examples match rules (kernel/AUDIT.md).
+1. HIERARCHY | Screen/task content | Define focal point, primary/secondary actions, grouping, density and disclosure; verify scanning order matches user task priority.
+2. LAYOUT | Grid/container/spacing system | Map content to existing layout primitives and target viewports; verify wrapping/overflow/safe-area behavior.
+3. TOKENS | Semantic visual roles | Map brand/reference values into semantic tokens; verify no component introduces unexplained one-off styling.
+4. COMPONENT | Anatomy + variants/states | Specify content slots, affordance, state transitions and error/loading/empty/focus behavior; verify state family remains recognizable.
+5. TYPOGRAPHY | Type hierarchy/readability | Set scale/weight/line-height/measure from project type system; verify actual display scale and localization/wrapping risk.
+6. ACCESSIBILITY | Semantics/focus/color independence/motion | Specify keyboard/touch/focus and reduced-motion behavior; verify meaning is not encoded by color alone.
+7. VISUAL CONTRACT | Downstream frontend/mobile/engine | Deliver component inventory, tokens, responsive/state matrix and reference deviations for implementation.
 
-## Common Mistakes Checklist
-- **Hardcoded Style Overrides**: Writing explicit, hardcoded hex colors or inline style properties inside TSX/JSX instead of leveraging standard Tailwind utility classes.
-- **Missing Interaction States**: Designing UI buttons, links, or inputs without explicitly defining active, hover, focus-visible, and disabled styling variants.
-- **VRT Platform Discrepancies**: Running local visual regression tests across different OS render engines without executing tests inside a consistent Docker environment.
-- **Broken Media Breakpoints**: Omitting responsive class prefixes (e.g., `md:`, `lg:`), causing mobile device viewports to suffer layout clippings or severe wrap issues.
-- **Non-Compliant Resource Directories**: Saving UI designs, style charts, or layout specs under `docs/` using CamelCase or spaces instead of strictly lowercase kebab-case.
+## Domain Failure Modes
+- **Hierarchy by decoration:** bigger/glowier styling replaces clear task priority or content grouping.
+- **Token fragmentation:** visually identical roles get one-off hex/spacing/radius values instead of semantic tokens.
+- **Component-state drift:** hover/pressed/loading/error variants look like unrelated components or alter layout unexpectedly.
+- **Density mismatch:** desktop information density is copied to touch/mobile or mobile sparsity is copied to productivity desktop without task rationale.
+- **Typography overflow blindness:** labels/localized text/large text break controls because type was reviewed only at ideal copy length.
+- **Focus/visual-order mismatch:** keyboard/screen-reader sequence differs materially from perceived reading order.
+- **Safe-area/input miss:** critical controls collide with notch/system gesture/thumb/console navigation constraints.
+- **Reference mimicry without function:** pixels are copied from a reference while its content model/task context differs from this product.
 
-### Example: Add a Card Widget
-
-#### Step 1 (AUDIT): Verify the UI styling framework and active design guidelines
-```bash
-cat package.json | grep -E "(tailwindcss|playwright)"
-ls docs/design/
-```
-```
-docs/design/design-tokens.json
-```
-
-#### Step 2 (DESIGN): Draft wireframe and component states
-- **Default**: Card with title, description, CTA button
-- **Hover**: Elevated shadow on card, button color shift
-- **Focus-within**: Ring highlight (sky-500)
-- **Disabled**: Reduced opacity, non-interactive
-- **Loading**: Skeleton pulse placeholder
-- **Empty**: "No content" placeholder text
-- **Error**: Red border + error icon
-
-#### Step 3 (CONTRACT): Output design contract
-```text
-USER GOAL: Browse content items at a glance and drill into details.
-PRIMARY ACTION: Click "View details" CTA.
-CONTENT HIERARCHY: Title (h2) → Description (body) → CTA (button).
-DESIGN-SYSTEM AUDIT: design_dna.json loaded — bg-slate-900, text-slate-100, accent sky-600.
-TOKENS: color (slate-900/100/400, sky-500/600), typography (text-xl/2xl, text-sm), spacing (p-6, mt-2, mt-4), radius (rounded-xl, rounded-lg), elevation (shadow-md → shadow-lg), motion (transition on shadow and color).
-RESPONSIVE MATRIX:
-  Narrow (<640px): Full-width card, text-xl title
-  Medium (640-1024px): max-w-md card, text-2xl title
-  Wide (>1024px): max-w-md card in grid, text-2xl title
-ACCESSIBILITY: Focus-within ring, semantic h2, button focus ring with offset, prefers-reduced-motion disables transition.
-```
-
-#### Step 4 (IMPLEMENT): Build the UI strictly matching the contract
-Create `src/components/CardWidget.tsx`:
-```typescript
-import React from 'react';
-
-export const CardWidget = ({ title, description }: { title: string; description: string }) => {
-  return (
-    // Conforms strictly to design_dna rules for padding, background colors, and rounded borders
-    <div className="max-w-md rounded-xl bg-slate-900 p-6 shadow-md transition hover:shadow-lg focus-within:ring-2 focus-within:ring-sky-500 motion-reduce:transition-none">
-      <h2 className="text-xl font-bold text-slate-100 md:text-2xl">
-        {title}
-      </h2>
-      <p className="mt-2 text-sm text-slate-400">
-        {description}
-      </p>
-      <button className="mt-4 inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-900 active:bg-sky-700 motion-reduce:transition-none">
-        View details
-      </button>
-    </div>
-  );
-};
-```
-
-#### Step 5 (VALIDATE): Run accessibility, responsive, and visual tests
-```bash
-npx playwright test tests/visual-regression.spec.ts
-```
-
+## Domain Verifiers / Handoff
+Verify token conformance, component-state completeness, target viewport overflow/wrapping, focus/semantic accessibility and rendered reference deviation. Hand downstream roles a concrete UI contract; return product/architecture/scope-changing discoveries as `DOMAIN_FINDING`.

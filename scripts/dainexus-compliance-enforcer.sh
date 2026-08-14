@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: dai-nexus-compliance-enforcer.sh has been moved to ci/dai-nexus-compliance-enforcer.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dainexus-compliance-enforcer.sh has been moved to ci/dainexus-compliance-enforcer.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/ci/dai-nexus-compliance-enforcer.sh" "$@"
+    source "$DIR/ci/dainexus-compliance-enforcer.sh" "$@"
 else
-    exec "$DIR/ci/dai-nexus-compliance-enforcer.sh" "$@"
+    exec "$DIR/ci/dainexus-compliance-enforcer.sh" "$@"
 fi

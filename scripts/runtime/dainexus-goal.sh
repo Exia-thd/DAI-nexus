@@ -1,5 +1,5 @@
 #!/bin/bash
-# dai-nexus-goal.sh - CLI wrapper for goal-driven workflow
+# dainexus-goal.sh - CLI wrapper for goal-driven workflow
 #
 # Usage:
 #   dai-nexus goal set "condition"

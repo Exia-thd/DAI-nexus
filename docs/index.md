@@ -44,7 +44,7 @@ Welcome to DAI Nexus — an adaptive orchestrator with 84 AI skills covering the
 | **Skill Health Check** | `bash scripts/skill-health.sh check` — validates all 84 canonical skills |
 | **Dependency Graph** | `bash scripts/dep-graph.sh` — detects cycles, generates DOT/Mermaid exports |
 | **Skill Versioning** | `bash scripts/skill-rollback.sh` — rollback skills to previous versions |
-| **Session Tracker** | `bash scripts/dai-nexus-session-tracker.sh` — tracks consecutive plan failures |
+| **Session Tracker** | `bash scripts/dainexus-session-tracker.sh` — tracks consecutive plan failures |
 
 ## By Role
 

@@ -1,12 +1,12 @@
 #!/bin/bash
-# dai-nexus-evolution-init.sh
+# dainexus-evolution-init.sh
 # Bootstraps the ASIP self-evolution infrastructure. Creates baseline files,
 # initializes state, and registers the lesson migration hook in the MCP setup.
 #
 # Usage:
-#   bash scripts/dai-nexus-evolution-init.sh              # full init
-#   bash scripts/dai-nexus-evolution-init.sh --check     # status only
-#   bash scripts/dai-nexus-evolution-init.sh --update-metrics [type] [value]
+#   bash scripts/dainexus-evolution-init.sh              # full init
+#   bash scripts/dainexus-evolution-init.sh --check     # status only
+#   bash scripts/dainexus-evolution-init.sh --update-metrics [type] [value]
 
 set -euo pipefail
 
@@ -201,9 +201,9 @@ bootstrap_session_tracker() {
     if [ -f "$SESSION_TRACK" ]; then
         ok "session-track.json already exists"
     else
-        # Re-initialize via dai-nexus-session-tracker.sh
-        if [ -x "$SCRIPT_DIR/dai-nexus-session-tracker.sh" ]; then
-            bash "$SCRIPT_DIR/dai-nexus-session-tracker.sh" init 2>/dev/null || true
+        # Re-initialize via dainexus-session-tracker.sh
+        if [ -x "$SCRIPT_DIR/dainexus-session-tracker.sh" ]; then
+            bash "$SCRIPT_DIR/dainexus-session-tracker.sh" init 2>/dev/null || true
             ok "Initialized session-track.json"
         else
             # Fallback: create manually
@@ -217,8 +217,8 @@ bootstrap_session_tracker() {
 bootstrap_scripts() {
     local required_scripts=(
         "asip-deterministic-check.sh"
-        "dai-nexus-lesson-migrator.sh"
-        "dai-nexus-session-tracker.sh"
+        "dainexus-lesson-migrator.sh"
+        "dainexus-session-tracker.sh"
     )
 
     for script in "${required_scripts[@]}"; do
@@ -388,7 +388,7 @@ check_status() {
     # Check scripts
     echo ""
     echo "  Scripts:"
-    for script in "asip-deterministic-check.sh" "dai-nexus-lesson-migrator.sh" "dai-nexus-session-tracker.sh"; do
+    for script in "asip-deterministic-check.sh" "dainexus-lesson-migrator.sh" "dainexus-session-tracker.sh"; do
         local path="$SCRIPT_DIR/$script"
         if [ -f "$path" ] && [ -x "$path" ]; then
             echo -e "  ${GREEN}✓${NC} $script (executable)"
@@ -435,7 +435,7 @@ except Exception as e:
     if $all_ok; then
         echo -e "  Status: ${GREEN}ALL SYSTEMS OK${NC}"
     else
-        echo -e "  Status: ${RED}INCOMPLETE — run: bash scripts/dai-nexus-evolution-init.sh${NC}"
+        echo -e "  Status: ${RED}INCOMPLETE — run: bash scripts/dainexus-evolution-init.sh${NC}"
     fi
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
@@ -455,7 +455,7 @@ self_verify() {
     fi
 
     log "Self-verification: checking referenced scripts..."
-    for script in asip-deterministic-check.sh dai-nexus-lesson-migrator.sh dai-nexus-session-tracker.sh; do
+    for script in asip-deterministic-check.sh dainexus-lesson-migrator.sh dainexus-session-tracker.sh; do
         if [ -f "$SCRIPT_DIR/$script" ]; then
             if bash -n "$SCRIPT_DIR/$script" 2>/dev/null; then
                 ok "  $script: valid"
@@ -493,7 +493,7 @@ main() {
             self_verify
             echo ""
             ok "Bootstrap complete!"
-            ok "Run: bash scripts/dai-nexus-evolution-init.sh --check  (to verify)"
+            ok "Run: bash scripts/dainexus-evolution-init.sh --check  (to verify)"
             echo ""
             ;;
         --check|check|status)

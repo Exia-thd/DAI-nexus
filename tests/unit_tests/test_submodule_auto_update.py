@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 UPDATER = ROOT / "scripts" / "lite" / "submodule-auto-update.sh"
 HOOK_INSTALLER = ROOT / "scripts" / "lite" / "install-submodule-update-hooks.sh"
-LEGACY_SHIM = ROOT / "scripts" / "dai-nexus-submodule-check.sh"
-BATCH_UPDATER = ROOT / "scripts" / "runtime" / "dai-nexus-batch-update.sh"
+LEGACY_SHIM = ROOT / "scripts" / "dainexus-submodule-check.sh"
+BATCH_UPDATER = ROOT / "scripts" / "runtime" / "dainexus-batch-update.sh"
 GIT_LOCAL_ENV_VARS = subprocess.run(
     ("git", "rev-parse", "--local-env-vars"),
     cwd=ROOT,
@@ -81,9 +81,9 @@ def test_parent_hooks_update_submodule_and_refresh_installed_runtime(
     shutil.copy2(UPDATER, seed / "scripts" / "lite" / UPDATER.name)
     shutil.copy2(HOOK_INSTALLER, seed / "scripts" / "lite" / HOOK_INSTALLER.name)
     shutil.copy2(LEGACY_SHIM, seed / "scripts" / LEGACY_SHIM.name)
-    write_stub(seed / "scripts" / "dai-nexus-install.sh", "install")
-    write_stub(seed / "scripts" / "dai-nexus-hook-doctor.sh", "doctor")
-    write_stub(seed / "scripts" / "dai-nexus-mcp-setup.sh", "mcp", record_cwd=True)
+    write_stub(seed / "scripts" / "dainexus-install.sh", "install")
+    write_stub(seed / "scripts" / "dainexus-hook-doctor.sh", "doctor")
+    write_stub(seed / "scripts" / "dainexus-mcp-setup.sh", "mcp", record_cwd=True)
     (seed / "VERSION").write_text("one\n", encoding="utf-8")
     git(seed, "add", ".")
     git(seed, "commit", "-m", "initial")

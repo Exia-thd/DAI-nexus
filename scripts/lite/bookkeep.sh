@@ -23,7 +23,7 @@ cd "$PROJECT_ROOT"
 
 # Ensure essential scripts are present
 MEMORY_SESSION="scripts/memory-session.sh"
-SESSION_TRACKER="scripts/dai-nexus-session-tracker.sh"
+SESSION_TRACKER="scripts/dainexus-session-tracker.sh"
 
 run_bg() {
   # Run a command in the background (fire-and-forget)

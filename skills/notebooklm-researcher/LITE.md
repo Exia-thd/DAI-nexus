@@ -10,7 +10,7 @@ version: 1.0.0
 | Assumption | Check command / file read | Result | Script-produced evidence |
 |---|---|---|---|
 | NotebookLM CLI utility is installed and responsive | `nlm --version` | ... | run the check command and paste output |
-| Session tracker exists to monitor attempt counts | `ls -la scripts/dai-nexus-session-tracker.sh` | ... | run the check command and paste output |
+| Session tracker exists to monitor attempt counts | `ls -la scripts/dainexus-session-tracker.sh` | ... | run the check command and paste output |
 | Active lessons log exists under the local state directory | `cat .dainexus/lessons.md` | ... | run the check command and paste output |
 
 ## SOLVE Step 3: DECOMPOSE (Notebooklm Researcher Domain Slots)
@@ -24,7 +24,7 @@ Format: `n. ACTION | TARGET | CHECK`
 ## Common Mistakes Checklist
 - **Skipping CLI verification**: Attempting deep research workflows without validating `nlm` compiler installation, leading to silent tool failures.
 - **Accepting uncalibrated outputs**: Accepting synthesis reports with high hallucination risk (
-- **Bypassing the failure tracker**: Resolving pipeline failures manually without updating `dai-nexus-session-tracker.sh`, preventing the orchestrator from learning.
+- **Bypassing the failure tracker**: Resolving pipeline failures manually without updating `dainexus-session-tracker.sh`, preventing the orchestrator from learning.
 - **Non-compliant naming conventions**: Saving compiled research summaries under `docs/` using CamelCase, spaces, or uppercase letters instead of strictly lowercase kebab-case.
 
 ### Step 1: Verify the NotebookLM CLI and active budget configurations
@@ -36,7 +36,7 @@ cat .dainexus/budget.yaml
 ### Step 2: Execute automated Research Gate sequence on complex task failure
 ```bash
 # Simulating tracker recording 2 failed attempts and triggering the Research Gate
-./scripts/dai-nexus-session-tracker.sh --record-failure --task "optimize-sqlite-cache"
+./scripts/dainexus-session-tracker.sh --record-failure --task "optimize-sqlite-cache"
 ```
 
 ### Step 3: Execute nlm research query and run skeptic agent calibration

@@ -38,8 +38,8 @@ run_required mcp-format npm --prefix mcp run format:check
 run_required mcp-build npm --prefix mcp run build
 run_required mcp-tests npm --prefix mcp run test
 run_required mcp-coverage npm --prefix mcp run test:coverage
-run_required mcp-launcher-security bash tests/test-dai-nexus-mcp-launcher.sh
-run_required mcp-setup bash tests/setup/test-dai-nexus-mcp-setup.sh
+run_required mcp-launcher-security bash tests/test-dainexus-mcp-launcher.sh
+run_required mcp-setup bash tests/setup/test-dainexus-mcp-setup.sh
 run_required hook-installation bash tests/test_hooks.sh
 run_required runtime-lifecycle-guard bash scripts/ci/verify-runtime-leases.sh
 run_required cli-tests npm --prefix src/cli test

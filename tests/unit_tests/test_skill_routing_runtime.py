@@ -10,7 +10,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROUTER_PATH = REPO_ROOT / "scripts" / "runtime" / "skill_routing.py"
-ORCHESTRATOR_PATH = REPO_ROOT / "scripts" / "runtime" / "dai-nexus-orchestrator.py"
+ORCHESTRATOR_PATH = REPO_ROOT / "scripts" / "runtime" / "dainexus-orchestrator.py"
 
 
 def _load_module(name: str, path: Path):

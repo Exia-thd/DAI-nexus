@@ -18,9 +18,9 @@
 
 | Task ID | Name | Commit | Notes |
 |---------|------|--------|-------|
-| **P1-T1** | I-NEW-1.1: Shell Filter native | `31a8dd8` | `scripts/dai-nexus-shell-filter.sh` — 384 lines, 18 command filters. ANSI stripping, structured summaries, per-file diff parsing. macOS awk compatible. Synced to Antigravity plugin. |
+| **P1-T1** | I-NEW-1.1: Shell Filter native | `31a8dd8` | `scripts/dainexus-shell-filter.sh` — 384 lines, 18 command filters. ANSI stripping, structured summaries, per-file diff parsing. macOS awk compatible. Synced to Antigravity plugin. |
 | **P1-T2** | I-NEW-1.2: Session Deduplication middleware | `31a8dd8` | `mcp/src/middleware/session-deduplication.ts` + `types.ts` + `chain.ts`. SHA-256 normalized keys, sliding turn/time window (10 turns / 5 min), LRU eviction (500 entries). 25 passing unit tests. |
-| **P1-T3** | I-NEW-1.3: RTK Detection in MCP setup | `31a8dd8` | `scripts/dai-nexus-mcp-setup.sh` — Detects rtk, chop, snip, ctx, tkill at setup time. Writes `.dainexus/settings.env` with `DAINEXUS_SHELL_COMPRESSOR`. |
+| **P1-T3** | I-NEW-1.3: RTK Detection in MCP setup | `31a8dd8` | `scripts/dainexus-mcp-setup.sh` — Detects rtk, chop, snip, ctx, tkill at setup time. Writes `.dainexus/settings.env` with `DAINEXUS_SHELL_COMPRESSOR`. |
 | **P1-T4** | I2: Tool Output Sandboxing middleware | `31a8dd8` | `mcp/src/middleware/tool-sandbox.ts`. ANSI stripping, prompt injection detection, compression (>10KB truncate), structured summaries per tool type. |
 
 ### P2 — DAI Nexus Node Code Intelligence (Medium Priority)
@@ -48,7 +48,7 @@
 |---------|------|--------|-------|
 | **P5-T1** | I11: RTK + chop + snip Detection & Integration | `HEAD` | `scripts/run_shell_filter.sh` — RTK delegation wrapper. Auto-detects available compressors (rtk > chop > snip > ctx > tkill > native). 7 passing tests. |
 | **P5-T2** | I-NEW-4: Context-Mode Integration (ctx_execute MCP tool) | `HEAD` | `dainexus-node/src/mcp/tools.ts` — New `ctx_execute` tool. Sandboxed code execution with structured output summarization. Supports: python, node, bash, go, rust, ruby, php. 173 passing tests. |
-| **P5-T3** | I-NEW-6: Token-Savior Integration | `HEAD` | `scripts/dai-nexus-mcp-setup.sh` — Token-Savior detection. Sets `DAINEXUS_CODE_NAV` (token-savior > dainexus-node) và `DAINEXUS_MEMORY_VECTOR` (token-savior > sqlite). Synced to Antigravity plugin. |
+| **P5-T3** | I-NEW-6: Token-Savior Integration | `HEAD` | `scripts/dainexus-mcp-setup.sh` — Token-Savior detection. Sets `DAINEXUS_CODE_NAV` (token-savior > dainexus-node) và `DAINEXUS_MEMORY_VECTOR` (token-savior > sqlite). Synced to Antigravity plugin. |
 
 ---
 
@@ -64,8 +64,8 @@ All roadmap tasks have been completed.
 
 | File | Purpose |
 |------|---------|
-| `scripts/dai-nexus-shell-filter.sh` | Shell output filter (main) |
-| `scripts/dai-nexus-mcp-setup.sh` | MCP setup with RTK + Token-Savior detection |
+| `scripts/dainexus-shell-filter.sh` | Shell output filter (main) |
+| `scripts/dainexus-mcp-setup.sh` | MCP setup with RTK + Token-Savior detection |
 | `mcp/src/middleware/types.ts` | Shared middleware types |
 | `mcp/src/middleware/session-deduplication.ts` | Session dedup middleware |
 | `mcp/src/middleware/chain.ts` | Middleware chain orchestrator |

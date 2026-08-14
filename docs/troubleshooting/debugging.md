@@ -7,7 +7,7 @@
 ### DAI Nexus not responding
 
 1. Check that `CLAUDE.md` or `AGENTS.md` exists in project root
-2. Verify MCP server is running: `bash scripts/dai-nexus-mcp-setup.sh --check`
+2. Verify MCP server is running: `bash scripts/dainexus-mcp-setup.sh --check`
 3. Check session health: `python3 scripts/memory-middleware.py status`
 
 ### Wrong mode selected

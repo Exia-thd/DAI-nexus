@@ -89,7 +89,7 @@ run_shell_filter() {
             fi
             ;;
         dai-nexus-shell-filter|*)
-            local filter_path="${DAINEXUS_DIR:-.}/scripts/dai-nexus-shell-filter.sh"
+            local filter_path="${DAINEXUS_DIR:-.}/scripts/dainexus-shell-filter.sh"
             if [[ -f "$filter_path" ]]; then
                 if [[ $# -eq 0 ]]; then
                     bash "$filter_path"

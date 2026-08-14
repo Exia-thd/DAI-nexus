@@ -76,13 +76,13 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 
 ### Added
 - **GitNexus Integration**: Migrated code intelligence from DAI Nexus Node to GitNexus (38K+ stars, npm install, auto-setup for all editors, 16 MCP tools) (reconstructed from docs).
-- **dai-nexus-mcp-setup.sh v3.0.0**: Unified setup script configuring both `dai-nexus` and `gitnexus` MCP servers.
+- **dainexus-mcp-setup.sh v3.0.0**: Unified setup script configuring both `dai-nexus` and `gitnexus` MCP servers.
 - **Multi-repo Support**: New `gitnexus group` for cross-repo analysis.
 
 ### Breaking
 - `npx dainexus-node analyze` → `gitnexus analyze`
-- `dainexus-node_*` MCP tools → `gitnexus_*` MCP tools
-- `fw-mcp.sh dainexus-node` → `gitnexus setup` (GitNexus) + `dai-nexus-mcp-setup.sh` (DAI Nexus)
+- `dainexus_node_*` MCP tools → `gitnexus_*` MCP tools
+- `fw-mcp.sh dainexus-node` → `gitnexus setup` (GitNexus) + `dainexus-mcp-setup.sh` (DAI Nexus)
 
 ## [8.4.0] — 2026-05-10
 
@@ -91,7 +91,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 ### Added
 - **Mandatory DAI Nexus Rule**: EVERY user request MUST go through the DAI Nexus pipeline after installation. Added enforcement box to README and AGENTS.md (reconstructed from docs).
 - **Enhanced Research Gate**: ASIP Research Gate now checks NotebookLM availability first, falls back to Web Search, synthesizes insights, and updates session tracker (reconstructed from docs).
-- **Session Tracker** (`scripts/dai-nexus-session-tracker.sh`): Tracks consecutive plan failures; ≥2 consecutive failures trigger mandatory Research Gate (reconstructed from docs).
+- **Session Tracker** (`scripts/dainexus-session-tracker.sh`): Tracks consecutive plan failures; ≥2 consecutive failures trigger mandatory Research Gate (reconstructed from docs).
 - **Plan Quality Tracking**: Mandatory `plan → score → meta-evaluate → check ≥9 → execute` loop with max 3 iterations.
 
 ### Changed
@@ -125,7 +125,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 
 ### Added
 - **Sequence Diagram Generator Update**: Automated sequence diagram generator to trace routes, extract parameters, and map client-to-server call trees using GitNexus.
-- **Submodule Auto-Update Check**: Added `scripts/dai-nexus-submodule-check.sh` to allow projects using DAI Nexus as a submodule to automatically check, fetch, and pull DAI Nexus updates in their git hooks (pre-commit or post-merge).
+- **Submodule Auto-Update Check**: Added `scripts/dainexus-submodule-check.sh` to allow projects using DAI Nexus as a submodule to automatically check, fetch, and pull DAI Nexus updates in their git hooks (pre-commit or post-merge).
 
 ## [8.1.0] — 2026-04-29
 
@@ -197,7 +197,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 - **husky version** (`package.json`) — Corrected `husky: "^10.0.0"` (non-existent) to `husky: "^9.1.7"`.
 - **typo: `forgwrightVersion`** (`scripts/mcp-generate.sh`, `mcp-generator/templates/`) — Fixed to `dai-nexusVersion` in both script and Handlebars template.
 - **Version consistency** — `package.json` `version` field bumped to `7.8.1`, matching `VERSION` file.
-- **`mcp-config.json` version** — `dai-nexus_version` updated from `7.0.0` to `7.8.1`.
+- **`mcp-config.json` version** — `dai_nexus_version` updated from `7.0.0` to `7.8.1`.
 - **MCP server config** — Added `dai-nexus-dainexus-node` entry to `.cursor/mcp.json` pointing to local dai-nexus repo.
 
 ### Dependencies
@@ -306,7 +306,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 - **Global Setup Script** (`scripts/setup-project.sh`) — Links DAI Nexus to any project without git submodule. Detects tech stack, runs DAI Nexus Node analyze, prints Cursor MCP config snippet.
 - **GitHub Templates** (`.github/`) — Issue templates (bug report, feature request), PR template with DAI Nexus pipeline checklist.
 - **Cursor Subagent Review Workflow** (`.cursor/agents/`) — 5 specialized subagents: quality-reviewer, security-auditor, spec-reviewer, verifier, chat-interpreter for structured code review.
-- **DAI Nexus Node MCP Tools** (via MCP server) — `dainexus-node_query`, `dainexus-node_context`, `dainexus-node_impact`, `dainexus-node_detect_changes`, `dainexus-node_rename`, `dainexus-node_cypher` for code intelligence.
+- **DAI Nexus Node MCP Tools** (via MCP server) — `dainexus_node_query`, `dainexus_node_context`, `dainexus_node_impact`, `dainexus_node_detect_changes`, `dainexus_node_rename`, `dainexus_node_cypher` for code intelligence.
 - **Auto-initialization Check** — MCP server and DAI Nexus Node index auto-initialize on session start if `.dainexus/mcp-server/mcp-config.json` is missing.
 - **Antigravity Plugin** (`.antigravity/`) — Production-grade plugin system with 52 skills, 15 shared protocols, preset templates, game dev workflows.
 

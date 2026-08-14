@@ -8,7 +8,7 @@
 
 ```
 1. Search memory
-   python scripts/lite/memory.py search "<project-name> <user-request-keywords>" --limit 5 --format compact
+   python3 scripts/lite/memory.py search "<project-name> <user-request-keywords>" --limit 5 --format compact
    
    → If store empty or no results: run scripts/lite/memory.py refresh once, then search again
    

@@ -1,5 +1,5 @@
 #!/bin/bash
-# dai-nexus-session-tracker.sh
+# dainexus-session-tracker.sh
 # Tracks session quality and recovery telemetry. Legacy ASIP fields remain for compatibility.
 # Part of Phase 1 - Task 1.4
 

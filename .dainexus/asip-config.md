@@ -40,13 +40,13 @@ triggers:
 
 ```bash
 # After each plan evaluation:
-bash scripts/dai-nexus-session-tracker.sh plan <score> [threshold]
+bash scripts/dainexus-session-tracker.sh plan <score> [threshold]
 
 # After session ends:
-bash scripts/dai-nexus-session-tracker.sh end [status] [summary]
+bash scripts/dainexus-session-tracker.sh end [status] [summary]
 
 # Check ASIP trigger:
-bash scripts/dai-nexus-session-tracker.sh check
+bash scripts/dainexus-session-tracker.sh check
 ```
 
 ## Metrics Collection

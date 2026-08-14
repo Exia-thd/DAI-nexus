@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: dai-nexus-setup.sh has been moved to bootstrap/dai-nexus-setup.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dainexus-setup.sh has been moved to bootstrap/dainexus-setup.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/bootstrap/dai-nexus-setup.sh" "$@"
+    source "$DIR/bootstrap/dainexus-setup.sh" "$@"
 else
-    exec "$DIR/bootstrap/dai-nexus-setup.sh" "$@"
+    exec "$DIR/bootstrap/dainexus-setup.sh" "$@"
 fi

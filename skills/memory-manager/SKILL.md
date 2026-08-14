@@ -81,7 +81,7 @@ tags: [memory, sqlite, fts5, persistence, knowledge-base, context]
 │                                                                      │
 │  1. Extract keywords from the user's request (nouns, verbs)        │
 │  2. Run: bash scripts/memory-retrieve.sh "<request>"              │
-│     OR:  python scripts/lite/memory.py search "<keywords>" --limit 3│
+│     OR:  python3 scripts/lite/memory.py search "<keywords>" --limit 3│
 │  3. Also run: bash scripts/memory-suggest.sh "<request>"        │
 │  3. If relevant memories found:                                    │
 │     → Inject as MEMORY BLOCK at top of context                   │
@@ -145,7 +145,7 @@ Categories affect search relevance and GC prioritization:
 
 ## CLI Commands
 
-### Primary CLI: `python scripts/lite/memory.py`
+### Primary CLI: `scripts/lite/memory.py`
 
 ```bash
 # ═══════════════════════════════════════════════════════════════
@@ -153,23 +153,23 @@ Categories affect search relevance and GC prioritization:
 # ═══════════════════════════════════════════════════════════════
 
 # First-time setup (creates database schema)
-python scripts/lite/memory.py setup
+python3 scripts/lite/memory.py setup
 
 # ═══════════════════════════════════════════════════════════════
 # STORING MEMORIES
 # ═══════════════════════════════════════════════════════════════
 
 # Add a memory with category
-python scripts/lite/memory.py add "Decided to use JWT + refresh tokens for auth" --category decisions
+python3 scripts/lite/memory.py add "Decided to use JWT + refresh tokens for auth" --category decisions
 
 # Add with tags
-python scripts/lite/memory.py add "Migration from REST to GraphQL planned for Q2" --category architecture --tags graphql,rest,migration
+python3 scripts/lite/memory.py add "Migration from REST to GraphQL planned for Q2" --category architecture --tags graphql,rest,migration
 
 # Add with custom ID for linking
-python scripts/lite/memory.py add "User authentication via Auth0" --category decisions --id auth-system-001
+python3 scripts/lite/memory.py add "User authentication via Auth0" --category decisions --id auth-system-001
 
 # Batch add from file
-python scripts/lite/memory.py add --batch memories.txt
+python3 scripts/lite/memory.py add --batch memories.txt
 
 # ═══════════════════════════════════════════════════════════════
 # RETRIEVING MEMORIES (3 LAYERS)
@@ -177,60 +177,60 @@ python scripts/lite/memory.py add --batch memories.txt
 
 # LAYER 1: Compact index (always first)
 # ~15 tokens/result — quick overview
-python scripts/lite/memory.py index "project context" --limit 30
+python3 scripts/lite/memory.py index "project context" --limit 30
 
 # LAYER 2: Full-text search (BM25 ranked)
 # ~60 tokens/result — detailed matches
-python scripts/lite/memory.py search "authentication flow" --limit 5
+python3 scripts/lite/memory.py search "authentication flow" --limit 5
 
 # LAYER 3: Full detail on demand
 # ~200 tokens/result — complete observation
-python scripts/lite/memory.py get 123
+python3 scripts/lite/memory.py get 123
 
 # ═══════════════════════════════════════════════════════════════
 # LISTING & FILTERING
 # ═══════════════════════════════════════════════════════════════
 
 # List all memories (paginated)
-python scripts/lite/memory.py list --limit 50
+python3 scripts/lite/memory.py list --limit 50
 
 # List by category
-python scripts/lite/memory.py list --category decisions --limit 20
+python3 scripts/lite/memory.py list --category decisions --limit 20
 
 # List by tag
-python scripts/lite/memory.py list --tag authentication --limit 10
+python3 scripts/lite/memory.py list --tag authentication --limit 10
 
 # List recent
-python scripts/lite/memory.py list --recent 10
+python3 scripts/lite/memory.py list --recent 10
 
 # ═══════════════════════════════════════════════════════════════
 # STATISTICS & MAINTENANCE
 # ═══════════════════════════════════════════════════════════════
 
 # Memory statistics
-python scripts/lite/memory.py stats
+python3 scripts/lite/memory.py stats
 
 # Garbage collection (value-weighted)
-python scripts/lite/memory.py gc --max-obs 200
+python3 scripts/lite/memory.py gc --max-obs 200
 
 # Clean old sessions
-python scripts/lite/memory.py gc --category session --older-than 7d
+python3 scripts/lite/memory.py gc --category session --older-than 7d
 
 # Export memories
-python scripts/lite/memory.py export --format json > memories.json
+python3 scripts/lite/memory.py export --format json > memories.json
 
 # ═══════════════════════════════════════════════════════════════
 # UTILITIES
 # ═══════════════════════════════════════════════════════════════
 
 # Search with JSON output (for scripting)
-python scripts/lite/memory.py search "auth" --format json
+python3 scripts/lite/memory.py search "auth" --format json
 
 # Get memory count by category
-python scripts/lite/memory.py stats --by-category
+python3 scripts/lite/memory.py stats --by-category
 
 # Find related memories (by shared tags or context)
-python scripts/lite/memory.py related 123 --limit 5
+python3 scripts/lite/memory.py related 123 --limit 5
 ```
 
 ### Context Offload Trace CLI: `scripts/memory-trace.py`
@@ -672,10 +672,10 @@ class MemoryLifecycleHooks:
 
 ```bash
 # Check session health
-python scripts/lite/memory.py list --category session --recent 5
+python3 scripts/lite/memory.py list --category session --recent 5
 
 # Get session summary
-python scripts/lite/memory.py search "session" --limit 3
+python3 scripts/lite/memory.py search "session" --limit 3
 ```
 
 ---
@@ -709,13 +709,13 @@ dai-nexus/
 
 ```bash
 # Migrate from JSONL (scripts/lite/memory.py)
-python scripts/lite/memory.py migrate
+python3 scripts/lite/memory.py migrate
 
 # Migrate from ChromaDB (local_memory.py)
 python3 scripts/migrate-chroma-to-sqlite.py
 
 # Verify migration
-python scripts/lite/memory.py stats
+python3 scripts/lite/memory.py stats
 ```
 
 ### Migration Verification
@@ -725,11 +725,11 @@ python scripts/lite/memory.py stats
 grep -r "memory-cli\|local_memory" .
 
 # Check new system active
-python scripts/lite/memory.py stats
+python3 scripts/lite/memory.py stats
 
 # Compare counts
 echo "Old (JSONL):" && wc -l .dainexus/memory.jsonl
-echo "New (SQLite):" && python scripts/lite/memory.py list --format json | jq length
+echo "New (SQLite):" && python3 scripts/lite/memory.py list --format json | jq length
 ```
 
 ---
@@ -807,7 +807,7 @@ for session in sessions:
 
 ## Execution Checklist
 
-- [ ] Setup completed (`python scripts/lite/memory.py setup`)
+- [ ] Setup completed (`python3 scripts/lite/memory.py setup`)
 - [ ] Old systems migrated (JSONL, ChromaDB)
 - [ ] Lifecycle hooks integrated into orchestrator
 - [ ] `.memignore` created if needed

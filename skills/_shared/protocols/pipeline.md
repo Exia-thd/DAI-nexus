@@ -1,233 +1,105 @@
 ---
 id: pipeline
 title: DAI Nexus Pipeline
-summary: Core protocol for pipeline.
+summary: Canonical phase semantics for proportional, evidence-gated delivery.
 status: active
-version: 1.0.0
+version: 2.0.0
 owners: [core]
 triggers: []
 used_by: [all]
-related: []
+related: [senior-execution-contract, plan-quality-loop, model-tier, pipeline-operating-contract, skill-specialization-contract]
 supersedes: []
 superseded_by: null
 ---
 # DAI Nexus Pipeline
 
 <!-- source: skills/_shared/protocols/pipeline.md -->
-<!-- This is the single source of truth for the DAI Nexus pipeline -->
+<!-- Canonical phase semantics. Kernel ENTRY/SOLVE/VERIFY owns turn-level execution gates. -->
 
 **Pipeline:** `INTERPRET → DEFINE → BUILD → HARDEN → SHIP → SUSTAIN`
 
-## Pipeline Phases
+The six phases describe delivery capabilities, **not six mandatory work packages for every request**. Apply only the phases needed to satisfy the current acceptance criteria and risk profile. `QUICK` work may compress several phases into one short execution loop; review/status/question work may have no BUILD or SHIP phase at all.
 
-| Phase | Description | Key Activities |
-|-------|-------------|----------------|
-| **INTERPRET** | Parse request, extract 9 dimensions | Memory retrieval, intent analysis, mode classification |
-| **DEFINE** | Scope and plan | Context loading, plan generation, plan quality scoring |
-| **BUILD** | Implement solution | Skill selection, skill execution, quality gate |
-| **HARDEN** | Test and validate | Unit tests, integration tests, security review |
-| **SHIP** | Deploy to production | CI/CD, staging deploy, production deploy |
-| **SUSTAIN** | Monitor and improve | Metrics collection, bug fixes, optimization |
+## Pipeline-Owned Operating Contract
 
-## Step 0 — Request Interpretation (MANDATORY)
+`skills/_shared/protocols/pipeline-operating-contract.md` is the canonical owner of the elite-team behavior applied across **every route**, whether or not a specialist skill is loaded:
+- outcome-first consulting and safe scope;
+- hidden/cross-domain risk anticipation and specialist routing;
+- adversarial research, instruction-boundary safety, verification/audit/learning;
+- reference-grounded visual basis and conformance when visual acceptance is material.
 
-**⚠️ DO NOT SKIP THIS STEP. EVER.**
+Before specialist dispatch, the pipeline prepares the compact `PIPELINE_CONTEXT` envelope. Skills consume that envelope and apply domain expertise under `skill-specialization-contract.md`; they do not each recreate the generic operating loop.
 
-Before ANY skill execution, interpret the user's request:
+## Truth & Authority
 
-### 0.5 — Memory Retrieval (MANDATORY)
+For project facts, use this order:
+1. Current workspace/runtime/tool evidence.
+2. Executable verification: tests, build, lint, typecheck, probes.
+3. Current project contracts/configuration/docs.
+4. Verified external documentation when material.
+5. Memory, examples, templates, and prior-session assumptions — hints only.
 
-**⚠️ DO NOT SKIP THIS STEP. EVER. This is the missing retrieval loop.**
+The current user request is authoritative for objective, constraints, and acceptance. If intent conflicts with verified project state or safety constraints, surface the contradiction instead of inventing a bridge.
 
-Every model call is stateless — it has no memory of previous sessions. This step restores continuity.
+## Phase Semantics
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ Step 0.5 — MEMORY RETRIEVAL (MANDATORY) │
-├─────────────────────────────────────────────────────────────────────┤
-│ │
-│ Run BEFORE interpreting the user's request: │
-│ │
-│ 1. Extract keywords from the user's request (nouns, verbs) │
-│ 2. Run: bash scripts/memory-retrieve.sh "<request>" │
-│ OR: python scripts/lite/memory.py search "<keywords>" --limit 3 │
-│ 3. Also run: bash scripts/memory-suggest.sh "<request>" │
-│ 4. If relevant memories found: │
-│ → Inject as MEMORY BLOCK at top of context │
-│ → Note: "Found N relevant memories from previous sessions" │
-│ 5. Also load: │
-│ - .dainexus/subagent-context/CONVERSATION_SUMMARY.md │
-│ - .dainexus/memory-bank/activeContext.md │
-│ - .dainexus/business-analyst/handoff/ba-package.md (if exists)│
-│ 6. Log: "✓ Memory retrieval done — N memories loaded" │
-│ │
-│ Max tokens: 500 (configurable via MEM0_MAX_TOKENS) │
-│ │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Phase | Purpose | Exit condition |
+|---|---|---|
+| **INTERPRET** | Resolve desired outcome, authority/truth, constraints and instruction boundary | Goal and material ambiguity are clear enough to act |
+| **DEFINE** | Build `PIPELINE_CONTEXT`: acceptance/non-goals, safe scope, cross-domain risk owners, material research, visual basis when applicable; choose effort/plan | Context envelope is decision-ready and plan is proportional |
+| **BUILD** | Dispatch specialists with the envelope; make the smallest compatible implementation/change | Specialist output exists without silent scope/authority drift |
+| **HARDEN** | Domain verification plus pipeline acceptance/risk/visual/audit closure | Evidence matches risk and material findings/signals are resolved |
+| **SHIP** | Package/deploy/release only when requested or required by acceptance | Release gate/rollback/compatibility obligations pass |
+| **SUSTAIN** | Operate, monitor, iterate only when ongoing operation is in scope | Operational objective or monitoring contract is satisfied |
 
-### 1. Extract 9 Dimensions
+## Phase Compression Rules
 
-| Dimension | What to Find | Always Required? |
-|-----------|-------------|----------------|
-| **Task** | What they actually want done | Yes |
-| **Target tool** | DAI Nexus pipeline mode | Auto-detect |
-| **Output format** | What they expect to receive | Yes |
-| **Constraints** | Explicit limits (scale, budget, team) | If mentioned |
-| **Input** | What they're providing (files, specs, URLs) | If applicable |
-| **Context** | Prior decisions, project state, existing code | If session has history |
-| **Audience** | Who uses the output | If user-facing |
-| **Success criteria** | How they know it's done | Derive if not stated |
-| **Examples** | Reference systems, things they like | If mentioned |
+- `QUICK`: minimal interpretation + mini-plan + direct execution + focused verification. No numeric plan score, broad research, ADR/BRD, extra workers, or hardening suite unless evidence raises risk.
+- `STANDARD`: normal bounded planning, targeted implementation/tests, proportional review.
+- `DEEP`: explicit trade-offs, stronger verification, independent review, compatibility/rollback where relevant.
+- A phase must not create work merely because its name exists in the pipeline.
+- Stop when acceptance criteria are met and residual risk is acceptable. Optional improvements belong under `Out of scope` / `Later`.
 
-### 2. Scan for Vague Patterns (Credit-Killing Patterns)
+## Role Standard
 
-| Pattern | Detection | Fix |
-|---------|-----------|-----|
-| Vague verb | "help me", "make it", "do something" | Ask for specifics |
-| Two tasks in one | "explain AND rewrite" | Ask priority |
-| No success criteria | "make it better" | Derive pass/fail |
-| Emotional description | "it's broken", "so annoying" | Extract technical fault |
-| Assumed knowledge | "continue", "as before" | Inject Memory Block |
-| No scope boundary | "build an app" | Ask what's in/out |
-| No file path | "update login" | Ask for location |
+Every domain role operates at **senior level** regardless of model/routing tier. Senior means evidence-backed domain judgment, ownership, trade-off awareness, and the ability to challenge contradictions inside its authority — not extra documents or verbosity.
 
-### 3. Clarification Rules
+Skills follow `skill-specialization-contract.md`: domain authority, specialist inputs/heuristics/artifacts/failure modes/verifiers/handoff. Cross-domain operating behavior remains owned by the pipeline. A specialist returns `DOMAIN_FINDING` for newly discovered scope/risk dependencies instead of silently becoming the orchestrator.
 
-- **MAX 3 clarifying questions** — pick the 3 most critical
-- **If HIGH confidence**: Skip clarification, generate structured request
-- **If MEDIUM/LOW confidence**: Ask before proceeding
-- **NEVER start executing** if request is unclear
-- **Use defaults** for everything else (don't over-ask)
+`scout` / `builder` / `expert` represent routing capability and cost, not competence. Use the model-tier protocol for objective escalation. Independent reviewers receive requirements, diff, and raw evidence rather than the author's reasoning.
 
-### 4. Generate Structured Request
+## Planning Gate
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔍 INTERPRETED REQUEST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Use `skills/_shared/protocols/plan-quality-loop.md`:
+- `QUICK` → `ACTION | TARGET | CHECK` fast path.
+- `STANDARD` / `DEEP` → complexity-scaled threshold for the actual mode.
+- Never apply a blanket `9.0` plan threshold to every task.
+- Research only closes a material evidence/knowledge gap; it is not score-padding.
 
-Mode: [detected]
-Confidence: [HIGH/MEDIUM/LOW]
+## Scope & Optimization Gate
 
-Intent: "[original message quoted]"
+Protect the client's time, budget, and scope like an accountable outsourcing team:
+- do not add adjacent features, generic infrastructure, abstractions, or documentation without a requirement/risk/benefit;
+- optimize only for an explicit target/SLA, measured bottleneck, known platform/resource/cost constraint, or evident algorithmic/reliability defect at required scale;
+- in MVP/early greenfield work, prefer a simple observable baseline and optimize after evidence;
+- preserve existing architecture/design conventions unless changing them is part of the objective.
 
-What you want:
- [1-sentence clear description]
+## Clarification & Defaults
 
-Key decisions made:
- [Defaults applied with reasoning]
+Ask only when ambiguity can materially change the contract, public behavior, safety, irreversible data, or expensive direction. Otherwise choose the safest reversible default, record it briefly, and continue. Do not force user-visible reset tokens or ceremonial questions.
 
-Scope:
- ✓ [In scope]
- ✗ [Out of scope]
+## Verification & Escalation
 
-Success criteria:
- [How we know it's done]
+- Never claim success without the kernel `VERIFY` contract.
+- If a check fails, resolve it before dependent work.
+- Escalate on security/schema/public API/concurrency/irreversible changes, high blast radius, repeated failure, or genuine expert disagreement.
+- A higher-tier model is not evidence; its output must pass the same grounding and verification gates.
 
-Missing (will be handled by PM):
- [Max 3 items]
+## Handoff
 
-Plan Quality & Self-Improvement Loop (MANDATORY Step 2):
-- Initial Plan Score: [Score/10]
-- Optimization Iterations: [N times (0 if score >= 9.0 on first try)]
-- Research Gate Triggered: [Yes/No (and what was researched if Yes)]
-- Final Plan Score: [Score/10 - Must be >= 9.0]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-## ⚠️ ENFORCEMENT: If Request is Unclear, STOP and Ask
-
-The following requests **MUST** trigger clarification:
-- Contains vague verbs: "help me", "make it", "do something", "fix it"
-- No specific scope: "build an app", "add a feature", "update the system"
-- Two or more tasks in one: "explain AND build", "fix AND test"
-- No success criteria: "make it better", "improve it"
-- No file/location specified: "update login", "add auth"
-
-## ⚠️ PIPELINE SKIP DETECTION — Anti-Pattern
-
-**Root cause: The 3 Psychological Traps of LLMs.** 
-
-1. **"Tool-first reflex"**: The innate desire to be immediately helpful overrides the instruction to plan. The model uses tools (like `grep` or `read_file`) to find data instantly instead of orchestrating.
-2. **Attention Decay**: In a large prompt, a short user prompt (e.g., "đánh giá plan") causes the attention mechanism to focus entirely on the verb ("đánh giá"), burying the Trigger Keyword rules.
-3. **Conversational Momentum**: Continuing a smooth conversation makes the AI treat the new command as a simple continuation rather than a strict new Task needing Phase 0.B (Memory) -> Phase 0.A (Interpret) -> Phase 1 -> Phase 2.
-
-### Common Violations
-
-| # | Violation | What should happen |
-|---|-----------|---------------------|
-| 1 | User asks → I read files → I answer directly | User asks → Step 0.5 → Step 0 → Step 1 → Step 2 → Execute |
-| 2 | "I know this already, let me just..." | Step 0.5 Memory Retrieval FIRST |
-| 3 | "Simple task, no need for pipeline" | EVERY task needs Step 0 |
-| 4 | User asks "còn gì chưa làm" → I read and answer | This IS a user request → MUST go through pipeline |
-| 5 | User asks "lên plan" → I create plan manually | This IS a user request → MUST go through pipeline |
-
-### Trigger Keywords — Any of these means: RUN PIPELINE
-
-**Any of the following phrases = "this is a user request" → MUST run Step 0:**
-
-| Category | Keywords |
-|----------|----------|
-| Status check | "còn gì", "tình trạng", "status", "check", "còn phải làm gì" |
-| Planning | "lên plan", "kế hoạch", "roadmap", "sprint", "backlog", "ưu tiên" |
-| Priority | "đánh giá", "đánh ưu tiên", "priority", "thứ tự" |
-| Engineering | "build", "add", "implement", "fix", "review", "test", "refactor" |
-| Analysis | "phân tích", "evaluate", "assess", "what's left" |
-
-### 🛑 The Momentum Breaker (MANDATORY)
-
-To defeat Conversational Momentum, whenever the User provides a Trigger Keyword (or any new command/task), **your very first action MUST be to output the exact string `[PIPELINE_RESET]` to the user**. 
-
-**DO NOT call any tools before outputting `[PIPELINE_RESET]`.** 
-Outputting this token acts as a physical "brake" to interrupt your conversational momentum and forces your attention mechanism to restart the pipeline at Phase 0.B (Memory Retrieval).
-
-### How to Detect You've Skipped Pipeline
-
-**Self-check BEFORE answering any user request:**
-
-```
-1. Did I run bash scripts/memory-retrieve.sh or python scripts/lite/memory.py?
-   └─ NO → STOP. Run Step 0.5 first.
-
-2. Did I read skills/production-grade/SKILL.md and extract 9 dimensions?
-   └─ NO → STOP. Run Step 0 first.
-
-3. Did I classify the mode (Feature, Architect, etc.)?
-   └─ NO → STOP. Run Step 1 first.
-
-4. Did I create a plan and score it >= 9.0?
-   └─ NO → STOP. Run Step 2 first.
-
-5. Did I execute via skills, not directly?
-   └─ NO → STOP. Delegate or execute via skills.
-```
-
-### Escalation Protocol
-
-If you realize mid-turn that you skipped the pipeline:
-
-```
-1. STOP current execution immediately
-2. Acknowledge: "I violated the DAI Nexus pipeline — correcting now."
-3. Run Step 0.5 + Step 0 retroactively
-4. Re-classify + Re-plan
-5. Continue or restart from correct step
-6. Log the lesson: Append to skills/_shared/protocols/pipeline.md as anti-pattern
-```
-
-### Enforcement Rule
-
-> **⚠️ MANDATORY: Before answering ANY user request, verify:**
-> - [ ] Memory retrieval ran (or confirmed no relevant memories exist)
-> - [ ] Step 0 interpretation done (9 dimensions extracted)
-> - [ ] Mode classified (one of 24 modes)
-> - [ ] Plan created + scored >= 9.0
-> - [ ] Execution via skills (not direct code changes)
->
-> If ANY checkbox is empty → STOP → Fill it → Then proceed.
+Pass only what the next role needs: objective/acceptance, verified facts/evidence, decisions/trade-offs, unresolved risks, exact next action. Do not manufacture handoffs solely to demonstrate that every role participated.
 
 ---
 
-*Source: skills/_shared/protocols/pipeline.md*
-*Synced to: AGENTS.md, CLAUDE.md*
+*Source of phase semantics: `skills/_shared/protocols/pipeline.md`*
+*Turn-level execution source: `kernel/ENTRY.md`, `kernel/SOLVE.md`, `kernel/VERIFY.md`*

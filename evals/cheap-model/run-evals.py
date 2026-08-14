@@ -591,7 +591,7 @@ def main():
     # Absolute paths
     repo_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
     orchestrator_path = os.path.join(
-        repo_root, "scripts", "dai-nexus-orchestrator.py"
+        repo_root, "scripts", "dainexus-orchestrator.py"
     )
 
     for task in tasks:
@@ -662,7 +662,7 @@ def main():
                 env["DAINEXUS_LITE"] = "false"
 
             # Run the orchestrator script
-            # Usage: python3 dai-nexus-orchestrator.py <PROJECT_ID> <TASK_PROMPT> [CODE_DIR]
+            # Usage: python3 dainexus-orchestrator.py <PROJECT_ID> <TASK_PROMPT> [CODE_DIR]
             cmd = f"python3 '{orchestrator_path}' 'eval-{task_id}' '{prompt}' '{temp_dir}'"
             agent_exit_code, agent_stdout, agent_stderr = run_command(
                 cmd, cwd=temp_dir, verbose=args.verbose, env=env

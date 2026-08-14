@@ -96,7 +96,7 @@ echo ""
 
 echo "── native filter ──"
 
-NATIVE_FILTER="$SCRIPT_DIR/../../scripts/dai-nexus-shell-filter.sh"
+NATIVE_FILTER="$SCRIPT_DIR/../../scripts/dainexus-shell-filter.sh"
 [[ -f "$NATIVE_FILTER" ]] && \
     log_pass "native filter exists" || log_fail "native filter missing"
 

@@ -185,7 +185,7 @@ for dependent in affected_skills:
 ### GraphViz DOT Format
 
 ```dot
-digraph dai-nexus_deps {
+digraph dai_nexus_deps {
     rankdir=TB;
     node [shape=box, style=rounded];
     

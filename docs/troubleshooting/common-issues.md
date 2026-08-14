@@ -16,7 +16,7 @@
 
 2. Run MCP setup:
    ```bash
-   bash scripts/dai-nexus-mcp-setup.sh --diagnose
+   bash scripts/dainexus-mcp-setup.sh --diagnose
    ```
 
 3. Restart your AI client
@@ -35,7 +35,7 @@
 
 2. Re-run setup:
    ```bash
-   bash scripts/dai-nexus-mcp-setup.sh
+   bash scripts/dainexus-mcp-setup.sh
    ```
 
 3. Verify server path exists:

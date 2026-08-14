@@ -98,7 +98,7 @@ None at release.
 If you encounter issues:
 
 1. Check the [Migration Guide](v8-to-v9.md)
-2. Run diagnostics: `bash scripts/dai-nexus-mcp-setup.sh --diagnose`
+2. Run diagnostics: `bash scripts/dainexus-mcp-setup.sh --diagnose`
 3. Open a [GitHub issue](https://github.com/Exia-thd/DAI-nexus/issues)
 
 ---

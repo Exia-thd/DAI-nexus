@@ -5,7 +5,7 @@
   "servers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["DAI-NEXUS/scripts/dai-nexus-mcp-launcher.sh"],
+      "args": ["DAI-NEXUS/scripts/dainexus-mcp-launcher.sh"],
       "description": "DAI Nexus project intelligence and skills"
     },
     "dainexus-node": {
@@ -15,7 +15,7 @@
     }
   },
   "notes": {
-    "installation": "Run 'dai-nexus-mcp-setup.sh setup' from your project to auto-generate this config",
+    "installation": "Run 'dainexus-mcp-setup.sh setup' from your project to auto-generate this config",
     "workspace": "Launchers auto-detect workspace from git root or DAINEXUS_WORKSPACE env var",
     "restart": "Restart Claude Desktop after modifying this file"
   }

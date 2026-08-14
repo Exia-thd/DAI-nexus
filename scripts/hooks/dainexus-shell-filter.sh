@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dai-nexus-shell-filter — Token-efficient shell output filter
 # Compresses shell command output before LLM context injection.
-# Usage: command | bash dai-nexus-shell-filter.sh [command] [args...]
+# Usage: command | bash dainexus-shell-filter.sh [command] [args...]
 
 set -uo pipefail
 

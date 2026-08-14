@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: dai-nexus-memory-hook.sh has been moved to hooks/dai-nexus-memory-hook.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dainexus-memory-hook.sh has been moved to hooks/dainexus-memory-hook.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/hooks/dai-nexus-memory-hook.sh" "$@"
+    source "$DIR/hooks/dainexus-memory-hook.sh" "$@"
 else
-    exec "$DIR/hooks/dai-nexus-memory-hook.sh" "$@"
+    exec "$DIR/hooks/dainexus-memory-hook.sh" "$@"
 fi

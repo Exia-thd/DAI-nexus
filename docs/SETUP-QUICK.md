@@ -11,7 +11,7 @@
 cd /path/to/project
 
 # 2. Run setup (one command — sets up Cursor + Claude + Antigravity + Codex CLI)
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh
+bash dai-nexus/scripts/dainexus-mcp-setup.sh
 
 # 3. Restart your IDE (all platforms)
 # Done!
@@ -30,7 +30,7 @@ cd ~/Projects/my-app
 ### 2. Run the Setup
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh
+bash dai-nexus/scripts/dainexus-mcp-setup.sh
 ```
 
 Expected output:
@@ -65,7 +65,7 @@ Expected output:
     ✓ OpenAI Codex CLI (~/.codex/config.toml)
 
   Next: Restart your AI clients to activate MCP servers
-        Verify: bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+        Verify: bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 ### 3. Restart All AI Clients
@@ -80,7 +80,7 @@ Expected output:
 ### 4. Verify (All 3 Platforms)
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 Expected output:
@@ -117,28 +117,28 @@ Expected output:
 
 ```bash
 # Cursor only
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --cursor
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --cursor
 
 # Claude Code only
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --claude-code
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --claude-code
 
 # Antigravity only
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --antigravity
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --antigravity
 
 # OpenAI Codex CLI only
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --codex
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --codex
 ```
 
 ### Check Status
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 ### Force Re-setup
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --force
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --force
 ```
 
 ### Just GitNexus
@@ -153,7 +153,7 @@ gitnexus setup
 ## Uninstall
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --uninstall
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --uninstall
 ```
 
 ---
@@ -166,7 +166,7 @@ After setup, confirm all 4 platforms are configured:
 - [ ] **Claude Code**: Restart Claude, check MCP tools appear
 - [ ] **Antigravity**: Restart Antigravity, check MCP tools appear
 - [ ] **OpenAI Codex CLI**: Restart Codex, run `codex mcp list` to verify
-- [ ] **Script check**: `bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check` shows all ✓
+- [ ] **Script check**: `bash dai-nexus/scripts/dainexus-mcp-setup.sh --check` shows all ✓
 
 ---
 

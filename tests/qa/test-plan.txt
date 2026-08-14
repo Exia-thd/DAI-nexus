@@ -65,8 +65,8 @@
 | `gate workflow` | Request → wait → approve end-to-end | ✅ |
 | `getAllSkills` | Returns skills from disk | ✅ |
 | `getSharedProtocols` | Returns protocols from disk | ✅ |
-| `error serialization` | DAI NexusError → JSON | ✅ |
-| `isDAI NexusError` | Type detection | ✅ |
+| `error serialization` | DaiNexusError → JSON | ✅ |
+| `isDaiNexusError` | Type detection | ✅ |
 
 ### 3.2 Forgenexus Integration Tests
 

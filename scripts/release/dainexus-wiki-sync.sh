@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/dai-nexus-wiki-sync.sh
+# scripts/dainexus-wiki-sync.sh
 
 # Đường dẫn đến Shared Vault dùng chung (Thay đổi nếu bạn đặt ở thư mục khác)
 SHARED_VAULT_PATH="$HOME/dai-nexus-shared-vault"

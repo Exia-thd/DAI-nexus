@@ -103,9 +103,9 @@ class CursorDBReader:
         return self.execute(sql)
 ```
 
-### 2. DAI NexusReader
+### 2. DaiNexusReader
 ```python
-class DAI NexusReader:
+class DaiNexusReader:
     def get_usage(self, project: str, days: int = 7) -> List[Dict]:
         """Read usage records from ~/.dainexus/usage/"""
         base_path = Path.home() / ".dainexus" / "usage" / project
@@ -115,7 +115,7 @@ class DAI NexusReader:
 ### 3. UnifiedAggregator
 ```python
 class UnifiedAggregator:
-    def aggregate(self, cursor_data, dai-nexus_data) -> Dict:
+    def aggregate(self, cursor_data, dai_nexus_data) -> Dict:
         return {
             "by_source": {...},
             "by_model": {...},
@@ -138,7 +138,7 @@ def cursor_models():
 @app.route('/api/unified/usage')
 def unified_usage():
     cursor = CursorDBReader().get_code_hashes()
-    dai-nexus = DAI NexusReader().get_usage(project)
+    dai-nexus = DaiNexusReader().get_usage(project)
     return jsonify(UnifiedAggregator().aggregate(cursor, dai-nexus))
 ```
 

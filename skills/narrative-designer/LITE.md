@@ -39,7 +39,7 @@ cat << 'EOF' > docs/01-product/quest-introduction.md
 Provide interactive onboarding quest dialogue mapped to WebGL state flags.
 
 ## 2. Character Nodes
-- NPC: Blacksmith Ironwright
+- NPC: Blacksmith DAI Nexus
 - Player: Newly arrived system engineer
 
 ## 3. Acceptance Criteria (BDD)

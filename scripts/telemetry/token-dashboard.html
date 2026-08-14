@@ -820,7 +820,7 @@
       } else if (currentSource === 'cursor') {
         updateCursorDashboard();
       } else if (currentSource === 'dai-nexus') {
-        updateDAI NexusDashboard();
+        updateDaiNexusDashboard();
       } else {
         updateUnifiedDashboard();
       }
@@ -892,7 +892,7 @@
       })));
     }
 
-    function updateDAI NexusDashboard() {
+    function updateDaiNexusDashboard() {
       if (!currentData || !currentData.summary) return;
       const s = currentData.summary;
 

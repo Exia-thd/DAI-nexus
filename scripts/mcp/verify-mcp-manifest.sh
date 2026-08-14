@@ -123,8 +123,8 @@ pass "All servers have required fields"
 
 # 7. Test MCP setup script compatibility
 info "Checking MCP setup script compatibility..."
-if [ -f "$PROJECT_DIR/scripts/dai-nexus-mcp-setup.sh" ]; then
-    if timeout 10 bash "$PROJECT_DIR/scripts/dai-nexus-mcp-setup.sh" --check 2>/dev/null; then
+if [ -f "$PROJECT_DIR/scripts/dainexus-mcp-setup.sh" ]; then
+    if timeout 10 bash "$PROJECT_DIR/scripts/dainexus-mcp-setup.sh" --check 2>/dev/null; then
         pass "MCP setup script compatible"
     else
         warn "MCP setup script returned warnings (non-critical)"

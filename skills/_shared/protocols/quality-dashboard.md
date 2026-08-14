@@ -107,7 +107,7 @@ Write `.dainexus/quality-report-{session}.json` at pipeline completion:
   "schema_version": "1.0",
   "session_id": "session-20260314-1324",
   "generated_at": "ISO-8601",
-  "dai-nexus_version": "7.0.0",
+  "dai_nexus_version": "7.0.0",
   "mode": "Full Build",
   "overall": {
     "score": 91,

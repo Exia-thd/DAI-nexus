@@ -25,16 +25,16 @@
 cd /path/to/your/project
 
 # Run the setup wizard
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh wizard
+bash dai-nexus/scripts/dainexus-mcp-setup.sh wizard
 
 # Or use quick setup (all defaults)
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
+bash dai-nexus/scripts/dainexus-mcp-setup.sh setup
 ```
 
 ### Verify Installation
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 Expected output:
@@ -75,7 +75,7 @@ git --version     # Should show 2.x+
 ```bash
 # From your project directory
 cd /path/to/project
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
+bash dai-nexus/scripts/dainexus-mcp-setup.sh setup
 ```
 
 This automatically:
@@ -91,7 +91,7 @@ This automatically:
   "mcpServers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["/path/to/dai-nexus/scripts/dai-nexus-mcp-launcher.sh"]
+      "args": ["/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"]
     }
   }
 }
@@ -111,7 +111,7 @@ gitnexus setup
 #### Verify Cursor Setup
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 Look for:
@@ -129,7 +129,7 @@ Look for:
 
 ```bash
 cd /path/to/project
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
+bash dai-nexus/scripts/dainexus-mcp-setup.sh setup
 ```
 
 #### Option 2: Manual Setup
@@ -146,7 +146,7 @@ bash dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
   "mcpServers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["/absolute/path/to/dai-nexus/scripts/dai-nexus-mcp-launcher.sh"]
+      "args": ["/absolute/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"]
     }
   }
 }
@@ -164,7 +164,7 @@ gitnexus setup
 #### Verify Claude Setup
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 ---
@@ -192,13 +192,13 @@ Antigravity CLI cũng dùng **canonical MCP server** tại `~/.dainexus/mcp-serv
 
 ```bash
 cd /path/to/project
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --antigravity
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --antigravity
 ```
 
 Hoặc setup tất cả platforms cùng lúc:
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh
+bash dai-nexus/scripts/dainexus-mcp-setup.sh
 ```
 
 #### How It Works
@@ -208,7 +208,7 @@ Antigravity reads .antigravity/mcp-manifest.json
                     ↓
         Reads workspace path + dai-nexus path (CONTEXT ONLY)
                     ↓
-        Starts dai-nexus-mcp-launcher.sh
+        Starts dainexus-mcp-launcher.sh
                     ↓
         Launcher uses ~/.dainexus/mcp-server/src/index.ts (CANONICAL)
                     ↓
@@ -218,7 +218,7 @@ Antigravity reads .antigravity/mcp-manifest.json
 #### Verify Antigravity Setup
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 Expected output:
@@ -250,7 +250,7 @@ Nếu cần config thủ công, launcher vẫn phải dùng canonical server:
   "mcpServers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["/path/to/dai-nexus/scripts/dai-nexus-mcp-launcher.sh"],
+      "args": ["/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"],
       "env": {
         "DAINEXUS_WORKSPACE": "${workspaceFolder}"
       }
@@ -282,19 +282,19 @@ Codex CLI cũng dùng **canonical MCP server** tại `~/.dainexus/mcp-server/src
 
 ```bash
 # Codex CLI only
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --codex
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --codex
 ```
 
 Hoặc setup tất cả platforms cùng lúc:
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh
+bash dai-nexus/scripts/dainexus-mcp-setup.sh
 ```
 
 #### Verify Codex Setup
 
 ```bash
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 ```
 
 Hoặc dùng Codex CLI native:
@@ -349,7 +349,7 @@ Project/
 
 ```bash
 cd /path/to/project
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
+bash dai-nexus/scripts/dainexus-mcp-setup.sh setup
 ```
 
 This creates the shared files:
@@ -373,8 +373,8 @@ Each IDE will automatically detect the workspace and load the correct context.
 
 | IDE | Config Location | Auto-Detection |
 |-----|---------------|-----------------|
-| **Cursor** | `~/.cursor/mcp.json` | Updated by `dai-nexus-mcp-setup.sh` |
-| **Claude Desktop** | `~/.config/Claude/...` | Updated by `dai-nexus-mcp-setup.sh` |
+| **Cursor** | `~/.cursor/mcp.json` | Updated by `dainexus-mcp-setup.sh` |
+| **Claude Desktop** | `~/.config/Claude/...` | Updated by `dainexus-mcp-setup.sh` |
 | **Antigravity** | `.antigravity/` | Reads manifest automatically |
 
 ### Workspace Detection Per IDE
@@ -382,14 +382,14 @@ Each IDE will automatically detect the workspace and load the correct context.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Cursor                                                      │
-│   ↓ ~/.cursor/mcp.json → dai-nexus-mcp-launcher.sh      │
+│   ↓ ~/.cursor/mcp.json → dainexus-mcp-launcher.sh      │
 │   ↓ Workspace: git rev-parse --show-toplevel               │
 │   ↓ Project context loaded                                 │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
 │ Claude Desktop                                              │
-│   ↓ ~/.config/Claude/... → dai-nexus-mcp-launcher.sh    │
+│   ↓ ~/.config/Claude/... → dainexus-mcp-launcher.sh    │
 │   ↓ Workspace: git rev-parse --show-toplevel               │
 │   ↓ Project context loaded                                 │
 └─────────────────────────────────────────────────────────────┘
@@ -398,7 +398,7 @@ Each IDE will automatically detect the workspace and load the correct context.
 │ Antigravity                                                 │
 │   ↓ Reads .antigravity/mcp-manifest.json                   │
 │   ↓ Sets DAINEXUS_WORKSPACE env var                     │
-│   ↓ dai-nexus-mcp-launcher.sh uses this env var          │
+│   ↓ dainexus-mcp-launcher.sh uses this env var          │
 │   ↓ Project context loaded                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -424,42 +424,42 @@ When you switch from one IDE to another:
 
 ```bash
 # Check which IDEs are configured
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
 
 # Run diagnostics for detailed view
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --diagnose
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --diagnose
 ```
 
 ---
 
 ## Commands Reference
 
-### dai-nexus-mcp-setup.sh
+### dainexus-mcp-setup.sh
 
 Unified MCP setup for Cursor + Claude Code + Antigravity + OpenAI Codex CLI.
 
 ```bash
 # Setup all platforms
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh
+bash dai-nexus/scripts/dainexus-mcp-setup.sh
 
 # Setup individual platform
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --cursor
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --claude-code
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --antigravity
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --codex
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --cursor
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --claude-code
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --antigravity
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --codex
 
 # Force re-generate MCP server
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --force
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --force
 
 # Status & diagnostics
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --check
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --diagnose
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --check
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --diagnose
 
 # Remove MCP setup from all platforms
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --uninstall
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --uninstall
 
 # Help
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh --help
+bash dai-nexus/scripts/dainexus-mcp-setup.sh --help
 ```
 
 ### GitNexus CLI
@@ -497,10 +497,10 @@ gitnexus list
 
 ```bash
 # Enable verbose output
-FW_MCP_VERBOSE=1 bash dai-nexus-mcp-setup.sh --diagnose
+FW_MCP_VERBOSE=1 bash dainexus-mcp-setup.sh --diagnose
 
 # Or use --verbose flag
-bash dai-nexus-mcp-setup.sh --diagnose
+bash dainexus-mcp-setup.sh --diagnose
 ```
 
 ---
@@ -515,12 +515,12 @@ bash dai-nexus-mcp-setup.sh --diagnose
 
 1. Check status:
    ```bash
-   bash dai-nexus-mcp-setup.sh --check
+   bash dainexus-mcp-setup.sh --check
    ```
 
 2. Run diagnostics:
    ```bash
-   bash dai-nexus-mcp-setup.sh --diagnose
+   bash dainexus-mcp-setup.sh --diagnose
    ```
 
 3. Restart IDE
@@ -543,8 +543,8 @@ On Windows, path structures and command execution differ from macOS. If you enco
    - For Windows environments, prefix hook script paths with `bash` to ensure they execute correctly under non-POSIX shells:
      ```json
      "hooks": {
-       "PostMessage": "bash D:/path/to/dai-nexus/scripts/dai-nexus-memory-hook.sh tick",
-       "PostToolUse": "bash D:/path/to/dai-nexus/scripts/dai-nexus-memory-hook.sh checkpoint"
+       "PostMessage": "bash D:/path/to/dai-nexus/scripts/dainexus-memory-hook.sh tick",
+       "PostToolUse": "bash D:/path/to/dai-nexus/scripts/dainexus-memory-hook.sh checkpoint"
      }
      ```
 
@@ -592,13 +592,13 @@ On Windows, path structures and command execution differ from macOS. If you enco
 1. Set workspace explicitly:
    ```bash
    export DAINEXUS_WORKSPACE=/path/to/project
-   bash dai-nexus-mcp-setup.sh --check
+   bash dainexus-mcp-setup.sh --check
    ```
 
 2. Run from project directory:
    ```bash
    cd /path/to/project
-   bash dai-nexus-mcp-setup.sh --check
+   bash dainexus-mcp-setup.sh --check
    ```
 
 ### GitNexus Index Stale
@@ -617,7 +617,7 @@ gitnexus analyze --force
 
 **Solution:** Re-run setup:
 ```bash
-bash dai-nexus-mcp-setup.sh setup --force
+bash dainexus-mcp-setup.sh setup --force
 ```
 
 ### npm Install Failures
@@ -667,7 +667,7 @@ gitnexus setup
 ```bash
 cd dai-nexus
 git pull origin main
-bash scripts/dai-nexus-mcp-setup.sh setup --force
+bash scripts/dainexus-mcp-setup.sh setup --force
 ```
 
 ### Q: Multiple projects - do I need separate configs?
@@ -682,7 +682,7 @@ bash scripts/dai-nexus-mcp-setup.sh setup --force
 
 **A:**
 ```bash
-bash dai-nexus-mcp-setup.sh --uninstall
+bash dainexus-mcp-setup.sh --uninstall
 ```
 
 ### Q: Can I use DAI Nexus with multiple IDEs simultaneously?
@@ -691,7 +691,7 @@ bash dai-nexus-mcp-setup.sh --uninstall
 
 ```bash
 # Setup once
-bash dai-nexus/scripts/dai-nexus-mcp-setup.sh setup
+bash dai-nexus/scripts/dainexus-mcp-setup.sh setup
 
 # Restart all IDEs (Cursor + Claude Desktop + Antigravity)
 # They all share the same:

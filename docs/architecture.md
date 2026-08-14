@@ -403,10 +403,10 @@ GitNexus maintains a graph database of code symbols and relationships:
 
 | Category | Key Scripts |
 |----------|-------------|
-| **Setup** | `dai-nexus-mcp-setup.sh`, `setup-project.sh`, `setup.sh` |
+| **Setup** | `dainexus-mcp-setup.sh`, `setup-project.sh`, `setup.sh` |
 | **Memory** | `scripts/lite/memory.py`, `memory-trace.py`, `memory-consolidate.py`, `memory-hygiene.sh` |
-| **Quality** | `forge-validate.sh`, `dai-nexus-session-tracker.sh` |
-| **CI/CD** | `test-cli.sh`, `dai-nexus-submodule-check.sh` |
+| **Quality** | `forge-validate.sh`, `dainexus-session-tracker.sh` |
+| **CI/CD** | `test-cli.sh`, `dainexus-submodule-check.sh` |
 | **Kernel** | `lite/sync-kernel.py`, `lite/escalate.sh` |
 | **Analysis** | `convention-indexer.sh`, `checkpoint-extract.sh` |
 | **Parallel** | `worktree-manager.sh` |

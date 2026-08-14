@@ -209,7 +209,7 @@ const disabled = process.env.DAINEXUS_DISABLED_HOOKS?.split(',') ?? [];
 **Status:** Gap — 4 harnesses vs ECC's 10+
 **What to build:** MCP setup for Gemini CLI, Zed AI, and OpenCode.
 
-**Deliverable:** `scripts/dai-nexus-mcp-setup.sh` extended with:
+**Deliverable:** `scripts/dainexus-mcp-setup.sh` extended with:
 ```bash
 --gemini    # Setup for Gemini CLI
 --zed       # Setup for Zed AI
@@ -266,7 +266,7 @@ dai-nexus list-installed              # Show what's installed
 
 **Deliverable:** `install.sh` with profile flags + `uninstall.sh` with doctor
 **Value:** Teams can install only what they need. Faster onboarding.
-**Dependencies:** dai-nexus-mcp-setup.sh (existing)
+**Dependencies:** dainexus-mcp-setup.sh (existing)
 **Effort:** Medium — 2 days
 **Acceptance Criteria:**
 - [ ] `dai-nexus install --profile minimal` installs only core pipeline
@@ -281,7 +281,7 @@ dai-nexus list-installed              # Show what's installed
 #### 4.1 — Skill Creator from Git History
 **Status:** ✓ COMPLETED
 **Deliverables:**
-- `scripts/dai-nexus-skill-create.sh` — Git-based skill auto-generator
+- `scripts/dainexus-skill-create.sh` — Git-based skill auto-generator
 - `skills/skill-maker/SKILL.md` — Updated with git analysis section
 - `skills/generated/` — Generated skills output directory
 

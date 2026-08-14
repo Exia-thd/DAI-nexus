@@ -295,13 +295,13 @@ install_mcp() {
     # Setup for Claude Code
     if command -v claude &> /dev/null || [[ -f "$HOME/.claude/settings.json" ]]; then
         log_info "Setting up Claude Code MCP..."
-        "$source_dir/scripts/dai-nexus-mcp-setup.sh" --claude-code 2>/dev/null || true
+        "$source_dir/scripts/dainexus-mcp-setup.sh" --claude-code 2>/dev/null || true
     fi
 
     # Setup for Cursor
     if command -v cursor &> /dev/null || [[ -f "$HOME/.cursor/mcp.json" ]]; then
         log_info "Setting up Cursor MCP..."
-        "$source_dir/scripts/dai-nexus-mcp-setup.sh" --cursor 2>/dev/null || true
+        "$source_dir/scripts/dainexus-mcp-setup.sh" --cursor 2>/dev/null || true
     fi
 
     log_success "MCP configuration complete"
@@ -565,14 +565,14 @@ install_scripts() {
     mkdir -p "$bin_dir"
 
     local scripts=(
-        "bootstrap/dai-nexus-install.sh"
-        "runtime/dai-nexus-lifecycle.sh"
-        "bootstrap/dai-nexus-update.sh"
-        "mcp/dai-nexus-mcp-setup.sh"
+        "bootstrap/dainexus-install.sh"
+        "runtime/dainexus-lifecycle.sh"
+        "bootstrap/dainexus-update.sh"
+        "mcp/dainexus-mcp-setup.sh"
         "memory/memory-middleware.py"
         "scripts/lite/memory.py"
-        "runtime/dai-nexus-session-tracker.sh"
-        "skills/dai-nexus-lesson-migrator.sh"
+        "runtime/dainexus-session-tracker.sh"
+        "skills/dainexus-lesson-migrator.sh"
     )
 
     for script_path in "${scripts[@]}"; do
@@ -605,7 +605,7 @@ create_alias() {
     log_header "Creating Shell Alias"
 
     local shell_rc=""
-    local alias_line='alias dai-nexus="'"$DAINEXUS_DIR"'/bin/dai-nexus-lifecycle.sh"'
+    local alias_line='alias dai-nexus="'"$DAINEXUS_DIR"'/bin/dainexus-lifecycle.sh"'
 
     # Detect shell
     if [[ -n "${BASH_VERSION:-}" ]]; then

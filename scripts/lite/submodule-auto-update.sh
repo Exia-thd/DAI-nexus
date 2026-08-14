@@ -77,9 +77,9 @@ fi
 NEW_HEAD="$(git rev-parse HEAD)"
 echo "✅ [DAI Nexus] Đã tự động cập nhật submodule lên ${NEW_HEAD:0:8}."
 
-INSTALLER="$FW_ROOT/scripts/dai-nexus-install.sh"
-DOCTOR="$FW_ROOT/scripts/dai-nexus-hook-doctor.sh"
-MCP_SETUP="$FW_ROOT/scripts/dai-nexus-mcp-setup.sh"
+INSTALLER="$FW_ROOT/scripts/dainexus-install.sh"
+DOCTOR="$FW_ROOT/scripts/dainexus-hook-doctor.sh"
+MCP_SETUP="$FW_ROOT/scripts/dainexus-mcp-setup.sh"
 
 if [[ -x "$INSTALLER" ]]; then
     if ! DAINEXUS_SOURCE_DIR="$FW_ROOT" bash "$INSTALLER" \

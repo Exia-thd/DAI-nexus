@@ -141,7 +141,7 @@ check_requirements() {
 
     # Launchers
     ((checks++))
-    if [[ -f "${DAINEXUS_DIR}/scripts/dai-nexus-mcp-launcher.sh" ]]; then
+    if [[ -f "${DAINEXUS_DIR}/scripts/dainexus-mcp-launcher.sh" ]]; then
         ((passed++))
         log_ok "DAI Nexus Launcher: exists"
     else
@@ -224,7 +224,7 @@ DAINEXUS_DIR="$fw_path"
 export DAINEXUS_WORKSPACE="\$WORKSPACE"
 
 # Run MCP servers via launcher
-exec bash "\${DAINEXUS_DIR}/scripts/dai-nexus-mcp-launcher.sh"
+exec bash "\${DAINEXUS_DIR}/scripts/dainexus-mcp-launcher.sh"
 EOF
 }
 
@@ -311,7 +311,7 @@ generate_extension() {
     # Copy DAI Nexus scripts
     log_step "Bundling DAI Nexus..."
     mkdir -p "$temp_dir/dai-nexus-extension/dai-nexus/scripts"
-    cp "${DAINEXUS_DIR}/scripts/dai-nexus-mcp-launcher.sh" "$temp_dir/dai-nexus-extension/dai-nexus/scripts/"
+    cp "${DAINEXUS_DIR}/scripts/dainexus-mcp-launcher.sh" "$temp_dir/dai-nexus-extension/dai-nexus/scripts/"
 
     # Copy launchers
     cp "$temp_dir/dai-nexus-extension/launcher.sh" "$temp_dir/dai-nexus-extension/dai-nexus/scripts/"

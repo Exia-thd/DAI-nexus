@@ -15,13 +15,13 @@ Run silently BEFORE any execution (all modes) to ensure project intelligence is 
 
    ```bash
    # If dai-nexus is a submodule in the project:
-   bash <project-root>/dai-nexus/scripts/dai-nexus-mcp-setup.sh
+   bash <project-root>/dai-nexus/scripts/dainexus-mcp-setup.sh
 
    # If dai-nexus IS the project:
-   bash scripts/dai-nexus-mcp-setup.sh
+   bash scripts/dainexus-mcp-setup.sh
 
    # For Antigravity plugin users (universal, works from any project):
-   bash <dai-nexus>/.antigravity/plugins/production-grade/scripts/dai-nexus-mcp-setup.sh
+   bash <dai-nexus>/.antigravity/plugins/production-grade/scripts/dainexus-mcp-setup.sh
    ```
 
    This single command:
@@ -44,7 +44,7 @@ Run silently BEFORE any execution (all modes) to ensure project intelligence is 
 
 **Step 0.2 — System Requirements + Power Level Check (required):**
 
-DAI Nexus requires **Node.js 18+** (GitNexus) and **Python 3** (local memory). Power level determines which tools are needed.
+DAI Nexus requires **Node.js 22+** (GitNexus/MCP runtime) and **Python 3** (local memory). Power level determines which tools are needed.
 
 **Step 0.2.1 — System Requirements Check:**
 
@@ -64,15 +64,15 @@ settings_check: [ -f .dainexus/settings.md ] && echo "exists" || echo "missing"
 | ≥18 | ≥3.8 | ready | ✅ Full Persistent — continue to Step 0.3 |
 | ≥18 | ≥3.8 | setup | ⧖ Memory setup needed — run memory-local.sh |
 | ≥18 | missing | — | ⚠️ Python missing — stop, tell user install Python 3 |
-| <18 | — | — | ⚠️ Node.js <18 — stop, tell user upgrade Node.js |
-| missing | — | — | ⚠️ Node.js missing — stop, tell user install Node.js 18+ |
+| <22 | — | — | ⚠️ Node.js <22 — stop, tell user upgrade Node.js |
+| missing | — | — | ⚠️ Node.js missing — stop, tell user install Node.js 22+ |
 
 **If Node.js or Python missing (blocking):**
 ```
 notify_user:
   "⚠️ Missing required tools for DAI Nexus:
 
-   Node.js 18+ required for: GitNexus code intelligence, MCP server
+   Node.js 22+ required for: GitNexus code intelligence, MCP server
    Python 3.8+ required for: Local memory (ChromaDB + sentence-transformers)
 
    How to install:
@@ -121,7 +121,7 @@ ELSE:
 notify_user:
   "DAI Nexus has 5 power levels. Choose based on how much capability you need:
 
-  ⚡ Basic       — 80 skills, full pipeline (Node.js only)
+  ⚡ Basic       — manifest-driven skill registry + proportional pipeline (Node.js only)
   ⚡⚡ Smart     — + GitNexus blast-radius analysis (Node.js only)
   ⚡⚡⚡ Persistent — + Local memory with ChromaDB (Node.js + Python 3)
   ⚡⚡⚡⚡ Research  — + NotebookLM grounded research (optional)
@@ -145,7 +145,7 @@ IF Full Power:
   notify_user:
     "⚡ Full Power selected! You have everything you need:
 
-     MANDATORY (auto-verified): Node.js 18+, Python 3.8+, local memory ✓
+     MANDATORY (auto-verified): Node.js 22+, Python 3.8+, local memory ✓
 
      OPTIONAL — install anytime to unlock more capability:
 
@@ -291,7 +291,7 @@ Run AFTER update check, BEFORE mode classification. Follows `skills/_shared/prot
 
 3. **Load memory context (required for Persistent power level — Step 0.2):**
    - Run `bash <path-to-dai-nexus>/scripts/memory-retrieve.sh "<user-request>"` OR
-   - Run `python3 <path-to-dai-nexus>/python scripts/lite/memory.py search "<project-name> <user-request-keywords>" --limit 5`
+   - Run `python3 <path-to-dai-nexus>scripts/lite/memory.py search "<project-name> <user-request-keywords>" --limit 5`
    - Also load:
      - `.dainexus/subagent-context/CONVERSATION_SUMMARY.md`
      - `.dainexus/memory-bank/activeContext.md`
@@ -315,11 +315,12 @@ Run AFTER session context is loaded, AFTER chat-interpreter (Step -1), BEFORE an
    mkdir -p .dainexus/subagent-context/
    ```
 
-2. **Read chat-interpreter output:**
+2. **Read chat-interpreter output when present:**
    ```
    Read .dainexus/subagent-context/INTERPRETED_REQUEST.md
-   → This is the authoritative source of user intent
-   → All skills use this instead of the raw chat message
+   → Treat it as a bounded derived handoff/cache.
+   → The latest user instruction remains authoritative for intent; current workspace/runtime evidence remains authoritative for project state.
+   → If the cache conflicts with either, re-interpret and refresh it before delegating.
    ```
 
 3. **Write PIPELINE_SUMMARY.md** (refresh for each new phase):

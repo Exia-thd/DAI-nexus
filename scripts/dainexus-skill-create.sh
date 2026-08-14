@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: dai-nexus-skill-create.sh has been moved to skills/dai-nexus-skill-create.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dainexus-skill-create.sh has been moved to skills/dainexus-skill-create.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/skills/dai-nexus-skill-create.sh" "$@"
+    source "$DIR/skills/dainexus-skill-create.sh" "$@"
 else
-    exec "$DIR/skills/dai-nexus-skill-create.sh" "$@"
+    exec "$DIR/skills/dainexus-skill-create.sh" "$@"
 fi

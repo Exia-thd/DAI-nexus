@@ -39,5 +39,5 @@ sqlite3 .dainexus/memory.db "SELECT circuit_id, pes, trajectory_hash FROM proced
 ### Step 3: Execute ASIP edge adjustment (decay) after a detected compilation failure
 ```bash
 # Simulating an execution blocker on a specific database query edge
-python scripts/lite/memory.py graph-decay "source-node" "edge-db-conn"
+python3 scripts/lite/memory.py graph-decay "source-node" "edge-db-conn"
 ```

@@ -64,10 +64,10 @@ class ClaudeTelemetryReader:
         """Returns: [{model, session_count, total_duration}]"""
 ```
 
-### 3. DAI NexusReader
+### 3. DaiNexusReader
 
 ```python
-class DAI NexusReader:
+class DaiNexusReader:
     """Read from ~/.dainexus/usage/{project}/*.jsonl"""
     USAGE_PATH = "~/.dainexus/usage"
     

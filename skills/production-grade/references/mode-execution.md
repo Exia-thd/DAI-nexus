@@ -5,17 +5,17 @@
 ## Mode Execution (Non-Full-Build)
 
 All modes share these behaviors:
-- Bootstrap workspace: `mkdir -p skills/_shared/protocols/ .dainexus/`
-- Write shared protocols (same as Full Build step 3)
-- Read `.production-grade.yaml` for path overrides
-- Read existing workspace state if present
-- Apply coding-level adaptation from `.production-grade.yaml` (see main orchestrator config)
-- Apply sensitive file protection protocol for all file operations
-- **Run plan quality loop** on EVERY skill invocation — plan first, score ≥ 9.0 before any work begins
-- **Asynchronous Heartbeat:** Periodically emit human-readable status updates (e.g., "Running tests...", "Applying self-healing fix 2/5...") so the user knows the AI is working and hasn't frozen.
-- **⚠️ QA AUTO-RUN (MANDATORY):** Apply complexity-based hybrid testing flow. For complex tasks, the sequence is: Given/When/Then (BA) → Write Tests/Stubs (QA) → Code (Dev) → Run Tests → Pass ✓. For simple tasks: Code (Dev) → Write & Run Tests (QA) → Pass ✓. Never finish without verifying tests pass.
-- **Antigravity Planning (for large features):** Features with 3+ components MUST use antigravity planning structure BEFORE starting implementation. Create `antigravity/planning/[feature-name]/` with PLAN.md, SCOPE.md, ARCHITECTURE.md, TASKS.md files.
-- Engagement mode: ask ONLY if mode involves 3+ skills. For 1-2 skill modes, use Standard engagement + Sequential execution.
+- Reuse existing workspace/protocol state; create persistent scaffolding only when the task actually needs it.
+- Read `.production-grade.yaml` and current workspace state when present.
+- Apply senior execution, sensitive-file protection, and runtime model-tier protocols.
+- `QUICK` work uses `ACTION | TARGET | CHECK`; `STANDARD`/`DEEP` use the applicable complexity-scaled plan threshold. Never force a universal 9/10 score.
+- Verification matches risk: use the smallest deterministic check that proves acceptance; add broader regression/security/reliability testing when the change warrants it.
+- Payment, billing, IAP/in-app purchase, receipt validation, entitlements,
+  subscription, and checkout are always `HARD` / `DEEP`, regardless of file
+  count; no mode shortcut may classify them as `QUICK`.
+- Emit status updates for substantial/long-running work, not as noise around trivial edits.
+- Use Antigravity planning only when durable multi-component/multi-team coordination or `DEEP` architecture work benefits from persistent planning artifacts.
+- Ask the user only when ambiguity materially changes the contract, safety, irreversible data, or expensive direction.
 
 ### Goal Mode Execution (v8.2)
 
@@ -44,41 +44,29 @@ When Goal mode is triggered, DAI Nexus enters autonomous pursuit mode:
 4. EXIT CONDITIONS:
    - Condition is met (evaluator returns MET)
    - User runs `/goal clear`
-   - Safety limit reached (max_turns, timeout)
+   - Explicit runtime safety guard is reached (timeout, tool-call or byte limit)
    - User explicitly stops
 ```
 
 **Integration with other skills:** Goal mode wraps ANY skill execution. The underlying skill does the work; Goal mode handles the loop and evaluation.
 
-## ⚠️ Self-Check Before Finishing (MANDATORY)
+## Self-Check Before Finishing
 
-**BEFORE declaring a task complete, verify ALL of the following:**
+Before claiming completion, verify the checks that actually apply:
 
-| # | Check | Action if Failed |
-|---|-------|-----------------|
-| 1 | **Request interpreted?** | If Step 0 wasn't completed, go back and do it |
-| 2 | **Plan scored ≥ 9.0?** | If < 9.0, improve plan before proceeding |
-| 3 | **ASIP Research Gate followed?** | If 2 failures occurred → research + skill update was mandatory |
-| 4 | **Lessons written?** | Append to skill SKILL.md + .dainexus/lessons.md |
-| 5 | **Test cases prepared?** | For medium/large features, write test stubs first |
-| 6 | **Code changed?** | Implement code to satisfy requirements & test cases |
-| 7 | **Tests run & verified?** | Run QA tests to verify 100% pass |
-| 8 | **gitnexus_impact run?** | If editing symbols → run impact analysis |
-| 9 | **Scope respected?** | If scope creep detected → flag to user |
-| 10 | **User approval obtained?** | If gate exists → wait for approval |
-| 11 | **Review mode respected?** | If Full mode → run director reviews; if Solo → confirm skip OK |
-| 12 | **ASIP metrics updated?** | Increment counters in .dainexus/asip-metrics.json |
+| Check | Required behavior |
+|---|---|
+| Intent/state reconciled | Latest user request and current workspace/runtime evidence agree with the work performed. |
+| Effort/plan fit | `QUICK` used its mini-plan; `STANDARD` / `DEEP` passed the applicable threshold. No blanket 9/10 rule. |
+| Scope | No unrequested adjacent features/process work were silently added. |
+| Recovery | Failed steps followed the two-failure stop rule; research occurred only for a material unknown. |
+| Verification | Run the smallest deterministic checks that prove changed acceptance criteria, plus wider regression/security/release checks when risk warrants. |
+| Impact | When changing existing symbols/contracts, inspect callers/dependents with available project tools before finalizing. |
+| Approval | Obtain user/human approval only where the project/safety/release/preference contract requires it. |
+| Review | Independent review is required for `DEEP`, sensitive/public-contract work, or materially broad change as defined by the kernel. |
+| Learning | Store useful lessons project-locally; never auto-append them to shared DAI Nexus skills. |
 
-**⚠️ NEVER finish a task without completing checks 3-5 and 7 if code was changed.**
-
-### QA Test Sequence (MANDATORY complexity-based hybrid flow)
-
-```
-For Complex Tasks:   Given/When/Then (BA) → Write Tests/Stubs (QA) → Code (Dev) → Run Tests → Pass ✓
-For Simple Tasks:    Code (Dev) → Write & Run Tests (QA) → Pass ✓
-```
-
-**Do NOT wait for user to ask for tests. Run/verify them automatically.**
+Tests are derived from acceptance and risk, not a fixed lifecycle. Test-first is preferred for meaningful behavior/regression risk; `QUICK` reversible work may use an existing focused verifier instead of manufacturing a test artifact.
 
 ## Antigravity Planning System
 
@@ -446,7 +434,9 @@ Build a game from concept to a verified release using the control plane in
    enter at the earliest incomplete phase instead of recreating valid artifacts.
 4. **Use role lanes, not a fictional roster**:
    - Control plane: `production-grade`, `project-manager`
-   - Creative: `game-designer`, `art-director`, `level-designer`,
+   - Creative order: UX/research → `concept-artist` → `art-director` → UI/technical/engine handoff
+   - Creative files: `skills/concept-artist/LITE.md`, then `skills/art-director/LITE.md`
+   - Creative: `game-designer`, `concept-artist`, `art-director`, `level-designer`,
      `narrative-designer`, `game-audio-engineer`
    - Technical: `solution-architect`, `game-engineer`, engine-specific skills,
      `technical-artist`
@@ -456,7 +446,13 @@ Build a game from concept to a verified release using the control plane in
    project profile, and engine files. If genuinely unset, recommend Unity,
    Unreal, Godot, Phaser 3, or Three.js from platform and production constraints
    and ask only when the choice materially changes architecture.
-6. **Preserve the Style DNA gate** — initialize and validate
+6. **Preserve the concept and Style DNA gates** — call
+   `python3 scripts/runtime/skill_routing.py --mode game-build --config .dainexus/skills-config.json`
+   for ordered verified paths, use `concept-artist` to produce
+   structurally distinct visual directions and a selected concept packet, then
+   validate the concept/art artifacts with
+   `python3 scripts/art-direction/creative-handoff.py validate-handoff "$CONCEPT_PACKET" "$ART_DIRECTION_GATES"`,
+   freeze the skill-aware dispatch packet, and then initialize and validate
    `.dainexus/art-direction/game-art-contract.json` using the Art Director
    protocol. Asset generation and engine handoff require approved style,
    confidence resolution, drift validation, manifest, and handoff evidence.

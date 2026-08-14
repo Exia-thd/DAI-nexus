@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: dai-nexus-goal.sh has been moved to runtime/dai-nexus-goal.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dainexus-goal.sh has been moved to runtime/dainexus-goal.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/runtime/dai-nexus-goal.sh" "$@"
+    source "$DIR/runtime/dainexus-goal.sh" "$@"
 else
-    exec "$DIR/runtime/dai-nexus-goal.sh" "$@"
+    exec "$DIR/runtime/dainexus-goal.sh" "$@"
 fi

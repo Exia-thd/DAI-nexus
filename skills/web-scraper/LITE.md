@@ -46,7 +46,7 @@ interface ScrapeResult {
 }
 
 export const scrapeStaticPage = async (url: string): Promise<ScrapeResult> => {
-  const customUserAgent = 'Mozilla/5.0 (compatible; DAI NexusBot/1.0)';
+  const customUserAgent = 'Mozilla/5.0 (compatible; DaiNexusBot/1.0)';
 
   try {
     // Grounded: Enforcing strict timeout and custom user-agent parameters to prevent blocking

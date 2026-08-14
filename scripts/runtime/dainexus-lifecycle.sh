@@ -235,9 +235,9 @@ check_scripts() {
 
     local scripts_dir="$DAINEXUS_DIR/bin"
     local required_scripts=(
-        "dai-nexus-lifecycle.sh"
-        "dai-nexus-install.sh"
-        "dai-nexus-update.sh"
+        "dainexus-lifecycle.sh"
+        "dainexus-install.sh"
+        "dainexus-update.sh"
     )
 
     if [[ -d "$scripts_dir" ]]; then
@@ -391,8 +391,8 @@ fix_common_issues() {
     # Fix 6: Re-run MCP setup if needed
     if [[ -d "$MCP_DIR" ]] && [[ -f "$MCP_DIR/src/index.ts" ]]; then
         log_fix "Running MCP setup..."
-        "$DAINEXUS_DIR/scripts/dai-nexus-mcp-setup.sh" --claude-code 2>/dev/null || true
-        "$DAINEXUS_DIR/scripts/dai-nexus-mcp-setup.sh" --cursor 2>/dev/null || true
+        "$DAINEXUS_DIR/scripts/dainexus-mcp-setup.sh" --claude-code 2>/dev/null || true
+        "$DAINEXUS_DIR/scripts/dainexus-mcp-setup.sh" --cursor 2>/dev/null || true
     fi
 
     echo ""

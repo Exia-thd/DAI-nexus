@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/dai-nexus-wiki-sync-all.sh
+# scripts/dainexus-wiki-sync-all.sh
 
 # Đường dẫn đến Shared Vault và Thư mục GitHub chứa các dự án
 SHARED_VAULT_PATH="$HOME/dai-nexus-shared-vault"

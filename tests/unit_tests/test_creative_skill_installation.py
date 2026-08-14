@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-INSTALLER = ROOT / "scripts" / "bootstrap" / "dai-nexus-install.sh"
+INSTALLER = ROOT / "scripts" / "bootstrap" / "dainexus-install.sh"
 SKILLS_CONFIG = ROOT / ".dainexus" / "skills-config.json"
 WORKFLOW = ROOT / "workflows" / "game-studio-build.md"
 PROTOCOL = ROOT / "skills" / "_shared" / "protocols" / "game-studio-pipeline.md"

@@ -84,7 +84,7 @@ skills are `skills/concept-artist/LITE.md` and `skills/art-director/LITE.md`.
 
 ```bash
 # One-command setup for all IDEs
-bash scripts/dai-nexus-mcp-setup.sh
+bash scripts/dainexus-mcp-setup.sh
 ```
 
 ### 6. Self-Improving Protocol (ASIP)
@@ -143,7 +143,7 @@ Enable persistent memory so the AI remembers decisions, conventions, and lessons
 
 Connect the DAI Nexus MCP server for maximum power: 12+ AI tools available directly in your IDE, multi-project support, and isolated per-project state.
 
-- **Requirements:** MCP-compatible IDE, `bash scripts/dai-nexus-mcp-setup.sh`
+- **Requirements:** MCP-compatible IDE, `bash scripts/dainexus-mcp-setup.sh`
 - **What you get:** Full MCP toolset, multi-project workspace, real-time pipeline status
 
 ---
@@ -169,7 +169,7 @@ Connect the DAI Nexus MCP server for maximum power: 12+ AI tools available direc
 | **Claude Code** | `CLAUDE.md` | ✅ Full | Stable | Direct Claude CLI integration. Supports hooks for auto-indexing. |
 | **Antigravity** | `AGENTS.md` | ✅ Full | Stable | Gemini-powered IDE. Uses `GEMINI.md` alongside `AGENTS.md`. |
 | **Gemini (CLI/IDE)** | `GEMINI.md` | ✅ Full | Stable | Gemini-native support with `thinking_level` optimization. |
-| **Codex (OpenAI)** | `AGENTS.md` | ✅ Full | Stable | Codex CLI integration via `dai-nexus-mcp-setup.sh --codex`. |
+| **Codex (OpenAI)** | `AGENTS.md` | ✅ Full | Stable | Codex CLI integration via `dainexus-mcp-setup.sh --codex`. |
 | **Forge CLI** | `src/cli/package.json` | N/A | Beta | Agent-first command-line interface; package versioned independently. |
 
 ### Configuration Files
@@ -202,7 +202,7 @@ cursor /path/to/your/project/
 npm install -g gitnexus && gitnexus setup && gitnexus analyze
 
 # 5. (Optional) Add MCP for full power
-bash scripts/dai-nexus-mcp-setup.sh
+bash scripts/dainexus-mcp-setup.sh
 ```
 
 ---

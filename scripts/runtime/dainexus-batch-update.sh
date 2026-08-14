@@ -5,10 +5,10 @@
 # Updates all projects that use DAI Nexus as a git submodule.
 #
 # Usage:
-#   bash scripts/dai-nexus-batch-update.sh                 # Check all (dry-run)
-#   bash scripts/dai-nexus-batch-update.sh --pull           # Auto-pull updates
-#   bash scripts/dai-nexus-batch-update.sh --pull --commit  # Pull + auto-commit
-#   bash scripts/dai-nexus-batch-update.sh --install-hooks  # Install git hooks
+#   bash scripts/dainexus-batch-update.sh                 # Check all (dry-run)
+#   bash scripts/dainexus-batch-update.sh --pull           # Auto-pull updates
+#   bash scripts/dainexus-batch-update.sh --pull --commit  # Pull + auto-commit
+#   bash scripts/dainexus-batch-update.sh --install-hooks  # Install git hooks
 #
 # Scans: ~/GitHub, ~/Documents/GitHub (customizable via SCAN_DIRS env var)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -224,8 +224,8 @@ echo ""
 
 if ! $DO_PULL && [[ $behind_total -gt 0 ]]; then
     info "Run with ${GREEN}--pull${NC} to auto-update all projects:"
-    info "  bash scripts/dai-nexus-batch-update.sh --pull"
+    info "  bash scripts/dainexus-batch-update.sh --pull"
     info ""
     info "Run with ${GREEN}--pull --commit${NC} to also commit the changes:"
-    info "  bash scripts/dai-nexus-batch-update.sh --pull --commit"
+    info "  bash scripts/dainexus-batch-update.sh --pull --commit"
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-# dai-nexus-lesson-migrator.sh
+# dainexus-lesson-migrator.sh
 # Legacy framework lesson migrator. Project/session lessons remain local by default.
 # Mutating shared SKILL.md files now requires an explicit framework-mutation command/flag.
 

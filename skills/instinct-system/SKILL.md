@@ -299,7 +299,7 @@ Add to `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
-    "PostToolUse": "./scripts/dai-nexus-instinct-hook.sh observe"
+    "PostToolUse": "./scripts/dainexus-instinct-hook.sh observe"
   }
 }
 ```
@@ -397,7 +397,7 @@ console.log(getObserverStats());
 │   └── instincts-config.ts   # Configuration
 ├── instincts-config.json     # Per-project overrides (optional)
 scripts/
-└── dai-nexus-instinct-hook.sh  # CLI/hook integration
+└── dainexus-instinct-hook.sh  # CLI/hook integration
 skills/
 └── instinct-system/
     └── SKILL.md              # This file
@@ -409,17 +409,17 @@ skills/
 
 ```bash
 # Check status
-./scripts/dai-nexus-instinct-hook.sh status
+./scripts/dainexus-instinct-hook.sh status
 
 # View stats
-./scripts/dai-nexus-instinct-hook.sh stats
+./scripts/dainexus-instinct-hook.sh stats
 
 # Clear pattern store
-./scripts/dai-nexus-instinct-hook.sh clear
+./scripts/dainexus-instinct-hook.sh clear
 
 # Observe a tool call
-./scripts/dai-nexus-instinct-hook.sh observe "Read" '{}' "true"
+./scripts/dainexus-instinct-hook.sh observe "Read" '{}' "true"
 
 # Promote patterns
-./scripts/dai-nexus-instinct-hook.sh promote "session-id"
+./scripts/dainexus-instinct-hook.sh promote "session-id"
 ```
