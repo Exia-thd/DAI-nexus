@@ -15,7 +15,7 @@
 <main>
 
 <section class="hero">
-  <span class="tag">TÀI LIỆU SINH TỪ SOURCE · v0.9.0</span>
+  <span class="tag">TÀI LIỆU SINH TỪ SOURCE · v0.9.1</span>
   <h1>DAI Nexus — <span class="accent">hệ điều hành cho AI coding agent</span></h1>
   <p class="lead">
     Không phải một tập prompt. Đây là một <strong>bộ luật + runtime</strong>: kernel bất biến nạp mỗi phiên,
@@ -27,9 +27,9 @@
     <span>Kernel <strong>8 file</strong></span>
     <span>Overlay <strong>87</strong></span>
     <span>Protocol <strong>57</strong></span>
-    <span>Runtime <strong>17 script</strong></span>
+    <span>Runtime <strong>18 script</strong></span>
     <span>MCP tool <strong>8</strong></span>
-    <span>Self-test <strong>59</strong></span>
+    <span>Self-test <strong>65</strong></span>
   </div>
 </section>
 
@@ -53,7 +53,7 @@
 
 <h2><span class="num">02</span> Ba tầng</h2>
 <div class="diagram">┌────────────────────────────────────────────────────────────────────────────┐
-│ TẦNG 1 — KERNEL (8 file, ~6591 token, luôn nạp)                            │
+│ TẦNG 1 — KERNEL (8 file, ~6792 token, luôn nạp)                            │
 │ kernel/{AUDIT, CLARIFY, ENTRY, ESCALATE, INDEX, POLICY, SOLVE, VERIFY}     │
 │ → 6 Hard Rules · SOLVE loop · VERIFY/AUDIT · Execution policy              │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -66,7 +66,7 @@
 └────────────────────────────────────────────────────────────────────────────┘
                         ⇓ được cưỡng bức bởi
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ TẦNG 3 — RUNTIME (17 script, 5466 dòng Python thuần)                       │
+│ TẦNG 3 — RUNTIME (18 script, 5743 dòng Python thuần)                       │
 │ run_check · verify_gate · policy_check · runtime_lease                     │
 │ memory · escalate · worktree_manager · validate_overlays                   │
 │ mcp/server.py → 8 tool cho IDE                                             │
@@ -85,7 +85,7 @@
   <a href="./evidence.html" class="nav-card"><div class="idx">03 · chống ảo giác</div>
     <h3>Chuỗi bằng chứng</h3><p>4 lớp: evidence writer → stop gate → policy fail-closed → runtime ledger.</p></a>
   <a href="./runtime.html" class="nav-card"><div class="idx">04 · scripts/ + mcp/</div>
-    <h3>Runtime</h3><p>17 công cụ Python zero-dependency + MCP server 8 tool.</p></a>
+    <h3>Runtime</h3><p>18 công cụ Python zero-dependency + MCP server 8 tool.</p></a>
   <a href="./memory.html" class="nav-card"><div class="idx">05 · memory.py</div>
     <h3>Memory</h3><p>SQLite+FTS5, BM25 fuse RRF, auto-tag, redaction, GC theo giá trị.</p></a>
   <a href="./patterns.html" class="nav-card"><div class="idx">06 · TINH TÚY</div>
@@ -115,12 +115,12 @@ Turn-close: VERIFY block · AUDIT coverage matrix · lưu memory · runtime ledg
 Stop hook: verify_gate.py — thiếu/giả/hết hạn evidence ⇒ CHẶN</div>
 
 <h2><span class="num">06</span> Số liệu (đọc từ repo)</h2>
-<div class="grid cols-4"><div class="stat"><div class="val">8</div><div class="lbl">kernel file</div></div><div class="stat"><div class="val">6591</div><div class="lbl">token boot</div></div><div class="stat"><div class="val">87</div><div class="lbl">skill overlay</div></div><div class="stat"><div class="val">57</div><div class="lbl">protocol</div></div><div class="stat"><div class="val">17</div><div class="lbl">runtime script</div></div><div class="stat"><div class="val">5466</div><div class="lbl">dòng runtime</div></div><div class="stat"><div class="val">8</div><div class="lbl">MCP tool</div></div><div class="stat"><div class="val">59</div><div class="lbl">self-test</div></div></div>
+<div class="grid cols-4"><div class="stat"><div class="val">8</div><div class="lbl">kernel file</div></div><div class="stat"><div class="val">6792</div><div class="lbl">token boot</div></div><div class="stat"><div class="val">87</div><div class="lbl">skill overlay</div></div><div class="stat"><div class="val">57</div><div class="lbl">protocol</div></div><div class="stat"><div class="val">18</div><div class="lbl">runtime script</div></div><div class="stat"><div class="val">5743</div><div class="lbl">dòng runtime</div></div><div class="stat"><div class="val">8</div><div class="lbl">MCP tool</div></div><div class="stat"><div class="val">65</div><div class="lbl">self-test</div></div></div>
 
 </main>
 <footer>
   <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
-  <div>v0.9.0 · commit <code>7bede65</code> · build 2026-08-14</div>
+  <div>v0.9.1 · commit <code>324337a</code> · build 2026-08-14</div>
 </footer>
 </body>
 </html>

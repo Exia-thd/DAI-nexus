@@ -258,6 +258,20 @@ Rules for this block:
 6. UI evidence separates structural/tool verification from human aesthetic judgment.
 7. If the task started any long-running process, emit Template 4 too. "The tests passed" is not evidence that the machine was left clean.
 
+## Strict block format (correlated)
+When a check has recorded acceptance criteria, the VERIFY block must quote the evidence rather than paraphrase it — six fields, `ACCEPTANCE` first:
+```text
+ACCEPTANCE: <lowercase-slug matching an acceptance id in the evidence>
+CLAIM: <the exact claim text recorded for that id>
+COMMAND: <the exact command from the evidence>
+OUTPUT: sha256:<the evidence output_sha256>
+EXIT CODE: <code>
+VERDICT: PASS | FAIL
+```
+`scripts/lite/rule_validator.py` enforces this and the Stop hook rejects the turn as `MISREPORTED` on any mismatch. Record criteria with `run_check.py --acceptance-id <slug> --claim "<text>"`.
+
+Emitting **no** block is fine — not every turn makes a verification claim. Emitting a *partial* block is the failure: it reads like proof while proving nothing.
+
 ## Evidence schema
 `run_check.py` writes schema **v2**: the v1 fields (`command`, `exit_code`, `output`, `timestamp_utc`, `workspace`, `tree_sha`) plus
 `output_sha256` (integrity — a hand-edited `output` no longer matches its digest),

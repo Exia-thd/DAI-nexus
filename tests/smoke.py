@@ -276,6 +276,45 @@ def test_memory_is_portable() -> None:
               r.returncode == 0 and "memory OK" in r.stdout, (r.stdout + r.stderr)[-250:])
 
 
+def test_claim_correlation() -> None:
+    """A VERIFY block must quote its evidence, not paraphrase it.
+
+    Evidence proves a command ran; this proves the *report* about it is faithful.
+    Rewording the claim, citing another command, or pasting prose where the
+    output digest belongs all have to fail.
+    """
+    r = run(PY + ["scripts/lite/rule_validator.py", "--selftest"])
+    check("rule_validator selftest", r.returncode == 0, (r.stdout + r.stderr)[-200:])
+
+    import importlib
+    sys.path.insert(0, str(ROOT / "scripts" / "lite"))
+    rv = importlib.import_module("rule_validator")
+    ev = {"command": ["py", "-3", "tests/smoke.py"], "output_sha256": "b" * 64,
+          "acceptance_criteria": [{"id": "suite-green", "claim": "the suite passes"}]}
+    good = (f"ACCEPTANCE: suite-green\nCLAIM: the suite passes\n"
+            f"COMMAND: py -3 tests/smoke.py\nOUTPUT: sha256:{'b' * 64}\n"
+            f"EXIT CODE: 0\nVERDICT: PASS")
+    check("faithful block accepted", not rv.validate(good, ev), str(rv.validate(good, ev))[:150])
+    check("reworded claim rejected",
+          bool(rv.validate(good.replace("the suite passes", "all good"), ev)))
+    check("prose instead of digest rejected",
+          bool(rv.validate(good.replace(f"sha256:{'b' * 64}", "everything passed"), ev)))
+    check("silence is not an error", not rv.validate("plain prose, no claim made", ev))
+
+    # The gate must refuse a misreported turn even when no code changed.
+    import os
+    if True:
+        payload = json.dumps({"response_content":
+                              good.replace("the suite passes", "fabricated claim")})
+        env = dict(os.environ, DAINEXUS_TURN="__no_such_turn__")
+        r = subprocess.run(PY + [str(ROOT / "scripts" / "lite" / "verify_gate.py"), "--hook"],
+                           input=payload, capture_output=True, text=True, cwd=ROOT,
+                           timeout=60, env=env)
+        check("gate blocks a misreported turn with no code changes",
+              r.returncode != 0 and "MISREPORTED" in (r.stdout + r.stderr),
+              (r.stdout + r.stderr)[-200:])
+
+
 def test_evidence_schema_v2() -> None:
     """v2 records carry an integrity digest; a doctored output must not survive it."""
     import importlib
@@ -429,6 +468,7 @@ def main() -> None:
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
                test_overlay_validator, test_docs_fresh, test_evidence_schema_v2,
+               test_claim_correlation,
                test_memory_is_portable, test_standalone_page_is_orphaned,
                test_stub_check_precision,
                test_utf8_cli_output, test_escalate_timeout_and_lease,

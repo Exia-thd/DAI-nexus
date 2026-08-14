@@ -48,7 +48,7 @@ TẦNG 3 — RUNTIME (Python thuần, zero-dependency, Windows/macOS/Linux)
 # 1. Sinh boot files từ kernel (chạy lại mỗi khi sửa kernel/)
 python scripts/lite/sync-kernel.py
 
-# 2. Tự kiểm tra toàn hệ thống (62 checks)
+# 2. Tự kiểm tra toàn hệ thống (68 checks)
 python tests/smoke.py
 
 # 3. Dùng: mở Claude Code (hoặc Cursor/Gemini CLI) tại repo này.

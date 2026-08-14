@@ -120,6 +120,11 @@ def main() -> None:
     parser.add_argument("--redact", default="1")
     parser.add_argument("--tier", choices=["quick", "standard", "deep"], default="standard")
     parser.add_argument("--acceptance", default="")
+    parser.add_argument("--acceptance-id", action="append", default=[],
+                        help="lowercase-slug id; pair with --claim, repeatable")
+    parser.add_argument("--claim", action="append", default=[],
+                        help="exact behaviour the matching --acceptance-id proves")
+    parser.add_argument("--test-ref", action="append", default=[])
     parser.add_argument("--negative-path", action="append", default=[])
     parser.add_argument("--help", "-h", action="store_true")
     parser.add_argument("cmd", nargs=argparse.REMAINDER)
@@ -144,6 +149,18 @@ def main() -> None:
     turn = args.turn or os.environ.get("DAINEXUS_TURN") or (
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"_{os.getpid()}"
     )
+
+    if len(args.acceptance_id) != len(args.claim):
+        print("[run-check] ERROR: --acceptance-id and --claim must be given in pairs.",
+              file=sys.stderr)
+        sys.exit(2)
+    acceptance_criteria = []
+    for slug, claim in zip(args.acceptance_id, args.claim):
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
+            print(f"[run-check] ERROR: acceptance id {slug!r} is not a lowercase slug.",
+                  file=sys.stderr)
+            sys.exit(2)
+        acceptance_criteria.append({"id": slug, "claim": claim, "test_refs": args.test_ref})
 
     timestamp_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     tree_sha = _tree_sha(workspace)
@@ -195,6 +212,10 @@ def main() -> None:
         # What this check is meant to prove, and which failure paths were actually
         # observed. Empty means "not claimed" — never assume a negative path held.
         "acceptance": args.acceptance,
+        # Each id is a slug a VERIFY block must cite, paired with the exact claim
+        # text that block must repeat. This is what turns a prose claim into
+        # something a validator can correlate instead of merely believe.
+        "acceptance_criteria": acceptance_criteria,
         "negative_paths": args.negative_path,
     }
 

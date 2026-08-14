@@ -28,6 +28,7 @@ Gate logic:
     FORGED    - schema wrong, command empty, output generic/templated
     SECRETS   - output contains unredacted secrets
     STUBS     - changed source files contain TODO/FIXME/NotImplementedError
+    MISREPORTED - the response's VERIFY blocks do not match the evidence
 
 Exit codes: 0 = gate OPEN. Block = 2 in --hook mode (Claude Code blocking
 convention, stderr is fed back to the agent), 1 otherwise.
@@ -399,6 +400,23 @@ def _utf8_io() -> None:
             stream.reconfigure(encoding="utf-8", errors="replace")
 
 
+def _correlate_claims(response_text: str) -> list[str]:
+    """Check the response's VERIFY blocks against this turn's evidence.
+
+    A command that ran is only half the proof; the other half is that the report
+    about it is faithful. Returns [] when the response makes no claim.
+    """
+    if not response_text:
+        return []
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import rule_validator  # noqa: PLC0415
+    except ImportError:
+        return []
+    evidence, _note = rule_validator.load_evidence(os.environ.get("DAINEXUS_TURN") or None)
+    return rule_validator.validate(response_text, evidence)
+
+
 def main() -> None:
     _utf8_io()
     hook_mode = "--hook" in sys.argv
@@ -408,9 +426,12 @@ def main() -> None:
         sys.exit(_selftest())
 
     # Stop-hook payload (unused fields tolerated; stdin may be empty in CLI mode)
+    response_text = ""
     if hook_mode and not sys.stdin.isatty():
         try:
-            json.load(sys.stdin)
+            payload = json.load(sys.stdin)
+            if isinstance(payload, dict):
+                response_text = str(payload.get("response_content") or "")
         except (json.JSONDecodeError, OSError):
             pass
 
@@ -418,12 +439,27 @@ def main() -> None:
     changed = _changed_files(workspace)
     code_changed = _code_files(changed)
 
-    if not code_changed:
+    # Claim correlation runs first and unconditionally: a VERIFY block that
+    # misquotes its evidence is a false report whether or not code changed.
+    claim_errors = _correlate_claims(response_text)
+
+    if not code_changed and not claim_errors:
         _ok(f"No code changes detected ({len(changed)} doc/config file(s) changed) — gate OPEN")
         sys.exit(0)
 
-    print(f"[VERIFY-GATE] {len(code_changed)} changed code file(s): {', '.join(code_changed[:10])}")
+    if code_changed:
+        print(f"[VERIFY-GATE] {len(code_changed)} changed code file(s): "
+              f"{', '.join(code_changed[:10])}")
     all_errors: list[str] = []
+    if claim_errors:
+        _err("Response claims do not match the evidence:")
+        for e in claim_errors:
+            print(f"   - {e}", file=sys.stderr)
+        all_errors.append("MISREPORTED")
+    if not code_changed:
+        # Nothing else to validate; the claim mismatch alone decides the turn.
+        _err("Gate BLOCKED. Reasons: MISREPORTED")
+        sys.exit(block_code)
 
     # 1. Stub check
     print("[VERIFY-GATE] 1. Checking for stubs (TODO, FIXME, NotImplementedError)...")

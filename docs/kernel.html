@@ -17,7 +17,7 @@
 <section class="hero compact">
   <span class="tag">TẦNG 1</span>
   <h1>Kernel — <span class="accent">bộ luật bất biến</span></h1>
-  <p class="lead">8 file markdown, tổng ~6591 token, được
+  <p class="lead">8 file markdown, tổng ~6792 token, được
   <code>sync-kernel.py</code> gộp thành <code>CLAUDE.md</code> / <code>AGENTS.md</code> / <code>GEMINI.md</code>
   và nạp tự động ở mọi phiên. Budget cứng 7k token — vượt là build fail.</p>
 </section>
@@ -106,12 +106,12 @@ if target_tokens &gt;= TOKEN_BUDGET:
         f"Error: {target_name} exceeds the {TOKEN_BUDGET} deterministic token budget limit!",
         file=sys.stderr,
     )</code></pre></div>
-<div class="callout tip"><div class="title">Hiện tại</div>Boot file ~6591 token / 7000 — còn khoảng 409 token dư cho luật mới.</div>
+<div class="callout tip"><div class="title">Hiện tại</div>Boot file ~6792 token / 7000 — còn khoảng 208 token dư cho luật mới.</div>
 
 </main>
 <footer>
   <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
-  <div>v0.9.0 · commit <code>7bede65</code> · build 2026-08-14</div>
+  <div>v0.9.1 · commit <code>324337a</code> · build 2026-08-14</div>
 </footer>
 </body>
 </html>

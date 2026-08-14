@@ -268,6 +268,8 @@ REJECT_VI = {
     "FORGED":   "Sai schema, command rỗng, hoặc output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)",
     "SECRETS":  "Output chứa secret chưa che (API key, token, private key) — chính file evidence đã nhiễm",
     "STUBS":    "File đã sửa còn TODO/FIXME/NotImplementedError",
+    "MISREPORTED": "VERIFY block trong câu trả lời không khớp evidence — claim bị viết lại, "
+                   "command khác, hoặc chỗ đáng lẽ là digest thì dán văn xuôi",
 }
 
 
