@@ -16,7 +16,7 @@
 
 <section class="hero compact">
   <span class="tag">TẦNG 2</span>
-  <h1>Skills — <span class="accent">một orchestrator, 86 chuyên gia</span></h1>
+  <h1>Skills — <span class="accent">một orchestrator, 87 chuyên gia</span></h1>
   <p class="lead">Kernel chọn <em>mode</em>; pipeline chọn <em>phase</em>; overlay cung cấp
   kiến thức domain dưới dạng slot GROUND/DECOMPOSE. Không có gì được nạp trước khi cần.</p>
 </section>
@@ -65,20 +65,20 @@ Ví dụ overlay debugger:</p>
 <div class="callout warn"><div class="title">Overlay không được chứa bằng chứng giả</div>Bản đầu của các overlay này có kèm 'worked example' kết thúc bằng <code>EXIT CODE: 0 / VERDICT: PASS</code> cứng. Overlay là thứ agent bắt chước — nhúng sẵn một kết quả PASS chính là dạy nó <em>viết ra</em> VERIFY thay vì <em>chạy</em> check, phá thẳng Hard Rule 1. Toàn bộ đã bị cắt và <code>validate_overlays.py</code> nay chặn chúng quay lại.</div>
 
 <h2><span class="num">05</span> Thư viện overlay</h2>
-<p class="muted small">86 overlay, gồm: <code>3d-spatial-engineer</code>, <code>accessibility-engineer</code>, <code>ai-behavior-engineer</code>, <code>ai-engineer</code>, <code>animation-engineer</code>, <code>api-designer</code>, <code>art-director</code>, <code>auto-publish</code>, <code>autonomous-testing</code>, <code>backend</code>, <code>build-release-engineer</code>, <code>business-analyst</code>, <code>code-quality-engineer</code>, <code>code-reviewer</code>, <code>code-reviewer-go</code>, <code>code-reviewer-python</code>, <code>code-reviewer-rust</code>, <code>conversion-optimizer</code> …</p>
+<p class="muted small">87 overlay, gồm: <code>3d-spatial-engineer</code>, <code>accessibility-engineer</code>, <code>ai-behavior-engineer</code>, <code>ai-engineer</code>, <code>animation-engineer</code>, <code>api-designer</code>, <code>art-director</code>, <code>auto-publish</code>, <code>autonomous-testing</code>, <code>backend</code>, <code>build-release-engineer</code>, <code>business-analyst</code>, <code>code-quality-engineer</code>, <code>code-reviewer</code>, <code>code-reviewer-go</code>, <code>code-reviewer-python</code>, <code>code-reviewer-rust</code>, <code>concept-artist</code> …</p>
 <p>Nhóm theo vai trò: <strong>routing lõi</strong> (debugger, software-engineer, ui-designer, code-reviewer,
 qa-engineer, devops) · <strong>vai trò pipeline</strong> (product-manager, solution-architect,
 security-engineer, frontend-engineer) · <strong>domain</strong> (game engine, data/AI, mobile,
 per-language, growth…).</p>
 
 <h2><span class="num">06</span> Protocol dùng chung</h2>
-<p>51 protocol trong <code>skills/_shared/protocols/</code>. Hai cái quan trọng nhất:</p>
+<p>57 protocol trong <code>skills/_shared/protocols/</code>. Hai cái quan trọng nhất:</p>
 <table><thead><tr><th>Protocol</th><th>Vai trò</th></tr></thead><tbody><tr><td><code>guardrail.md</code></td><td>Kill switch: 13 nhóm luật (destructive, secrets, RCE, publishing, path traversal, resource exhaustion…) + cổng cơ học <code>policy_check.py</code></td></tr><tr><td><code>parallel-dispatch.md</code></td><td>Worker chạy song song trên git worktree, mỗi worker bị ràng bởi task contract; merge arbiter từ chối mọi thay đổi ngoài phạm vi</td></tr></tbody></table>
 
 </main>
 <footer>
   <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
-  <div>v0.8.2 · commit <code>92df5c0</code> · build 2026-08-14</div>
+  <div>v0.8.2 · commit <code>93d7e57</code> · build 2026-08-14</div>
 </footer>
 </body>
 </html>
