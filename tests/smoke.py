@@ -192,6 +192,41 @@ def test_skill_overlays_clean() -> None:
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
 
 
+def test_standalone_page_is_orphaned() -> None:
+    """docs/memory-standalone.html must survive being handed over on its own.
+
+    It is deliberately unreachable from the site: no nav, no outbound links, no
+    page pointing at it, and the stylesheet inlined. Any of those creeping back
+    silently breaks the one property it exists for.
+    """
+    import re
+    page = ROOT / "docs" / "memory-standalone.html"
+    check("standalone page exists", page.is_file())
+    if not page.is_file():
+        return
+    text = page.read_text(encoding="utf-8")
+
+    refs = (re.findall(r'(?:src|href)="([^"]+)"', text)
+            + re.findall(r"@import[^;]+;", text)
+            + re.findall(r"url\((?!data:)([^)]+)\)", text))
+    check("standalone page references no external file", not refs, str(refs[:5]))
+    check("standalone page has no navigation", 'class="nav"' not in text)
+    check("standalone page inlines the stylesheet",
+          "<style>" in text and "--accent" in text)
+
+    inbound = [p.name for p in (ROOT / "docs").glob("*.html")
+               if p.name != page.name and "memory-standalone" in p.read_text(encoding="utf-8")]
+    check("no sibling page links to the standalone page", not inbound, str(inbound))
+
+    # It is a clone of the guide: the section headings must match, so the two do
+    # not silently drift into different documents.
+    heads = lambda s: [re.sub(r"<[^>]+>", "", h).strip()
+                       for h in re.findall(r"<h2[^>]*>(.*?)</h2>", s, re.DOTALL)]
+    guide = (ROOT / "docs" / "memory-guide.html").read_text(encoding="utf-8")
+    check("standalone content matches the guide", heads(text) == heads(guide),
+          f"standalone={heads(text)[:3]} guide={heads(guide)[:3]}")
+
+
 def test_memory_is_portable() -> None:
     """docs/memory-guide.html promises one file, stdlib only, works standalone.
 
@@ -390,7 +425,7 @@ def main() -> None:
                test_sync_kernel_budget, test_policy_check, test_runtime_lease,
                test_routing_targets_exist, test_skill_overlays_clean,
                test_overlay_validator, test_docs_fresh, test_evidence_schema_v2,
-               test_memory_is_portable,
+               test_memory_is_portable, test_standalone_page_is_orphaned,
                test_stub_check_precision,
                test_utf8_cli_output, test_escalate_timeout_and_lease,
                test_skill_test_contracts, test_rule_ledger):
