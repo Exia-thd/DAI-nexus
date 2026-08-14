@@ -327,14 +327,14 @@ auto_generate_manifest() {
 
     log_debug "Attempting auto-generation of manifest..."
 
-    local dai-nexus_path=""
+    local dai_nexus_path=""
     if [[ -d "$workspace/dai-nexus" ]]; then
-        dai-nexus_path="$workspace/dai-nexus"
-    elif [[ "$dai-nexus" != "$workspace" ]]; then
-        dai-nexus_path="$dai-nexus"
+        dai_nexus_path="$workspace/dai-nexus"
+    elif [[ "$dai_nexus" != "$workspace" ]]; then
+        dai_nexus_path="$dai_nexus"
     fi
 
-    if [[ -z "$dai-nexus_path" ]] || [[ ! -f "$dai-nexus_path/scripts/mcp-generate.sh" ]]; then
+    if [[ -z "$dai_nexus_path" ]] || [[ ! -f "$dai_nexus_path/scripts/mcp-generate.sh" ]]; then
         log_debug "  → Cannot auto-generate: mcp-generate.sh not found"
         return 1
     fi
@@ -342,7 +342,7 @@ auto_generate_manifest() {
     log_info "Auto-generating MCP manifest for $workspace..."
 
     # Run generation script
-    if bash "$dai-nexus_path/scripts/mcp-generate.sh" > /dev/null 2>&1; then
+    if bash "$dai_nexus_path/scripts/mcp-generate.sh" > /dev/null 2>&1; then
         log_info "  → Manifest generated successfully"
         return 0
     else
@@ -379,7 +379,7 @@ main() {
     if [[ -n "$manifest" ]]; then
         if ! validate_manifest "$manifest" "$workspace"; then
             # Try to auto-generate
-            if auto_generate_manifest "$workspace" "$dai-nexus"; then
+            if auto_generate_manifest "$workspace" "$dai_nexus"; then
                 manifest="$(find_manifest "$workspace")" || manifest=""
             else
                 manifest=""
@@ -389,7 +389,7 @@ main() {
 
     # Step 5: Resolve server command
     SERVER_ARGV=()
-    resolve_server_cmd "$workspace" "$manifest" "$dai-nexus" || {
+    resolve_server_cmd "$workspace" "$manifest" "$dai_nexus" || {
         log_error "Could not find MCP server in workspace: $workspace"
         log_info ""
         log_info "Possible solutions:"

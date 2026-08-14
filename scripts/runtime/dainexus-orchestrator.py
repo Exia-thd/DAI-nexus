@@ -316,11 +316,11 @@ class DaiNexusAgent:
 
         # 1. Auto-Setup MCP for the project if manifest does not exist
         manifest_path = os.path.join(self.code_dir, ".antigravity", "mcp-manifest.json")
-        dai-nexus_manifest_path = os.path.join(
+        dai_nexus_manifest_path = os.path.join(
             self.code_dir, "..", ".dainexus", "mcp-manifest.json"
         )
         if not os.path.exists(manifest_path) and not os.path.exists(
-            dai-nexus_manifest_path
+            dai_nexus_manifest_path
         ):
             print(
                 f"[*] Missing MCP Manifest in '{self.code_dir}'. Running auto-setup..."

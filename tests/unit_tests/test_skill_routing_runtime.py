@@ -211,7 +211,7 @@ def test_manual_disable_force_enable_and_cap_are_ordered(tmp_path: Path) -> None
 def test_orchestrator_loads_ordered_game_creative_overlays(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    orchestrator = _load_module("dai-nexus_orchestrator_runtime", ORCHESTRATOR_PATH)
+    orchestrator = _load_module("dai_nexus_orchestrator_runtime", ORCHESTRATOR_PATH)
     (tmp_path / ".antigravity").mkdir()
     (tmp_path / ".antigravity" / "mcp-manifest.json").write_text("{}", encoding="utf-8")
 

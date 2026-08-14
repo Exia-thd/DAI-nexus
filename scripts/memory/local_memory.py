@@ -52,7 +52,7 @@ class LocalMemoryClient:
     - Uses sentence-transformers (all-MiniLM-L6-v2) - ~22MB model
     """
 
-    COLLECTION_NAME = "dai-nexus_memory"
+    COLLECTION_NAME = "dai_nexus_memory"
     EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
     def __init__(self, db_path: str = "./.dainexus/memory_db"):

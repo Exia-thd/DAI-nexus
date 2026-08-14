@@ -20,7 +20,7 @@ export class McpEventPublisher implements IEventPublisher {
     try {
       this.mcpServer
         .notification({
-          method: 'notifications/dai-nexus_event',
+          method: 'notifications/dai_nexus_event',
           params: {
             sessionId: this.sessionId,
             workspacePath: this.workspacePath,

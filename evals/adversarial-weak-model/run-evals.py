@@ -362,9 +362,9 @@ Use the smallest adequate process, verify material claims, and do not invent pro
 Write access is intentionally bounded to the task's expected change surface. If a tool is blocked, do not claim completion.
 Use built-in file/read/search tools for grounding and impact checks. Shell/command permission is intentionally limited to the focused verifier commands listed in the task; do not use shell for listing files, searching symbols, checking versions, or other exploratory reads.
 
-<dai-nexus_contract>
+<dai_nexus_contract>
 {_lite_contract()}
-</dai-nexus_contract>
+</dai_nexus_contract>
 
 <task>
 {task["prompt"]}{verifier_note}

@@ -1189,13 +1189,13 @@ def create_app(auth_token: str = ""):
             cursor_reader = CursorDBReader()
             project = request.args.get("project", "dai-nexus")
             period = int(request.args.get("period", 7))
-            dai-nexus_data = api.get_usage(project, period)
+            dai_nexus_data = api.get_usage(project, period)
 
             cursor_models_data = cursor_reader.get_model_stats()
 
             return jsonify(
                 {
-                    "dai-nexus": dai-nexus_data,
+                    "dai-nexus": dai_nexus_data,
                     "cursor": {
                         "models": cursor_models_data,
                         "available": cursor_reader.is_available(),
@@ -1305,14 +1305,14 @@ def run_basic_server(host: str, port: int, auth_token: str = ""):
 
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
                 project = qs.get("project", ["dai-nexus"])[0]
-                dai-nexus_data = api.get_usage(project, 7)
+                dai_nexus_data = api.get_usage(project, 7)
                 self.send_response(200)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
                 self.wfile.write(
                     json.dumps(
                         {
-                            "dai-nexus": dai-nexus_data,
+                            "dai-nexus": dai_nexus_data,
                             "cursor": {
                                 "models": cursor_reader.get_model_stats(),
                                 "available": cursor_reader.is_available(),

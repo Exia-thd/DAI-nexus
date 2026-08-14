@@ -12,7 +12,7 @@ MODULE_PATH = ROOT / "scripts" / "ci" / "local-ci.py"
 
 
 def _module():
-    spec = importlib.util.spec_from_file_location("dai-nexus_local_ci", MODULE_PATH)
+    spec = importlib.util.spec_from_file_location("dai_nexus_local_ci", MODULE_PATH)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

@@ -56,7 +56,7 @@ try {
             if (!registry.projects[fullPath]) {
               console.log(`➕ Registering new project found during scan: ${fullPath}`);
               registry.projects[fullPath] = {
-                dai-nexus_path: DAINEXUS_DIR,
+                dai_nexus_path: DAINEXUS_DIR,
                 registered_at: new Date().toISOString(),
                 last_used: new Date().toISOString()
               };
@@ -71,7 +71,7 @@ try {
                 if (!registry.projects[subPath]) {
                   console.log(`➕ Registering nested project found during scan: ${subPath}`);
                   registry.projects[subPath] = {
-                    dai-nexus_path: DAINEXUS_DIR,
+                    dai_nexus_path: DAINEXUS_DIR,
                     registered_at: new Date().toISOString(),
                     last_used: new Date().toISOString()
                   };
@@ -176,7 +176,7 @@ try {
       }
     }
 
-    // 3. Update dai-nexus_path in registry to point to global
+    // 3. Update dai_nexus_path in registry to point to global
     if (projects[projectRoot].dainexus_path !== DAINEXUS_DIR) {
       projects[projectRoot].dainexus_path = DAINEXUS_DIR;
       projects[projectRoot].updated_at = new Date().toISOString();

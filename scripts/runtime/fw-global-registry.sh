@@ -214,16 +214,16 @@ cmd_add() {
     fi
     
     # Find dai-nexus for this project
-    local dai-nexus_path=""
+    local dai_nexus_path=""
     local current="$path"
     
     while [[ "$current" != "/" ]] && [[ "$current" != "$HOME" ]]; do
         if [[ -f "$current/dai-nexus/AGENTS.md" ]] || [[ -f "$current/dai-nexus/CLAUDE.md" ]]; then
-            dai-nexus_path="$current/dai-nexus"
+            dai_nexus_path="$current/dai-nexus"
             break
         fi
         if [[ -f "$current/AGENTS.md" ]] || [[ -f "$current/CLAUDE.md" ]]; then
-            dai-nexus_path="$current"
+            dai_nexus_path="$current"
             break
         fi
         current="$(dirname "$current")"
@@ -236,7 +236,7 @@ try {
     var reg = JSON.parse(fs.readFileSync('${GLOBAL_REGISTRY}', 'utf8'));
     if (!reg.projects) reg.projects = {};
     reg.projects['${path}'] = {
-        dai-nexus_path: '${dai-nexus_path}' || null,
+        dai_nexus_path: '${dai_nexus_path}' || null,
         registered_at: new Date().toISOString(),
         last_used: new Date().toISOString()
     };
@@ -247,8 +247,8 @@ try {
     
     if [[ $? -eq 0 ]]; then
         log_ok "Registered: $path"
-        if [[ -n "$dai-nexus_path" ]]; then
-            log_info "  DAI Nexus: $dai-nexus_path"
+        if [[ -n "$dai_nexus_path" ]]; then
+            log_info "  DAI Nexus: $dai_nexus_path"
         fi
     else
         log_error "Failed to register: $path"

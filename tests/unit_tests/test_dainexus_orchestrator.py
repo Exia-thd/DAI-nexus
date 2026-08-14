@@ -11,7 +11,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODULE_PATH = REPO_ROOT / "scripts" / "runtime" / "dai-nexus-orchestrator.py"
-SPEC = importlib.util.spec_from_file_location("dai-nexus_orchestrator", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("dai_nexus_orchestrator", MODULE_PATH)
 assert SPEC and SPEC.loader
 orchestrator = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(orchestrator)
