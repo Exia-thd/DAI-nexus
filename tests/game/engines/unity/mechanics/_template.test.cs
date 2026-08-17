@@ -2,7 +2,7 @@
 // Naming: {System}_{Mechanic}_{Behavior}.test.cs
 // Ref: GDD/Sections/XX_{System}.md §X.X.X
 
-namespace Forgewright.GameTest.Unity.Mechanics
+namespace DaiNexus.GameTest.Unity.Mechanics
 {
     /// <summary>
     /// Combat system test template.

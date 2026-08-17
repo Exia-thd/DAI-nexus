@@ -1,8 +1,8 @@
 #!/bin/bash
-# forge bash completion
-# Usage: source <(forge completion bash)
+# dai bash completion
+# Usage: source <(dai completion bash)
 
-_forge_completion() {
+_dai_completion() {
   local cur prev words cword
   _init_completion || return
 
@@ -18,12 +18,12 @@ _forge_completion() {
   # Config subcommands
   local config_commands="get set list init delete"
 
-  # Forge options
+  # DAI options
   local options="--json --no-color --quiet --debug --help --version"
 
   # Completion logic
   case $prev in
-    forge)
+    dai)
       COMPREPLY=($(compgen -W "$commands $options" -- "$cur"))
       ;;
     tools)
@@ -96,4 +96,4 @@ _forge_completion() {
   esac
 }
 
-complete -F _forge_completion forge
+complete -F _dai_completion dai

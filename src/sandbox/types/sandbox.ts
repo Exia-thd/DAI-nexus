@@ -82,7 +82,7 @@ export const FilesystemConfigSchema = z.object({
   // Read-only root filesystem
   readOnlyRoot: z.boolean().default(true),
   // Workspace directory (tmpfs)
-  workspaceDir: z.string().default("/tmp/forge-sandbox"),
+  workspaceDir: z.string().default("/tmp/dai-sandbox"),
 });
 export type FilesystemConfig = z.infer<typeof FilesystemConfigSchema>;
 

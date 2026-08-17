@@ -143,7 +143,7 @@
 - **Positive:** Private key never exposed to clients, easier key rotation
 - **Negative:** Slower verification, larger tokens
 
-**Rationale:** Asymmetric algorithms are safer for distributed systems. Even if a service is compromised, they can only verify tokens, not forge new ones. Key rotation is simpler.
+**Rationale:** Asymmetric algorithms are safer for distributed systems. Even if a service is compromised, they can only verify tokens, not dai new ones. Key rotation is simpler.
 
 ---
 

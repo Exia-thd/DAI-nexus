@@ -19,9 +19,9 @@ export function registerCompletionCommand(program: Command): void {
 
 async function handleCompletion(shell: string): Promise<void> {
   const shells: Record<string, string> = {
-    bash: "forge.bash",
-    zsh: "forge.zsh",
-    fish: "forge.fish",
+    bash: "dai.bash",
+    zsh: "dai.zsh",
+    fish: "dai.fish",
   };
 
   const filename = shells[shell.toLowerCase()];

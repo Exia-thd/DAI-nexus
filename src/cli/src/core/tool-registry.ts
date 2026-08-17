@@ -51,7 +51,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call orchestrator.execute --args \'{"mode":"feature","request":"add login"}\'',
+      'dai tools call orchestrator.execute --args \'{"mode":"feature","request":"add login"}\'',
     ],
   },
 
@@ -73,7 +73,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
         enum: ["table", "json"],
       },
     },
-    examples: ["forge skills list", "forge skills list --category engineering"],
+    examples: ["dai skills list", "dai skills list --category engineering"],
   },
 
   {
@@ -92,7 +92,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
         description: "Filter by category",
       },
     },
-    examples: ['forge tools call skills.search --args \'{"query":"api"}\''],
+    examples: ['dai tools call skills.search --args \'{"query":"api"}\''],
   },
 
   // Validate
@@ -120,7 +120,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
         default: false,
       },
     },
-    examples: ["forge validate --json", "forge validate --level 2"],
+    examples: ["dai validate --json", "dai validate --level 2"],
   },
 
   // Config
@@ -135,7 +135,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
         description: "Configuration key",
       },
     },
-    examples: ["forge config get forge.apiKey"],
+    examples: ["dai config get dai.apiKey"],
   },
 
   {
@@ -154,7 +154,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
         description: "Configuration value",
       },
     },
-    examples: ["forge config set forge.apiKey sk-xxx"],
+    examples: ["dai config set dai.apiKey sk-xxx"],
   },
 
   {
@@ -162,7 +162,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
     description: "List all configuration values with sources",
     category: TOOL_CATEGORIES.ORCHESTRATION,
     inputSchema: {},
-    examples: ["forge config list"],
+    examples: ["dai config list"],
   },
 
   // Doctor
@@ -178,7 +178,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
         default: false,
       },
     },
-    examples: ["forge doctor", "forge doctor --verbose"],
+    examples: ["dai doctor", "dai doctor --verbose"],
   },
 
   // Engineering Skills
@@ -199,7 +199,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call engineering.software --args \'{"task":"create REST API"}\'',
+      'dai tools call engineering.software --args \'{"task":"create REST API"}\'',
     ],
   },
 
@@ -220,7 +220,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call engineering.frontend --args \'{"task":"create button component"}\'',
+      'dai tools call engineering.frontend --args \'{"task":"create button component"}\'',
     ],
   },
 
@@ -236,7 +236,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call engineering.qa --args \'{"task":"write unit tests"}\'',
+      'dai tools call engineering.qa --args \'{"task":"write unit tests"}\'',
     ],
   },
 
@@ -253,7 +253,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call engineering.security --args \'{"task":"audit authentication"}\'',
+      'dai tools call engineering.security --args \'{"task":"audit authentication"}\'',
     ],
   },
 
@@ -275,7 +275,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call devops.deploy --args \'{"target":"aws","environment":"prod"}\'',
+      'dai tools call devops.deploy --args \'{"target":"aws","environment":"prod"}\'',
     ],
   },
 
@@ -291,7 +291,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call devops.database --args \'{"task":"create migration"}\'',
+      'dai tools call devops.database --args \'{"task":"create migration"}\'',
     ],
   },
 
@@ -308,7 +308,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call ai.engineer --args \'{"task":"build RAG system"}\'',
+      'dai tools call ai.engineer --args \'{"task":"build RAG system"}\'',
     ],
   },
 
@@ -324,7 +324,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call ai.prompt --args \'{"task":"optimize classification prompt"}\'',
+      'dai tools call ai.prompt --args \'{"task":"optimize classification prompt"}\'',
     ],
   },
 
@@ -341,7 +341,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call game.design --args \'{"task":"design combat system"}\'',
+      'dai tools call game.design --args \'{"task":"design combat system"}\'',
     ],
   },
 
@@ -357,7 +357,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call game.unity --args \'{"task":"create player controller"}\'',
+      'dai tools call game.unity --args \'{"task":"create player controller"}\'',
     ],
   },
 
@@ -373,7 +373,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call game.unreal --args \'{"task":"setup character blueprint"}\'',
+      'dai tools call game.unreal --args \'{"task":"setup character blueprint"}\'',
     ],
   },
 
@@ -390,7 +390,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call meta.polymath --args \'{"query":"how does blockchain work"}\'',
+      'dai tools call meta.polymath --args \'{"query":"how does blockchain work"}\'',
     ],
   },
 
@@ -416,7 +416,7 @@ export const TOOL_REGISTRY: readonly ToolSpec[] = [
       },
     },
     examples: [
-      'forge tools call meta.memory --args \'{"action":"read","key":"project-info"}\'',
+      'dai tools call meta.memory --args \'{"action":"read","key":"project-info"}\'',
     ],
   },
 ] as const;

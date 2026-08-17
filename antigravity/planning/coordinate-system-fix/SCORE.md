@@ -136,7 +136,7 @@ All 8 criteria meet or exceed 9/10 threshold.
 | Priority | Phase | Key Deliverables |
 |----------|-------|------------------|
 | 1 | Phase 1 | Cheatsheet, Import docs |
-| 2 | Phase 2 | `forge validate --asset-coords` |
+| 2 | Phase 2 | `dai validate --asset-coords` |
 | 3 | Phase 3 | Coordinate conversion library |
 | 4 | Phase 4 | Floating origin templates |
 | 5 | Phase 5 | Editor visual tools |

@@ -92,7 +92,7 @@ try {
   mkdirSync(smokeProject);
   run('npm', ['init', '--yes'], { cwd: smokeProject });
   run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', join(temp, cli.filename)], { cwd: smokeProject });
-  run('node', [join(smokeProject, 'node_modules', '.bin', 'forge'), '--help'], { cwd: smokeProject });
+  run('node', [join(smokeProject, 'node_modules', '.bin', 'dai'), '--help'], { cwd: smokeProject });
 
   console.log(`security: production vulnerabilities high=0 critical=0`);
   console.log(`coverage: lines=${totals.lines.pct}% statements=${totals.statements.pct}% functions=${totals.functions.pct}% branches=${totals.branches.pct}%`);

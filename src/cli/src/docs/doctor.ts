@@ -33,7 +33,7 @@ export function doctorCatalog(
       projectId: catalog.project.id,
       path: ".dainexus/cache/docs-index.json",
       message: "The stored normalized docs index is stale.",
-      suggestion: "Run `forge docs scan` or `forge docs build`.",
+      suggestion: "Run `dai docs scan` or `dai docs build`.",
     });
   }
 

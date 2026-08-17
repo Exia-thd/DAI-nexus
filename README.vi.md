@@ -402,7 +402,7 @@ sequenceDiagram
     participant User
     participant Orch as Orchestrator
     participant Mem as Memory memory
-    participant Forge as DAI Nexus Node
+    participant DAI as DAI Nexus Node
     participant Skill as Skills
 
     User->>Orch: New Session Start
@@ -411,7 +411,7 @@ sequenceDiagram
     Orch->>Orch: Step 1: Load project-profile.json
     Orch->>Orch: Step 2: Load session-log.json
     Orch->>Orch: Step 3: memory search + code-conventions
-    Orch->>Forge: Step 3.5: Check index freshness
+    Orch->>DAI: Step 3.5: Check index freshness
     Orch->>Orch: Step 4: Detect greenfield vs brownfield
 
     rect rgb(20, 30, 60)
@@ -1190,13 +1190,13 @@ Các lệnh thực thi:
 Chạy bất kỳ lúc nào để chấm điểm dự án 0-100:
 
 ```bash
-bash scripts/forge-validate.sh
+bash scripts/dai-validate.sh
 
 # Chế độ CI (chỉ exit code)
-bash scripts/forge-validate.sh --quiet
+bash scripts/dai-validate.sh --quiet
 
 # Báo cáo JSON
-bash scripts/forge-validate.sh --json
+bash scripts/dai-validate.sh --json
 ```
 
 | Điểm | Grade | Ý nghĩa |

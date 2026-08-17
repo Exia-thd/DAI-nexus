@@ -25,7 +25,7 @@ describe("Sandbox Integration Tests", () => {
 
   beforeEach(() => {
     // Create temp test directory
-    testDir = path.join(os.tmpdir(), `forge-sandbox-integration-${Date.now()}`);
+    testDir = path.join(os.tmpdir(), `dai-sandbox-integration-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
 
     config = {

@@ -90,7 +90,7 @@ def test_guardrail_has_documentation_continuity(guardrail_content):
     content = guardrail_content.lower()
     assert "### 14. documentation continuity" in content
     assert "project-state" in content
-    assert "forge docs gate" in content
+    assert "dai docs gate" in content
     assert "generated html/css must never be hand-edited" in content
 
 

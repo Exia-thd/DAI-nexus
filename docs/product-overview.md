@@ -102,10 +102,10 @@ Lessons are persisted to `.dainexus/lessons.md` and graph memory so later runs c
 ### 7. Built-in Cost Control
 
 ```bash
-forge token on           # Enable tracking
-forge token budget --daily 5 --weekly 25
-forge token report       # Usage analytics
-forge token dashboard    # Visual dashboard
+dai token on           # Enable tracking
+dai token budget --daily 5 --weekly 25
+dai token report       # Usage analytics
+dai token dashboard    # Visual dashboard
 ```
 
 Optional **Expert CLI Mode** routes only high-stakes decisions (architecture gates, security reviews) to premium models, keeping routine work on cheaper models.
@@ -170,7 +170,7 @@ Connect the DAI Nexus MCP server for maximum power: 12+ AI tools available direc
 | **Antigravity** | `AGENTS.md` | ✅ Full | Stable | Gemini-powered IDE. Uses `GEMINI.md` alongside `AGENTS.md`. |
 | **Gemini (CLI/IDE)** | `GEMINI.md` | ✅ Full | Stable | Gemini-native support with `thinking_level` optimization. |
 | **Codex (OpenAI)** | `AGENTS.md` | ✅ Full | Stable | Codex CLI integration via `dainexus-mcp-setup.sh --codex`. |
-| **Forge CLI** | `src/cli/package.json` | N/A | Beta | Agent-first command-line interface; package versioned independently. |
+| **DAI CLI** | `src/cli/package.json` | N/A | Beta | Agent-first command-line interface; package versioned independently. |
 
 ### Configuration Files
 

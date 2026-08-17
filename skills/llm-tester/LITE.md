@@ -64,5 +64,5 @@ verify_model_completion('{"decision": "PROCEED", "confidence": 0.95, "reasoning"
 ### Step 3: Run the validation script and check token usage metrics
 ```bash
 python3 tests/validate_completion.py
-forge token status || cat ~/.dainexus/usage/summary.json
+dai token status || cat ~/.dainexus/usage/summary.json
 ```

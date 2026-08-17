@@ -21,7 +21,7 @@
 
 ```mermaid
 sequenceDiagram
-    participant CLI as forge docs
+    participant CLI as dai docs
     participant Registry
     participant Scanner
     participant Privacy

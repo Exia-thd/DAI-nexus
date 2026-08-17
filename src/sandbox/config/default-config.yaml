@@ -85,7 +85,7 @@ filesystem:
   allowSymlink: false  # Security risk - can bypass path restrictions
   resolveRealPath: true  # Resolve symlinks before checking paths
   readOnlyRoot: true  # Root filesystem is read-only
-  workspaceDir: "/tmp/forge-sandbox"  # Writable workspace
+  workspaceDir: "/tmp/dai-sandbox"  # Writable workspace
 
 # Network sandbox configuration
 network:

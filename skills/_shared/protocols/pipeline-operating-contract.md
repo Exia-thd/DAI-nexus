@@ -24,7 +24,7 @@ The four elite-team criteria are **pipeline invariants**, not responsibilities t
 4. **Reference-grounded visual quality** — when visual acceptance is material, establish an observable visual basis before design/implementation and require structural plus rendered reference-conformance evidence afterward. Generic model taste never replaces project/design-system/reference truth.
 5. **Continuous Docs Hub postcondition** — when a project configures the Docs
    Hub contract, pass its manifest/state context through every relevant phase
-   and apply `forge docs gate [target]` as a postcondition. The gate, not a
+   and apply `dai docs gate [target]` as a postcondition. The gate, not a
    policy-check deny regex and not manual generated HTML/CSS editing, proves
    documentation continuity.
 
@@ -152,7 +152,7 @@ Domain overlap is valid only when it is genuinely part of the specialty: prompt 
 1. **DOMAIN VERIFY** — specialist verifier proves its own output.
 2. **PIPELINE VERIFY** — `verification.md` / `quality-gate.md` proves acceptance and regression boundaries.
 3. **DOCS POSTCONDITION** — when `project_docs.contract` is continuous and the
-   change is material, run `forge docs gate [target]` after the specialist work.
+   change is material, run `dai docs gate [target]` after the specialist work.
    Require the canonical state in the same changeset; the gate performs the
    in-memory strict doctor, temporary HTML/CSS build, output verification, and
    fail-closed decision. Do not substitute a policy-check regex or a manual

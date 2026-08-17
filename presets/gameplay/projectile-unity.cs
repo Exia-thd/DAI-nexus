@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Forgewright.Gameplay
+namespace DaiNexus.Gameplay
 {
     /// <summary>
     /// Professional, frame-rate independent custom projectile simulation for Unity.

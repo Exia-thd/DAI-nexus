@@ -36,7 +36,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 - **DAI Nexus Lite — Evidence-Gated Kernel (Upgraded v3)**: Lightweight reasoning kernel for fast models (Gemini Flash), featuring turn-level script verification via `.dainexus/verify/<turn>.json`, turn-blocking platform hooks (Claude Code, Gemini CLI, Cursor, Codex CLI), ≤7k tokens boot budget, and objective escalations to Sonnet/Opus models.
 - **Automated Skill Distillation & Batch Upgrader**: `upgrade-skills.py` queries NotebookLM CLI in parallel via multi-agent subagents to distill all 83 skills to Lite overlays (`LITE.md`).
 - **Self-Healing Skill Indexing**: Dynamic generation of `kernel/INDEX.md` by scanning all `LITE.md` overlays, automatically mapping triggers and paths.
-- **Agent Benchmark Command** (`forge agent benchmark`): CLI command for evaluating agent performance.
+- **Agent Benchmark Command** (`dai agent benchmark`): CLI command for evaluating agent performance.
 - **Expert CLI Mode**: Optional premium model escalation for high-stakes planning, architecture, security, and gate decisions via local Claude CLI or Codex CLI (reconstructed from docs).
 - **Token Tracking by Default**: `token_tracking` enabled by default for all pipelines.
 - **Webhook State & Telemetry Protocol**: Replaces OSC/MCP event mechanism with HTTP Webhook for token and state reporting.
@@ -109,7 +109,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 - **ASIP Metrics** (`.dainexus/asip-metrics.json`): Tracking file for ASIP protocol performance.
 - **Lessons file** (`.dainexus/lessons.md`): Project-specific learnings from ASIP failures.
 - **Multica Hub Token Stats**: Token statistics component added to status dashboard (reconstructed from docs).
-- **Token Tracking & Cost Analytics**: `forge token on`, budget management, real-time tracking, and cost dashboard (reconstructed from docs).
+- **Token Tracking & Cost Analytics**: `dai token on`, budget management, real-time tracking, and cost dashboard (reconstructed from docs).
 
 ### Changed
 - **Middleware chain** updated with ASIP integration.
@@ -299,7 +299,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 
 ### Added
 
-- **Forge-Nexus MCP Server** (`mcp/`) — Global MCP server v1.0.0 with PipelineManager, SkillParser, PromptEngine. Enables Claude/Cursor AI assistants to interact with DAI Nexus pipeline across all projects. Listens on stdio via Model Context Protocol SDK.
+- **DAI-Nexus MCP Server** (`mcp/`) — Global MCP server v1.0.0 with PipelineManager, SkillParser, PromptEngine. Enables Claude/Cursor AI assistants to interact with DAI Nexus pipeline across all projects. Listens on stdio via Model Context Protocol SDK.
 - **GitHub Actions CI/CD** (`.github/workflows/ci.yml`) — Full pipeline: ESLint, Prettier format-check, TypeScript build, Vitest unit tests with v8 coverage, coverage threshold gate, commitlint on PRs.
 - **Dev tooling** (`mcp/`) — ESLint with TypeScript ESLint plugin, Prettier formatting, Vitest test runner, commitlint for Conventional Commits, `.eslintrc.json`, `.prettierrc`, `vitest.config.ts` with pool: forks.
 - **Husky Git hooks** (`.husky/`) — Pre-commit hook (ESLint + Prettier + TypeScript + Vitest), commit-msg hook for commitlint. Root `package.json` with `prepare: husky install` for auto-initialization on clone.

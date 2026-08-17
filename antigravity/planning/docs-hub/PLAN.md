@@ -66,7 +66,7 @@ flowchart LR
 | Phase | Deliverable | Status |
 |---|---|---|
 | 0 | ADR, scope, architecture, decisions, schema | Completed |
-| 1 | `forge docs init` and project registry | Completed |
+| 1 | `dai docs init` and project registry | Completed |
 | 2 | Scanner, privacy gate, normalized index | Completed |
 | 3 | Static HTML/CSS portal MVP | Completed |
 | 4 | Search, diagrams, backlinks, traceability | Completed |

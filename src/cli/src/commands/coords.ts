@@ -438,9 +438,9 @@ async function handleRef(): Promise<void> {
   console.log();
 
   console.log(pc.cyan("  Common Commands:"));
-  console.log('    forge coords convert "1,2,3" --from unity --to godot');
-  console.log('    forge coords validate "10000,0,0" --engine unity');
-  console.log("    forge coords engines");
+  console.log('    dai coords convert "1,2,3" --from unity --to godot');
+  console.log('    dai coords validate "10000,0,0" --engine unity');
+  console.log("    dai coords engines");
   console.log();
 }
 

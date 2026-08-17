@@ -1,6 +1,6 @@
-#compdef forge
+#compdef dai
 
-# Forge zsh completion
+# DAI zsh completion
 
 local -a commands options tools_commands skills_commands config_commands
 
@@ -43,7 +43,7 @@ options=(
   '-h[Show help]' '--help[Show help]'
 )
 
-forge_tool_names=(
+dai_tool_names=(
   'orchestrator.execute'
   'skills.list'
   'skills.search'
@@ -108,7 +108,7 @@ case $state in
       tools)
         case $line[2] in
           call)
-            _describe 'tool name' forge_tool_names
+            _describe 'tool name' dai_tool_names
             ;;
           list|search)
             _arguments \

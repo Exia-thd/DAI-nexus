@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # THIS_FILE_IS_A_MIGRATION_SHIM
-echo "WARNING: forge-validate.sh has been moved to utilities/forge-validate.sh. This shim will be removed in the next release." >&2
+echo "WARNING: dai-validate.sh has been moved to utilities/dai-validate.sh. This shim will be removed in the next release." >&2
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SHIM_SOURCE="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
@@ -10,7 +10,7 @@ else
 fi
 DIR="$( cd "$( dirname "$_SHIM_SOURCE" )" && pwd )"
 if [[ "$_SHIM_SOURCE" != "${0}" ]]; then
-    source "$DIR/utilities/forge-validate.sh" "$@"
+    source "$DIR/utilities/dai-validate.sh" "$@"
 else
-    exec "$DIR/utilities/forge-validate.sh" "$@"
+    exec "$DIR/utilities/dai-validate.sh" "$@"
 fi

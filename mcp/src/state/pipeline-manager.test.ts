@@ -4,6 +4,13 @@ import path from 'path';
 import os from 'os';
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dai-nexus-test-'));
+// resolveWorkspaceRoot checks DAINEXUS_WORKSPACE *before* CURSOR_WORKSPACE_ROOT,
+// so setting only the latter leaves this suite at the mercy of whatever the
+// launching shell — or a sibling test file's env stub — put in the former.
+// Clear every candidate, then point at our fixture.
+for (const key of ['DAINEXUS_WORKSPACE', 'CLASSD_WORKSPACE_ROOT', 'AGENTS_WORKSPACE']) {
+  delete process.env[key];
+}
 process.env.CURSOR_WORKSPACE_ROOT = tmpDir;
 
 const STATE_FILE = path.join(tmpDir, '.dainexus', 'pipeline-state.json');

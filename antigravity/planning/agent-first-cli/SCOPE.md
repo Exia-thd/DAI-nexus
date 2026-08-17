@@ -14,16 +14,16 @@
 - [ ] `--json` global flag
 - [ ] JSON envelope format
 - [ ] Tool registry data structure
-- [ ] `forge tools list` command
-- [ ] `forge tools call` command
+- [ ] `dai tools list` command
+- [ ] `dai tools call` command
 
 ### Phase 2: Enhanced CLI
 
 - [ ] Config layering (5 sources)
 - [ ] Input conventions (URL, stdin, @path)
-- [ ] `forge config` command
-- [ ] `forge doctor` command
-- [ ] `forge validate --json`
+- [ ] `dai config` command
+- [ ] `dai doctor` command
+- [ ] `dai validate --json`
 - [ ] Migration guide
 - [ ] Backward compatibility layer
 

@@ -56,7 +56,7 @@ function handleInit(
 
   if (existsSync(manifestPath) && !options.force) {
     writeResult(
-      "forge.init",
+      "dai.init",
       { path: manifestPath, status: "already_exists" },
       options.json || globalJson,
       startedAt,
@@ -70,7 +70,7 @@ function handleInit(
     `${JSON.stringify({ schema_version: 1 }, null, 2)}\n`,
   );
   writeResult(
-    "forge.init",
+    "dai.init",
     {
       path: manifestPath,
       status:
@@ -93,11 +93,11 @@ function handleOnboard(
 
   if (!existsSync(manifestPath)) {
     writeError(
-      "forge.onboard",
+      "dai.onboard",
       { path: manifestPath },
       options.json || globalJson,
       startedAt,
-      "Project manifest is required; run forge init first.",
+      "Project manifest is required; run dai init first.",
       "MANIFEST_REQUIRED",
     );
     return;
@@ -105,7 +105,7 @@ function handleOnboard(
 
   if (existsSync(profilePath) && !options.force) {
     writeResult(
-      "forge.onboard",
+      "dai.onboard",
       { path: profilePath, status: "already_exists" },
       options.json || globalJson,
       startedAt,
@@ -116,7 +116,7 @@ function handleOnboard(
   const profile = buildProjectProfile(target);
   writeFileSync(profilePath, `${JSON.stringify(profile, null, 2)}\n`);
   writeResult(
-    "forge.onboard",
+    "dai.onboard",
     {
       path: profilePath,
       status: options.force ? "overwritten" : "created",
@@ -173,7 +173,7 @@ function buildProjectProfile(target: string): {
 }
 
 function writeResult(
-  tool: "forge.init" | "forge.onboard",
+  tool: "dai.init" | "dai.onboard",
   data: Record<string, unknown>,
   useJson: boolean | undefined,
   startedAt: number,
@@ -191,7 +191,7 @@ function writeResult(
 }
 
 function writeError(
-  tool: "forge.onboard",
+  tool: "dai.onboard",
   data: Record<string, unknown>,
   useJson: boolean | undefined,
   startedAt: number,

@@ -1,6 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/buiphucminhtam/forgewright/main/.forgewright/instincts/instincts-config.schema.json",
-  "_comment": "Per-project instinct system configuration. Copy to .forgewright/instincts-config.json in your project.",
+  "_comment": "Per-project instinct system configuration. Copy to .dainexus/instincts-config.json in your project.",
   
   "enabled": true,
   "minSequenceLength": 3,
@@ -8,7 +7,7 @@
   "minInitialConfidence": 0.35,
   "promotionThreshold": 0.7,
   "maxEventsPerMinute": 60,
-  "storePath": ".forgewright/instincts/store.json",
+  "storePath": ".dainexus/instincts/store.json",
   "maxPatterns": 1000,
   "pruneThreshold": 0.15,
   "logLevel": "info",

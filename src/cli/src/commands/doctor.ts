@@ -169,7 +169,7 @@ function checkConfig(): HealthCheck {
     name: "User Configuration",
     status: "warning",
     message: "No configuration file found",
-    details: "Run: forge config init",
+    details: "Run: dai config init",
   };
 }
 
@@ -181,7 +181,7 @@ function checkMemory(): HealthCheck {
       name: "Memory Store",
       status: "warning",
       message: "No memory store found",
-      details: "Run: forge config init",
+      details: "Run: dai config init",
     };
   }
 

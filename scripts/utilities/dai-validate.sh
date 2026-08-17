@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# forge-validate.sh — Quality Gate Validation CLI
+# dai-validate.sh — Quality Gate Validation CLI
 # Part of DAI Nexus Production Grade Pipeline
 #
 # Automates Quality Gate Levels 1-3:
@@ -8,7 +8,7 @@
 #   Level 2: Regression Safety (critical for brownfield)
 #   Level 3: Code Standards (configurable)
 #
-# Usage: ./scripts/forge-validate.sh [options]
+# Usage: ./scripts/dai-validate.sh [options]
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 set -euo pipefail
@@ -377,10 +377,10 @@ EOF
 usage() {
   cat <<EOF
 
-  ${BOLD}forge-validate.sh${NC} — Quality Gate Validation CLI
+  ${BOLD}dai-validate.sh${NC} — Quality Gate Validation CLI
   Part of DAI Nexus Production Grade Pipeline
 
-  ${BOLD}Usage:${NC} ./scripts/forge-validate.sh [options]
+  ${BOLD}Usage:${NC} ./scripts/dai-validate.sh [options]
 
   ${BOLD}Options:${NC}
     --quiet, -q       Suppress output (exit code only)
@@ -394,10 +394,10 @@ usage() {
     1    Score < 60 (F, unacceptable quality)
 
   ${BOLD}Examples:${NC}
-    ./scripts/forge-validate.sh               # Full validation with display
-    ./scripts/forge-validate.sh --json        # Save JSON report
-    ./scripts/forge-validate.sh --quiet       # CI mode (exit code only)
-    ./scripts/forge-validate.sh --strict      # Block on any standards issue
+    ./scripts/dai-validate.sh               # Full validation with display
+    ./scripts/dai-validate.sh --json        # Save JSON report
+    ./scripts/dai-validate.sh --quiet       # CI mode (exit code only)
+    ./scripts/dai-validate.sh --strict      # Block on any standards issue
 
 EOF
 }

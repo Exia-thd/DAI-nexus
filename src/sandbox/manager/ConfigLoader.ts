@@ -337,7 +337,7 @@ export class ConfigLoader {
         allowSymlink: false,
         resolveRealPath: true,
         readOnlyRoot: true,
-        workspaceDir: "/tmp/forge-sandbox",
+        workspaceDir: "/tmp/dai-sandbox",
       },
       network: {
         enabled: true,

@@ -6,16 +6,16 @@
 
 ```bash
 # Start autonomous mode
-forge test autonomous
+dai test autonomous
 
 # Run specific layers
-forge test run --layer unit,integration,visual,e2e
+dai test run --layer unit,integration,visual,e2e
 
 # Risk-based execution
-forge test risk-scan
+dai test risk-scan
 
 # Production monitoring
-forge test shift-right
+dai test shift-right
 ```
 
 ---
@@ -262,33 +262,33 @@ async function redTeam(agent: AIAgent): Promise<TestCase[]> {
 
 ```bash
 # Autonomous Mode (Full Loop)
-forge test autonomous                  # test + fix + continue
-forge test autonomous --max-attempts 5 # Custom retry
+dai test autonomous                  # test + fix + continue
+dai test autonomous --max-attempts 5 # Custom retry
 
 # Test Layers
-forge test run --layer unit           # Unit tests only
-forge test run --layer integration   # Integration tests
-forge test run --layer visual        # Visual regression
-forge test run --layer e2e           # End-to-end
-forge test run --layer security      # Security scan
+dai test run --layer unit           # Unit tests only
+dai test run --layer integration   # Integration tests
+dai test run --layer visual        # Visual regression
+dai test run --layer e2e           # End-to-end
+dai test run --layer security      # Security scan
 
 # Specific Features
-forge test risk-scan                  # Risk-based prioritization
-forge test shift-right               # Production data analysis
-forge test red-team                  # AI Red Teamer
-forge test audit                     # Full audit report
+dai test risk-scan                  # Risk-based prioritization
+dai test shift-right               # Production data analysis
+dai test red-team                  # AI Red Teamer
+dai test audit                     # Full audit report
 
 # Visual
-forge test update-baseline           # Update visual baselines
-forge test compare --baseline v1     # Compare versions
+dai test update-baseline           # Update visual baselines
+dai test compare --baseline v1     # Compare versions
 
 # Fix Mode
-forge test fix                      # Auto-fix failures
-forge test fix --strategy aggressive # Aggressive fix attempt
+dai test fix                      # Auto-fix failures
+dai test fix --strategy aggressive # Aggressive fix attempt
 
 # CI/CD
-forge ci run                        # Full CI pipeline
-forge ci deploy                    # Deploy after green
+dai ci run                        # Full CI pipeline
+dai ci deploy                    # Deploy after green
 ```
 
 ---
@@ -365,10 +365,10 @@ autonomous:
 
 | Tool | Purpose | Command |
 |------|---------|---------|
-| Vitest | Unit + Integration | `forge test unit` |
-| Playwright | E2E + API | `forge test e2e` |
-| Applitools | Visual AI | `forge test visual` |
-| GitHub Actions | CI/CD | `forge ci run` |
+| Vitest | Unit + Integration | `dai test unit` |
+| Playwright | E2E + API | `dai test e2e` |
+| Applitools | Visual AI | `dai test visual` |
+| GitHub Actions | CI/CD | `dai ci run` |
 
 ### Self-Healing
 

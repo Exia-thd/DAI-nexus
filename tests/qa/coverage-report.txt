@@ -20,7 +20,7 @@
 | `src/analysis/scanner.test.ts` | 29 | ✅ |
 | `src/data/graph.test.ts` | 22 | ✅ |
 | `src/rag/chunker.test.ts` | 6 | ✅ |
-| `integration/forge.integration.test.ts` | (integration) | ✅ |
+| `integration/dai.integration.test.ts` | (integration) | ✅ |
 
 **Total: 127 unit tests**
 

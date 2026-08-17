@@ -463,7 +463,7 @@ export function scanProject(projectRootInput: string): DocsCatalog {
       message:
         "The docs manifest does not declare a project_docs state contract.",
       suggestion:
-        "Run `forge docs init` and keep project_docs.state in the manifest.",
+        "Run `dai docs init` and keep project_docs.state in the manifest.",
     });
   } else {
     projectStatePath = manifest.project_docs.state;
@@ -514,7 +514,7 @@ export function scanProject(projectRootInput: string): DocsCatalog {
           projectId: manifest.project.id,
           path: projectStatePath,
           message: loadedState.error.message,
-          suggestion: "Create the state file or run `forge docs init`.",
+          suggestion: "Create the state file or run `dai docs init`.",
         });
       } else {
         diagnostics.push({

@@ -30,23 +30,23 @@ npm link
 ### Human Mode
 
 ```bash
-forge tools list
-forge skills list
-forge doctor
-forge validate --level 3
+dai tools list
+dai skills list
+dai doctor
+dai validate --level 3
 ```
 
 ### Agent Mode
 
 ```bash
 # Tool discovery
-forge tools list --json | jq '.data.tools[].name'
+dai tools list --json | jq '.data.tools[].name'
 
 # Structured output
-forge doctor --json
+dai doctor --json
 
 # Quality gate
-forge validate --level 3 --json | jq '.data.score'
+dai validate --level 3 --json | jq '.data.score'
 ```
 
 ## Commands
@@ -54,63 +54,63 @@ forge validate --level 3 --json | jq '.data.score'
 ### Tools
 
 ```bash
-forge tools list                          # List all tools
-forge tools list --category engineering    # Filter by category
-forge tools list --search api             # Search tools
-forge tools:call skills.list              # Call a tool
-forge tools:call skills.list --args '{}'   # Call with args
+dai tools list                          # List all tools
+dai tools list --category engineering    # Filter by category
+dai tools list --search api             # Search tools
+dai tools:call skills.list              # Call a tool
+dai tools:call skills.list --args '{}'   # Call with args
 ```
 
 ### Skills
 
 ```bash
-forge skills list                          # List all skills
-forge skills list --category engineering  # Filter by category
-forge skills search api                   # Search skills
-forge skills categories                   # List categories
+dai skills list                          # List all skills
+dai skills list --category engineering  # Filter by category
+dai skills search api                   # Search skills
+dai skills categories                   # List categories
 ```
 
 ### Config
 
 ```bash
-forge config list                          # List all config
-forge config get forge.debug              # Get value
-forge config set forge.debug true         # Set value
-forge config init                          # Create config file
-forge config delete forge.debug           # Delete value
+dai config list                          # List all config
+dai config get dai.debug              # Get value
+dai config set dai.debug true         # Set value
+dai config init                          # Create config file
+dai config delete dai.debug           # Delete value
 ```
 
 ### Doctor
 
 ```bash
-forge doctor                               # Run diagnostics
-forge doctor --verbose                    # Verbose output
-forge doctor --json                       # JSON output
+dai doctor                               # Run diagnostics
+dai doctor --verbose                    # Verbose output
+dai doctor --json                       # JSON output
 ```
 
 ### Validate
 
 ```bash
-forge validate                             # Run all checks
-forge validate --level 1                  # Build only
-forge validate --level 2                  # + Regression
-forge validate --level 3                  # + Standards
-forge validate --strict                   # Treat warnings as errors
-forge validate --json                     # JSON output
-forge validate --report report.json       # Save report
+dai validate                             # Run all checks
+dai validate --level 1                  # Build only
+dai validate --level 2                  # + Regression
+dai validate --level 3                  # + Standards
+dai validate --strict                   # Treat warnings as errors
+dai validate --json                     # JSON output
+dai validate --report report.json       # Save report
 ```
 
 ### Completion
 
 ```bash
 # Bash
-source <(forge completion bash)
+source <(dai completion bash)
 
 # Zsh
-source <(forge completion zsh)
+source <(dai completion zsh)
 
 # Fish
-forge completion fish > ~/.config/fish/completions/forge.fish
+dai completion fish > ~/.config/fish/completions/dai.fish
 ```
 
 ## Global Flags
@@ -191,19 +191,19 @@ All commands return a standardized JSON envelope:
 #!/bin/bash
 
 # 1. Check system
-forge doctor --json || exit 1
+dai doctor --json || exit 1
 
 # 2. List tools
-TOOLS=$(forge tools list --json | jq -r '.data.tools[].name')
+TOOLS=$(dai tools list --json | jq -r '.data.tools[].name')
 
 # 3. Run validation
-forge validate --level 3 --json || {
+dai validate --level 3 --json || {
   echo "Validation failed"
   exit 1
 }
 
 # 4. Get results
-SCORE=$(forge validate --level 3 --json | jq '.data.score')
+SCORE=$(dai validate --level 3 --json | jq '.data.score')
 echo "Score: $SCORE"
 ```
 
@@ -213,18 +213,18 @@ echo "Score: $SCORE"
 import subprocess
 import json
 
-def forge_command(cmd: list) -> dict:
+def dai_command(cmd: list) -> dict:
     result = subprocess.run(
-        ["forge", "--json"] + cmd,
+        ["dai", "--json"] + cmd,
         capture_output=True,
         text=True
     )
     return json.loads(result.stdout)
 
 # Usage
-tools = forge_command(["tools", "list"])
-doctor = forge_command(["doctor"])
-validate = forge_command(["validate", "--level", "3"])
+tools = dai_command(["tools", "list"])
+doctor = dai_command(["doctor"])
+validate = dai_command(["validate", "--level", "3"])
 ```
 
 ## Development

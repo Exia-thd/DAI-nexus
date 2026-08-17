@@ -247,7 +247,7 @@ DENY Rules:
   - Pattern: material project change with no canonical project state in the same changeset
   - Pattern: configured project_docs state missing, invalid, stale, or outside the project root
   - Pattern: direct edit to generated Docs Hub HTML/CSS instead of rebuilding from source
-  - Required postcondition: run `forge docs gate [target]`
+  - Required postcondition: run `dai docs gate [target]`
   - Gate inputs: `--staged`, `--worktree`, or `--base-ref <ref>`
   - Gate behavior: detect material changes, run an in-memory strict doctor,
     build HTML/CSS in a temporary directory, verify the generated output, and

@@ -29,15 +29,15 @@ live status.
 Build one project:
 
 ```bash
-forge docs init .
-forge docs scan .
-forge docs build .
-forge docs doctor . --strict
-forge docs gate . --worktree
+dai docs init .
+dai docs scan .
+dai docs build .
+dai docs doctor . --strict
+dai docs gate . --worktree
 ```
 
-For a staged change, use `forge docs gate . --staged`. To compare a project
-with a branch or other reference, use `forge docs gate . --base-ref main`.
+For a staged change, use `dai docs gate . --staged`. To compare a project
+with a branch or other reference, use `dai docs gate . --base-ref main`.
 The gate chooses the requested change view, detects whether the change is
 material, requires the configured canonical state when it is, runs strict
 doctor checks in memory, builds HTML/CSS into a temporary directory, verifies
@@ -48,10 +48,10 @@ policy-check deny regex and a hand-edited generated page are not substitutes.
 Register and build several projects:
 
 ```bash
-forge docs registry add /path/to/project-a
-forge docs registry add /path/to/project-b
-forge docs registry list
-forge docs build --all
+dai docs registry add /path/to/project-a
+dai docs registry add /path/to/project-b
+dai docs registry list
+dai docs build --all
 ```
 
 The default registry is:
@@ -68,11 +68,11 @@ When `DAINEXUS_HOME` is unset, it falls back to:
 
 ## Manifest
 
-`forge docs init` creates `.dainexus/docs-manifest.json` without
+`dai docs init` creates `.dainexus/docs-manifest.json` without
 overwriting an existing manifest unless `--force` is supplied.
 
 The manifest is v1 and the parser keeps `project_docs` optional-compatible so
-legacy documentation remains readable. `forge docs init` non-destructively
+legacy documentation remains readable. `dai docs init` non-destructively
 migrates an existing v1 manifest that lacks the block, preserves its current
 sources, and creates the referenced state file only when absent. New
 initialization always includes the contract.
@@ -117,28 +117,28 @@ initialization always includes the contract.
 Legacy projects without a manifest use bounded discovery for `Docs/`, `docs/`,
 `documentation/`, `wiki/`, root README files, and curated project profile
 metadata. The CLI reports this fallback and does not write a manifest unless
-`forge docs init` is run.
+`dai docs init` is run.
 
 Legacy scan/build remains readable for compatibility. It is not a strict
-continuity contract: `forge docs gate` fails until the project has migrated to a
+continuity contract: `dai docs gate` fails until the project has migrated to a
 v1 manifest with a valid canonical project state.
 
 ## Commands
 
 | Command                                   | Purpose                                                              |
 | ----------------------------------------- | -------------------------------------------------------------------- |
-| `forge docs init [target]`                | Create or validate the project manifest                              |
-| `forge docs registry add <path>`          | Register a canonical project root                                    |
-| `forge docs registry list`                | List configured projects                                             |
-| `forge docs registry remove <id-or-path>` | Remove one registry entry                                            |
-| `forge docs scan [target]`                | Produce the normalized project catalog                               |
-| `forge docs build [target]`               | Build a static portal for one project                                |
-| `forge docs build --all`                  | Build all registered projects                                        |
-| `forge docs doctor [target]`              | Report links, anchors, diagrams, privacy, case, and staleness issues |
-| `forge docs gate [target]`                | Enforce continuous Docs Hub postconditions for a material change     |
-| `forge docs export obsidian [target]`     | Copy approved source documents to an external vault                  |
+| `dai docs init [target]`                | Create or validate the project manifest                              |
+| `dai docs registry add <path>`          | Register a canonical project root                                    |
+| `dai docs registry list`                | List configured projects                                             |
+| `dai docs registry remove <id-or-path>` | Remove one registry entry                                            |
+| `dai docs scan [target]`                | Produce the normalized project catalog                               |
+| `dai docs build [target]`               | Build a static portal for one project                                |
+| `dai docs build --all`                  | Build all registered projects                                        |
+| `dai docs doctor [target]`              | Report links, anchors, diagrams, privacy, case, and staleness issues |
+| `dai docs gate [target]`                | Enforce continuous Docs Hub postconditions for a material change     |
+| `dai docs export obsidian [target]`     | Copy approved source documents to an external vault                  |
 
-`forge docs gate` supports `--staged`, `--worktree`, and `--base-ref <ref>`.
+`dai docs gate` supports `--staged`, `--worktree`, and `--base-ref <ref>`.
 Only one change view should be selected. The gate does not edit source or
 generated files; it verifies the selected changeset and uses temporary output.
 `--staged` validates the index snapshot rather than unstaged worktree content;
@@ -183,7 +183,7 @@ small local script only progressively enhances search.
 Run a strict project diagnosis:
 
 ```bash
-forge docs doctor . --strict
+dai docs doctor . --strict
 ```
 
 Run the repository-owned documentation gate:
@@ -218,7 +218,7 @@ CLI; schema-only validation is not sufficient for acceptance. Always use strict
 doctor or the continuity gate for an authoritative decision.
 Update the source Markdown/JSON first, then run the gate. If the state is
 missing, invalid, stale beyond `max_stale_days`, unsafe, or absent from the
-selected changeset, the strict gate fails closed. `forge docs init` is the
+selected changeset, the strict gate fails closed. `dai docs init` is the
 source-preserving migration entry point; it does not move or overwrite existing
 documents or an existing state file.
 
@@ -238,7 +238,7 @@ projects degrade to an explicit diagnostic rather than a fabricated link.
 Obsidian is an optional export, not the canonical store:
 
 ```bash
-forge docs export obsidian --all
+dai docs export obsidian --all
 ```
 
 Exports contain copies of approved sources and generated navigation files. The

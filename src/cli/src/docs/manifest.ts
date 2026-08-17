@@ -358,7 +358,7 @@ export function loadManifest(projectRootInput: string): ManifestLoadResult {
       message:
         "No .dainexus/docs-manifest.json was found; using safe legacy source discovery.",
       suggestion:
-        "Run `forge docs init` to make the documentation contract explicit.",
+        "Run `dai docs init` to make the documentation contract explicit.",
     },
   ];
   return {

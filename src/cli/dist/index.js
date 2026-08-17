@@ -49,7 +49,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call orchestrator.execute --args '{"mode":"feature","request":"add login"}'`
+      `dai tools call orchestrator.execute --args '{"mode":"feature","request":"add login"}'`
     ]
   },
   // Skills
@@ -70,7 +70,7 @@ var TOOL_REGISTRY = [
         enum: ["table", "json"]
       }
     },
-    examples: ["forge skills list", "forge skills list --category engineering"]
+    examples: ["dai skills list", "dai skills list --category engineering"]
   },
   {
     name: "skills.search",
@@ -88,7 +88,7 @@ var TOOL_REGISTRY = [
         description: "Filter by category"
       }
     },
-    examples: [`forge tools call skills.search --args '{"query":"api"}'`]
+    examples: [`dai tools call skills.search --args '{"query":"api"}'`]
   },
   // Validate
   {
@@ -115,7 +115,7 @@ var TOOL_REGISTRY = [
         default: false
       }
     },
-    examples: ["forge validate --json", "forge validate --level 2"]
+    examples: ["dai validate --json", "dai validate --level 2"]
   },
   // Config
   {
@@ -129,7 +129,7 @@ var TOOL_REGISTRY = [
         description: "Configuration key"
       }
     },
-    examples: ["forge config get forge.apiKey"]
+    examples: ["dai config get dai.apiKey"]
   },
   {
     name: "config.set",
@@ -147,14 +147,14 @@ var TOOL_REGISTRY = [
         description: "Configuration value"
       }
     },
-    examples: ["forge config set forge.apiKey sk-xxx"]
+    examples: ["dai config set dai.apiKey sk-xxx"]
   },
   {
     name: "config.list",
     description: "List all configuration values with sources",
     category: TOOL_CATEGORIES.ORCHESTRATION,
     inputSchema: {},
-    examples: ["forge config list"]
+    examples: ["dai config list"]
   },
   // Doctor
   {
@@ -169,7 +169,7 @@ var TOOL_REGISTRY = [
         default: false
       }
     },
-    examples: ["forge doctor", "forge doctor --verbose"]
+    examples: ["dai doctor", "dai doctor --verbose"]
   },
   // Engineering Skills
   {
@@ -189,7 +189,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call engineering.software --args '{"task":"create REST API"}'`
+      `dai tools call engineering.software --args '{"task":"create REST API"}'`
     ]
   },
   {
@@ -209,7 +209,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call engineering.frontend --args '{"task":"create button component"}'`
+      `dai tools call engineering.frontend --args '{"task":"create button component"}'`
     ]
   },
   {
@@ -224,7 +224,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call engineering.qa --args '{"task":"write unit tests"}'`
+      `dai tools call engineering.qa --args '{"task":"write unit tests"}'`
     ]
   },
   {
@@ -239,7 +239,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call engineering.security --args '{"task":"audit authentication"}'`
+      `dai tools call engineering.security --args '{"task":"audit authentication"}'`
     ]
   },
   // DevOps
@@ -260,7 +260,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call devops.deploy --args '{"target":"aws","environment":"prod"}'`
+      `dai tools call devops.deploy --args '{"target":"aws","environment":"prod"}'`
     ]
   },
   {
@@ -275,7 +275,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call devops.database --args '{"task":"create migration"}'`
+      `dai tools call devops.database --args '{"task":"create migration"}'`
     ]
   },
   // AI/ML
@@ -291,7 +291,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call ai.engineer --args '{"task":"build RAG system"}'`
+      `dai tools call ai.engineer --args '{"task":"build RAG system"}'`
     ]
   },
   {
@@ -306,7 +306,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call ai.prompt --args '{"task":"optimize classification prompt"}'`
+      `dai tools call ai.prompt --args '{"task":"optimize classification prompt"}'`
     ]
   },
   // Game Development
@@ -322,7 +322,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call game.design --args '{"task":"design combat system"}'`
+      `dai tools call game.design --args '{"task":"design combat system"}'`
     ]
   },
   {
@@ -337,7 +337,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call game.unity --args '{"task":"create player controller"}'`
+      `dai tools call game.unity --args '{"task":"create player controller"}'`
     ]
   },
   {
@@ -352,7 +352,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call game.unreal --args '{"task":"setup character blueprint"}'`
+      `dai tools call game.unreal --args '{"task":"setup character blueprint"}'`
     ]
   },
   // Meta
@@ -368,7 +368,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call meta.polymath --args '{"query":"how does blockchain work"}'`
+      `dai tools call meta.polymath --args '{"query":"how does blockchain work"}'`
     ]
   },
   {
@@ -393,7 +393,7 @@ var TOOL_REGISTRY = [
       }
     },
     examples: [
-      `forge tools call meta.memory --args '{"action":"read","key":"project-info"}'`
+      `dai tools call meta.memory --args '{"action":"read","key":"project-info"}'`
     ]
   }
 ];
@@ -852,12 +852,12 @@ var ConfigStore = class {
    * Load default configuration values
    */
   loadDefaults() {
-    this.set("forge.debug", false, "DEFAULT");
-    this.set("forge.quiet", false, "DEFAULT");
-    this.set("forge.json", false, "DEFAULT");
-    this.set("forge.color", true, "DEFAULT");
-    this.set("forge.apiUrl", "https://api.dainexus.io", "DEFAULT");
-    this.set("forge.timeout", 3e4, "DEFAULT");
+    this.set("dai.debug", false, "DEFAULT");
+    this.set("dai.quiet", false, "DEFAULT");
+    this.set("dai.json", false, "DEFAULT");
+    this.set("dai.color", true, "DEFAULT");
+    this.set("dai.apiUrl", "https://api.dainexus.io", "DEFAULT");
+    this.set("dai.timeout", 3e4, "DEFAULT");
   }
   /**
    * Set a configuration value
@@ -1393,7 +1393,7 @@ function checkConfig() {
     name: "User Configuration",
     status: "warning",
     message: "No configuration file found",
-    details: "Run: forge config init"
+    details: "Run: dai config init"
   };
 }
 function checkMemory() {
@@ -1403,7 +1403,7 @@ function checkMemory() {
       name: "Memory Store",
       status: "warning",
       message: "No memory store found",
-      details: "Run: forge config init"
+      details: "Run: dai config init"
     };
   }
   return {
@@ -2077,9 +2077,9 @@ function registerCompletionCommand(program) {
 }
 async function handleCompletion(shell) {
   const shells = {
-    bash: "forge.bash",
-    zsh: "forge.zsh",
-    fish: "forge.fish"
+    bash: "dai.bash",
+    zsh: "dai.zsh",
+    fish: "dai.fish"
   };
   const filename = shells[shell.toLowerCase()];
   if (!filename) {
@@ -2544,9 +2544,9 @@ async function handleRef() {
   console.log("    Critical:   > 10,000 units (use Floating Origin)");
   console.log();
   console.log(pc7.cyan("  Common Commands:"));
-  console.log('    forge coords convert "1,2,3" --from unity --to godot');
-  console.log('    forge coords validate "10000,0,0" --engine unity');
-  console.log("    forge coords engines");
+  console.log('    dai coords convert "1,2,3" --from unity --to godot');
+  console.log('    dai coords validate "10000,0,0" --engine unity');
+  console.log("    dai coords engines");
   console.log();
 }
 async function handleBatch(file, options) {
@@ -4756,7 +4756,7 @@ async function runBenchmarkSuite(suitePath, options) {
       const projectTmpDir = join(tmpdir(), "dai-nexus-bench");
       mkdirSync(projectTmpDir, { recursive: true });
       if (resolvedWorkspace && existsSync(resolvedWorkspace)) {
-        const tempBase = join(projectTmpDir, `forge-bench-${task.id}-`);
+        const tempBase = join(projectTmpDir, `dai-bench-${task.id}-`);
         attemptWorkspace = mkdtempSync(tempBase);
         cpSync(resolvedWorkspace, attemptWorkspace, { recursive: true });
         cleanupFn = () => {
@@ -4766,7 +4766,7 @@ async function runBenchmarkSuite(suitePath, options) {
           }
         };
       } else {
-        const tempBase = join(projectTmpDir, `forge-bench-empty-${task.id}-`);
+        const tempBase = join(projectTmpDir, `dai-bench-empty-${task.id}-`);
         attemptWorkspace = mkdtempSync(tempBase);
         cleanupFn = () => {
           try {
@@ -4931,7 +4931,7 @@ function handleInit(targetInput, options, globalJson) {
   const manifestPath = join(target, PROJECT_DIR, PROJECT_MANIFEST);
   if (existsSync(manifestPath) && !options.force) {
     writeResult(
-      "forge.init",
+      "dai.init",
       { path: manifestPath, status: "already_exists" },
       options.json || globalJson,
       startedAt
@@ -4945,7 +4945,7 @@ function handleInit(targetInput, options, globalJson) {
 `
   );
   writeResult(
-    "forge.init",
+    "dai.init",
     {
       path: manifestPath,
       status: existsSync(manifestPath) && options.force ? "overwritten" : "created"
@@ -4961,18 +4961,18 @@ function handleOnboard(targetInput, options, globalJson) {
   const profilePath = join(target, PROJECT_DIR, PROJECT_PROFILE);
   if (!existsSync(manifestPath)) {
     writeError(
-      "forge.onboard",
+      "dai.onboard",
       { path: manifestPath },
       options.json || globalJson,
       startedAt,
-      "Project manifest is required; run forge init first.",
+      "Project manifest is required; run dai init first.",
       "MANIFEST_REQUIRED"
     );
     return;
   }
   if (existsSync(profilePath) && !options.force) {
     writeResult(
-      "forge.onboard",
+      "dai.onboard",
       { path: profilePath, status: "already_exists" },
       options.json || globalJson,
       startedAt
@@ -4983,7 +4983,7 @@ function handleOnboard(targetInput, options, globalJson) {
   writeFileSync(profilePath, `${JSON.stringify(profile, null, 2)}
 `);
   writeResult(
-    "forge.onboard",
+    "dai.onboard",
     {
       path: profilePath,
       status: options.force ? "overwritten" : "created",
@@ -6309,7 +6309,7 @@ function loadManifest(projectRootInput) {
       code: "LEGACY_MANIFEST_FALLBACK",
       projectId: manifest.project.id,
       message: "No .dainexus/docs-manifest.json was found; using safe legacy source discovery.",
-      suggestion: "Run `forge docs init` to make the documentation contract explicit."
+      suggestion: "Run `dai docs init` to make the documentation contract explicit."
     }
   ];
   return {
@@ -6953,7 +6953,7 @@ function scanProject(projectRootInput) {
       code: "PROJECT_DOCS_CONTRACT_MISSING",
       projectId: manifest.project.id,
       message: "The docs manifest does not declare a project_docs state contract.",
-      suggestion: "Run `forge docs init` and keep project_docs.state in the manifest."
+      suggestion: "Run `dai docs init` and keep project_docs.state in the manifest."
     });
   } else {
     projectStatePath = manifest.project_docs.state;
@@ -6999,7 +6999,7 @@ function scanProject(projectRootInput) {
           projectId: manifest.project.id,
           path: projectStatePath,
           message: loadedState.error.message,
-          suggestion: "Create the state file or run `forge docs init`."
+          suggestion: "Create the state file or run `dai docs init`."
         });
       } else {
         diagnostics.push({
@@ -7080,7 +7080,7 @@ function doctorCatalog(catalog, storedCatalog, options = {}) {
       projectId: catalog.project.id,
       path: ".dainexus/cache/docs-index.json",
       message: "The stored normalized docs index is stale.",
-      suggestion: "Run `forge docs scan` or `forge docs build`."
+      suggestion: "Run `dai docs scan` or `dai docs build`."
     });
   }
   const errors = diagnostics.filter(
@@ -8821,11 +8821,11 @@ function writeFailure(tool, message, details, json, startedAt, exitCode = EXIT_C
 }
 function writeGateSuccess(result, json, startedAt) {
   if (json) {
-    writeSuccess("forge.docs.gate", result, true, startedAt);
+    writeSuccess("dai.docs.gate", result, true, startedAt);
     return;
   }
   process.stdout.write(
-    `${pc7.green("\u2713")} forge.docs.gate (${result.mode}): ${result.changedPaths.length} changed, ${result.materialPaths.length} material, ${result.verifiedOutputPaths.length} outputs verified
+    `${pc7.green("\u2713")} dai.docs.gate (${result.mode}): ${result.changedPaths.length} changed, ${result.materialPaths.length} material, ${result.verifiedOutputPaths.length} outputs verified
 `
   );
 }
@@ -8840,7 +8840,7 @@ function resolveProjectRoots(target, all) {
   const registered = resolveRegistryProject(input);
   if (!registered) {
     throw new Error(
-      `Unknown project "${input}". Pass a path or add it with \`forge docs registry add\`.`
+      `Unknown project "${input}". Pass a path or add it with \`dai docs registry add\`.`
     );
   }
   return [registered.root];
@@ -8911,7 +8911,7 @@ function registerDocsCommands(program) {
           (diagnostic2) => diagnostic2.severity === "error"
         ) ?? result.doctor.diagnostics[0];
         writeFailure(
-          "forge.docs.gate",
+          "dai.docs.gate",
           blockingDiagnostic ? `Documentation continuity gate failed (${blockingDiagnostic.code}): ${blockingDiagnostic.message}` : "Documentation continuity gate failed.",
           result,
           json,
@@ -8923,7 +8923,7 @@ function registerDocsCommands(program) {
       writeGateSuccess(result, json, startedAt);
     } catch (error) {
       writeFailure(
-        "forge.docs.gate",
+        "dai.docs.gate",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -8939,10 +8939,10 @@ function registerDocsCommands(program) {
       const result = initManifest(target ?? process.cwd(), {
         force: options.force
       });
-      writeSuccess("forge.docs.init", result, json, startedAt);
+      writeSuccess("dai.docs.init", result, json, startedAt);
     } catch (error) {
       writeFailure(
-        "forge.docs.init",
+        "dai.docs.init",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -8956,14 +8956,14 @@ function registerDocsCommands(program) {
     const json = useJson(program, options);
     try {
       writeSuccess(
-        "forge.docs.registry.add",
+        "dai.docs.registry.add",
         addRegistryProject(path),
         json,
         startedAt
       );
     } catch (error) {
       writeFailure(
-        "forge.docs.registry.add",
+        "dai.docs.registry.add",
         error instanceof Error ? error.message : String(error),
         { path },
         json,
@@ -8975,15 +8975,10 @@ function registerDocsCommands(program) {
     const startedAt = Date.now();
     const json = useJson(program, options);
     try {
-      writeSuccess(
-        "forge.docs.registry.list",
-        loadRegistry(),
-        json,
-        startedAt
-      );
+      writeSuccess("dai.docs.registry.list", loadRegistry(), json, startedAt);
     } catch (error) {
       writeFailure(
-        "forge.docs.registry.list",
+        "dai.docs.registry.list",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -8998,7 +8993,7 @@ function registerDocsCommands(program) {
       const removed = removeRegistryProject(idOrPath);
       if (!removed) {
         writeFailure(
-          "forge.docs.registry.remove",
+          "dai.docs.registry.remove",
           `Project is not registered: ${idOrPath}`,
           { idOrPath },
           json,
@@ -9006,15 +9001,10 @@ function registerDocsCommands(program) {
         );
         return;
       }
-      writeSuccess(
-        "forge.docs.registry.remove",
-        { removed },
-        json,
-        startedAt
-      );
+      writeSuccess("dai.docs.registry.remove", { removed }, json, startedAt);
     } catch (error) {
       writeFailure(
-        "forge.docs.registry.remove",
+        "dai.docs.registry.remove",
         error instanceof Error ? error.message : String(error),
         { idOrPath },
         json,
@@ -9038,7 +9028,7 @@ function registerDocsCommands(program) {
       }));
       if (result.failures.length > 0) {
         writeFailure(
-          "forge.docs.scan",
+          "dai.docs.scan",
           "One or more projects could not be scanned.",
           { catalogs, failures: result.failures },
           json,
@@ -9046,10 +9036,10 @@ function registerDocsCommands(program) {
         );
         return;
       }
-      writeSuccess("forge.docs.scan", { catalogs }, json, startedAt);
+      writeSuccess("dai.docs.scan", { catalogs }, json, startedAt);
     } catch (error) {
       writeFailure(
-        "forge.docs.scan",
+        "dai.docs.scan",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -9070,7 +9060,7 @@ function registerDocsCommands(program) {
       });
       if (!execution.buildResult) {
         writeFailure(
-          "forge.docs.build",
+          "dai.docs.build",
           "No buildable projects were found.",
           {
             failures: execution.failures,
@@ -9085,7 +9075,7 @@ function registerDocsCommands(program) {
       }
       if (execution.failures.length > 0 || execution.blockedProjects.length > 0 || execution.strictProjects.length > 0) {
         writeFailure(
-          "forge.docs.build",
+          "dai.docs.build",
           "Docs Hub built the valid projects, but one or more projects failed.",
           {
             partialBuild: execution.buildResult,
@@ -9099,15 +9089,10 @@ function registerDocsCommands(program) {
         );
         return;
       }
-      writeSuccess(
-        "forge.docs.build",
-        execution.buildResult,
-        json,
-        startedAt
-      );
+      writeSuccess("dai.docs.build", execution.buildResult, json, startedAt);
     } catch (error) {
       writeFailure(
-        "forge.docs.build",
+        "dai.docs.build",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -9132,7 +9117,7 @@ function registerDocsCommands(program) {
       const failed = scanned.failures.length > 0 || reports.some((report) => report.status === "fail");
       if (failed) {
         writeFailure(
-          "forge.docs.doctor",
+          "dai.docs.doctor",
           "Documentation health checks failed.",
           { reports, failures: scanned.failures },
           json,
@@ -9142,14 +9127,14 @@ function registerDocsCommands(program) {
         return;
       }
       writeSuccess(
-        "forge.docs.doctor",
+        "dai.docs.doctor",
         { reports, failures: scanned.failures },
         json,
         startedAt
       );
     } catch (error) {
       writeFailure(
-        "forge.docs.doctor",
+        "dai.docs.doctor",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -9173,7 +9158,7 @@ function registerDocsCommands(program) {
       ) : [];
       if (scanned.failures.length > 0 || blocked.length > 0 || strictFailures.length > 0) {
         writeFailure(
-          "forge.docs.export.obsidian",
+          "dai.docs.export.obsidian",
           "Obsidian export was blocked by diagnostics.",
           {
             failures: scanned.failures,
@@ -9192,14 +9177,14 @@ function registerDocsCommands(program) {
         options.output ?? join(getDocsHubHome(), "docs-hub", "obsidian")
       );
       writeSuccess(
-        "forge.docs.export.obsidian",
+        "dai.docs.export.obsidian",
         exportObsidianVault(scanned.catalogs, output),
         json,
         startedAt
       );
     } catch (error) {
       writeFailure(
-        "forge.docs.export.obsidian",
+        "dai.docs.export.obsidian",
         error instanceof Error ? error.message : String(error),
         null,
         json,
@@ -9211,7 +9196,7 @@ function registerDocsCommands(program) {
 }
 function buildProgram() {
   const program = new Command();
-  program.name("forge").description("DAI Nexus CLI - Agent-First Command Line Interface").version(VERSION, "-V, --version");
+  program.name("dai").description("DAI Nexus CLI - Agent-First Command Line Interface").version(VERSION, "-V, --version");
   registerGlobalFlags(program);
   registerToolsCommands(program);
   registerSkillsCommands(program);
@@ -9236,25 +9221,25 @@ function buildProgram() {
     "after",
     `
 Examples:
-  $ forge tools list                  # List all tools
-  $ forge tools list --json           # JSON output for agents
-  $ forge tools list --category engineering  # Filter by category
-  $ forge skills list                 # List all skills
-  $ forge skills search api           # Search skills
-  $ forge expert status               # Show optional Claude/Codex CLI expert mode
-  $ forge expert use codex --track-tokens  # Switch expert mode to Codex CLI
-  $ forge token on                    # Enable local token tracking
-  $ forge token report --period week  # Show local token usage summary
-  $ forge delegate status             # Show auto-detected controller/worker state
-  $ forge delegate auto               # Auto-enable when Codex/Claude + Agy are available
-  $ forge docs init .                 # Create a privacy-safe docs manifest
-  $ forge docs build .                # Build the static documentation portal
-  $ forge --version                   # Show version
+  $ dai tools list                  # List all tools
+  $ dai tools list --json           # JSON output for agents
+  $ dai tools list --category engineering  # Filter by category
+  $ dai skills list                 # List all skills
+  $ dai skills search api           # Search skills
+  $ dai expert status               # Show optional Claude/Codex CLI expert mode
+  $ dai expert use codex --track-tokens  # Switch expert mode to Codex CLI
+  $ dai token on                    # Enable local token tracking
+  $ dai token report --period week  # Show local token usage summary
+  $ dai delegate status             # Show auto-detected controller/worker state
+  $ dai delegate auto               # Auto-enable when Codex/Claude + Agy are available
+  $ dai docs init .                 # Create a privacy-safe docs manifest
+  $ dai docs build .                # Build the static documentation portal
+  $ dai --version                   # Show version
 
 Agent Mode:
-  $ forge --json tools list | jq .    # Parse JSON output
-  $ forge --json tools list | jq '.data.tools[].name'
-  $ for tool in $(forge --json tools list | jq -r '.data.tools[].name'); do
+  $ dai --json tools list | jq .    # Parse JSON output
+  $ dai --json tools list | jq '.data.tools[].name'
+  $ for tool in $(dai --json tools list | jq -r '.data.tools[].name'); do
       echo "Tool: $tool"
     done
 

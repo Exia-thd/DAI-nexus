@@ -1,13 +1,13 @@
 /**
- * Forge Test CLI Commands
+ * DAI Test CLI Commands
  * 
  * Usage:
- *   forge test setup     - Initialize test infrastructure
- *   forge test run       - Run all tests
- *   forge test unit       - Run unit tests
- *   forge test e2e        - Run E2E tests
- *   forge test heal       - Run self-healing
- *   forge test agents     - Run agentic testing
+ *   dai test setup     - Initialize test infrastructure
+ *   dai test run       - Run all tests
+ *   dai test unit       - Run unit tests
+ *   dai test e2e        - Run E2E tests
+ *   dai test heal       - Run self-healing
+ *   dai test agents     - Run agentic testing
  */
 
 export interface TestCLIConfig {
@@ -116,7 +116,7 @@ export function printHelp(): void {
 DAI Nexus Testing CLI
 
 Usage:
-  forge test <command> [options]
+  dai test <command> [options]
 
 Commands:
 ${Object.entries(CLI_COMMANDS)
@@ -130,10 +130,10 @@ Options:
   --ci                CI mode (optimized for CI)
 
 Examples:
-  forge test setup --provider minimax
-  forge test run --layer unit --heal
-  forge test agents --role healer
-  forge test autonomous --monitor --red-team
+  dai test setup --provider minimax
+  dai test run --layer unit --heal
+  dai test agents --role healer
+  dai test autonomous --monitor --red-team
 
 For more information, see: https://github.com/Exia-thd/DAI-nexus
 `);

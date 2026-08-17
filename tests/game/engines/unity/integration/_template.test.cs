@@ -1,7 +1,7 @@
 // Unity Integration Test Template
 // Ref: GDD/Sections/11_Integration.md
 
-namespace Forgewright.GameTest.Unity.Integration
+namespace DaiNexus.GameTest.Unity.Integration
 {
     /// <summary>
     /// Cross-system integration tests. Validates that combining systems

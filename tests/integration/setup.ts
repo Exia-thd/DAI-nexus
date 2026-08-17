@@ -56,7 +56,7 @@ async function waitForPostgres(port: string, db: string): Promise<void> {
   throw new Error(`Postgres on port ${port} did not become ready in time`);
 }
 
-export function getForgenexusDBUrl(): string {
+export function getDaiNexusDBUrl(): string {
   return 'postgresql://testuser:testpass@localhost:5433/dainexus_node_test';
 }
 

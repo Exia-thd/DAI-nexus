@@ -4,7 +4,7 @@
   "description": "DAI Nexus CLI - Agent-First Command Line Interface",
   "type": "module",
   "bin": {
-    "forge": "./dist/index.js"
+    "dai": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

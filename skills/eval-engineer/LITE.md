@@ -61,5 +61,5 @@ print(calculate_quality_score('{"confidence": 0.95, "citations": [""]}'))
 ### Step 3: Run the prompt validator and check token usage metrics
 ```bash
 python3 tests/eval_prompt.py
-forge token status || cat ~/.dainexus/usage/summary.json
+dai token status || cat ~/.dainexus/usage/summary.json
 ```

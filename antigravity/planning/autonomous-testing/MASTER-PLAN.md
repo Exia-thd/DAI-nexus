@@ -454,8 +454,8 @@ interfaceNOVATestGenerator {
 │  ✅ 10 sample tests                                                     │
 │                                                                          │
 │  Commands:                                                               │
-│  $ forge test setup                                                     │
-│  $ forge test run --layer unit                                         │
+│  $ dai test setup                                                     │
+│  $ dai test run --layer unit                                         │
 │                                                                          │
 │  Tools: Playwright, Vitest, Healwright, GitHub Actions                   │
 │  Score Target: 8/10                                                     │
@@ -568,36 +568,36 @@ interfaceNOVATestGenerator {
 
 ```bash
 # Core Commands
-forge test setup                  # Initialize test infrastructure
-forge test run                    # Run all tests with auto-fix
-forge test autonomous             # Full autonomous mode
-forge test fix                    # Fix existing failures
+dai test setup                  # Initialize test infrastructure
+dai test run                    # Run all tests with auto-fix
+dai test autonomous             # Full autonomous mode
+dai test fix                    # Fix existing failures
 
 # Self-Healing
-forge test heal                   # Run self-healing engine
-forge test fingerprint            # Generate 5D fingerprints
-forge test analyze                # Analyze failures
+dai test heal                   # Run self-healing engine
+dai test fingerprint            # Generate 5D fingerprints
+dai test analyze                # Analyze failures
 
 # Agentic
-forge test agents                 # List specialized agents
-forge test orchestrate            # Run SEER orchestration
-forge test consensus              # Run multi-agent voting
-forge test nova                   # Generate from JIRA/Rally
+dai test agents                 # List specialized agents
+dai test orchestrate            # Run SEER orchestration
+dai test consensus              # Run multi-agent voting
+dai test nova                   # Generate from JIRA/Rally
 
 # Intelligence
-forge test inspect                # InspectCoder self-repair
-forge test flare                  # FLARE security fuzzing
-forge test trace                  # Trace-based assurance
+dai test inspect                # InspectCoder self-repair
+dai test flare                  # FLARE security fuzzing
+dai test trace                  # Trace-based assurance
 
 # Production
-forge test shift-right            # Shift-Right integration
-forge test production             # Production monitoring
-forge test feedback              # Update ML model
+dai test shift-right            # Shift-Right integration
+dai test production             # Production monitoring
+dai test feedback              # Update ML model
 
 # Advanced
-forge test committee              # Multi-agent committee
-forge test govern                # Runtime governance
-forge test audit                 # Full audit report
+dai test committee              # Multi-agent committee
+dai test govern                # Runtime governance
+dai test audit                 # Full audit report
 ```
 
 ---

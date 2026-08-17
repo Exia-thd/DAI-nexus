@@ -58,12 +58,12 @@ export class ConfigStore {
    * Load default configuration values
    */
   private loadDefaults(): void {
-    this.set("forge.debug", false, "DEFAULT");
-    this.set("forge.quiet", false, "DEFAULT");
-    this.set("forge.json", false, "DEFAULT");
-    this.set("forge.color", true, "DEFAULT");
-    this.set("forge.apiUrl", "https://api.dainexus.io", "DEFAULT");
-    this.set("forge.timeout", 30000, "DEFAULT");
+    this.set("dai.debug", false, "DEFAULT");
+    this.set("dai.quiet", false, "DEFAULT");
+    this.set("dai.json", false, "DEFAULT");
+    this.set("dai.color", true, "DEFAULT");
+    this.set("dai.apiUrl", "https://api.dainexus.io", "DEFAULT");
+    this.set("dai.timeout", 30000, "DEFAULT");
   }
 
   /**

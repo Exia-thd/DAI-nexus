@@ -100,11 +100,11 @@ function writeGateSuccess(
   startedAt: number,
 ): void {
   if (json) {
-    writeSuccess("forge.docs.gate", result, true, startedAt);
+    writeSuccess("dai.docs.gate", result, true, startedAt);
     return;
   }
   process.stdout.write(
-    `${pc.green("✓")} forge.docs.gate (${result.mode}): ${result.changedPaths.length} changed, ${result.materialPaths.length} material, ${result.verifiedOutputPaths.length} outputs verified\n`,
+    `${pc.green("✓")} dai.docs.gate (${result.mode}): ${result.changedPaths.length} changed, ${result.materialPaths.length} material, ${result.verifiedOutputPaths.length} outputs verified\n`,
   );
 }
 
@@ -123,7 +123,7 @@ function resolveProjectRoots(
   const registered = resolveRegistryProject(input);
   if (!registered) {
     throw new Error(
-      `Unknown project "${input}". Pass a path or add it with \`forge docs registry add\`.`,
+      `Unknown project "${input}". Pass a path or add it with \`dai docs registry add\`.`,
     );
   }
   return [registered.root];
@@ -233,7 +233,7 @@ export function registerDocsCommands(program: Command): void {
               (diagnostic) => diagnostic.severity === "error",
             ) ?? result.doctor.diagnostics[0];
           writeFailure(
-            "forge.docs.gate",
+            "dai.docs.gate",
             blockingDiagnostic
               ? `Documentation continuity gate failed (${blockingDiagnostic.code}): ${blockingDiagnostic.message}`
               : "Documentation continuity gate failed.",
@@ -247,7 +247,7 @@ export function registerDocsCommands(program: Command): void {
         writeGateSuccess(result, json, startedAt);
       } catch (error) {
         writeFailure(
-          "forge.docs.gate",
+          "dai.docs.gate",
           error instanceof Error ? error.message : String(error),
           null,
           json,
@@ -269,10 +269,10 @@ export function registerDocsCommands(program: Command): void {
         const result = initManifest(target ?? process.cwd(), {
           force: options.force,
         });
-        writeSuccess("forge.docs.init", result, json, startedAt);
+        writeSuccess("dai.docs.init", result, json, startedAt);
       } catch (error) {
         writeFailure(
-          "forge.docs.init",
+          "dai.docs.init",
           error instanceof Error ? error.message : String(error),
           null,
           json,
@@ -294,14 +294,14 @@ export function registerDocsCommands(program: Command): void {
       const json = useJson(program, options);
       try {
         writeSuccess(
-          "forge.docs.registry.add",
+          "dai.docs.registry.add",
           addRegistryProject(path),
           json,
           startedAt,
         );
       } catch (error) {
         writeFailure(
-          "forge.docs.registry.add",
+          "dai.docs.registry.add",
           error instanceof Error ? error.message : String(error),
           { path },
           json,
@@ -318,15 +318,10 @@ export function registerDocsCommands(program: Command): void {
       const startedAt = Date.now();
       const json = useJson(program, options);
       try {
-        writeSuccess(
-          "forge.docs.registry.list",
-          loadRegistry(),
-          json,
-          startedAt,
-        );
+        writeSuccess("dai.docs.registry.list", loadRegistry(), json, startedAt);
       } catch (error) {
         writeFailure(
-          "forge.docs.registry.list",
+          "dai.docs.registry.list",
           error instanceof Error ? error.message : String(error),
           null,
           json,
@@ -346,7 +341,7 @@ export function registerDocsCommands(program: Command): void {
         const removed = removeRegistryProject(idOrPath);
         if (!removed) {
           writeFailure(
-            "forge.docs.registry.remove",
+            "dai.docs.registry.remove",
             `Project is not registered: ${idOrPath}`,
             { idOrPath },
             json,
@@ -354,15 +349,10 @@ export function registerDocsCommands(program: Command): void {
           );
           return;
         }
-        writeSuccess(
-          "forge.docs.registry.remove",
-          { removed },
-          json,
-          startedAt,
-        );
+        writeSuccess("dai.docs.registry.remove", { removed }, json, startedAt);
       } catch (error) {
         writeFailure(
-          "forge.docs.registry.remove",
+          "dai.docs.registry.remove",
           error instanceof Error ? error.message : String(error),
           { idOrPath },
           json,
@@ -393,7 +383,7 @@ export function registerDocsCommands(program: Command): void {
         }));
         if (result.failures.length > 0) {
           writeFailure(
-            "forge.docs.scan",
+            "dai.docs.scan",
             "One or more projects could not be scanned.",
             { catalogs, failures: result.failures },
             json,
@@ -401,10 +391,10 @@ export function registerDocsCommands(program: Command): void {
           );
           return;
         }
-        writeSuccess("forge.docs.scan", { catalogs }, json, startedAt);
+        writeSuccess("dai.docs.scan", { catalogs }, json, startedAt);
       } catch (error) {
         writeFailure(
-          "forge.docs.scan",
+          "dai.docs.scan",
           error instanceof Error ? error.message : String(error),
           null,
           json,
@@ -433,7 +423,7 @@ export function registerDocsCommands(program: Command): void {
         });
         if (!execution.buildResult) {
           writeFailure(
-            "forge.docs.build",
+            "dai.docs.build",
             "No buildable projects were found.",
             {
               failures: execution.failures,
@@ -452,7 +442,7 @@ export function registerDocsCommands(program: Command): void {
           execution.strictProjects.length > 0
         ) {
           writeFailure(
-            "forge.docs.build",
+            "dai.docs.build",
             "Docs Hub built the valid projects, but one or more projects failed.",
             {
               partialBuild: execution.buildResult,
@@ -466,15 +456,10 @@ export function registerDocsCommands(program: Command): void {
           );
           return;
         }
-        writeSuccess(
-          "forge.docs.build",
-          execution.buildResult,
-          json,
-          startedAt,
-        );
+        writeSuccess("dai.docs.build", execution.buildResult, json, startedAt);
       } catch (error) {
         writeFailure(
-          "forge.docs.build",
+          "dai.docs.build",
           error instanceof Error ? error.message : String(error),
           null,
           json,
@@ -508,7 +493,7 @@ export function registerDocsCommands(program: Command): void {
           reports.some((report) => report.status === "fail");
         if (failed) {
           writeFailure(
-            "forge.docs.doctor",
+            "dai.docs.doctor",
             "Documentation health checks failed.",
             { reports, failures: scanned.failures },
             json,
@@ -518,14 +503,14 @@ export function registerDocsCommands(program: Command): void {
           return;
         }
         writeSuccess(
-          "forge.docs.doctor",
+          "dai.docs.doctor",
           { reports, failures: scanned.failures },
           json,
           startedAt,
         );
       } catch (error) {
         writeFailure(
-          "forge.docs.doctor",
+          "dai.docs.doctor",
           error instanceof Error ? error.message : String(error),
           null,
           json,
@@ -568,7 +553,7 @@ export function registerDocsCommands(program: Command): void {
           strictFailures.length > 0
         ) {
           writeFailure(
-            "forge.docs.export.obsidian",
+            "dai.docs.export.obsidian",
             "Obsidian export was blocked by diagnostics.",
             {
               failures: scanned.failures,
@@ -587,14 +572,14 @@ export function registerDocsCommands(program: Command): void {
           options.output ?? join(getDocsHubHome(), "docs-hub", "obsidian"),
         );
         writeSuccess(
-          "forge.docs.export.obsidian",
+          "dai.docs.export.obsidian",
           exportObsidianVault(scanned.catalogs, output),
           json,
           startedAt,
         );
       } catch (error) {
         writeFailure(
-          "forge.docs.export.obsidian",
+          "dai.docs.export.obsidian",
           error instanceof Error ? error.message : String(error),
           null,
           json,

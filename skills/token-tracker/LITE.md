@@ -9,7 +9,7 @@ version: 1.0.0
 ## SOLVE Step 2: GROUND (Token Tracker Domain Slots)
 | Assumption | Check command / file read | Result | Script-produced evidence |
 |---|---|---|---|
-| Built-in cost control and local token tracking are activated | `forge token status` or `forge token on` | ... | run the check command and paste output |
+| Built-in cost control and local token tracking are activated | `dai token status` or `dai token on` | ... | run the check command and paste output |
 | Active project budget configuration is established | `cat .dainexus/budget.yaml` | ... | run the check command and paste output |
 | Structured token usage log directory and JSONL files exist | `ls -la ~/.dainexus/usage/` | ... | run the check command and paste output |
 | Offline context caching thresholds are configured | `cat .production-grade.yaml` | ... | run the check command and paste output |
@@ -23,7 +23,7 @@ Format: `n. ACTION | TARGET | CHECK`
 4. EXPORT | Generate a clean, kebab-case markdown usage report under `docs/05-operations/` | Verify file name compliance and execute sync hooks to propagate reports to the Shared Obsidian Vault.
 
 ## Common Mistakes Checklist
-- **Disabled tracking**: Running high-overhead autonomous agent tasks without running `forge token on` first, rendering API spend completely invisible.
+- **Disabled tracking**: Running high-overhead autonomous agent tasks without running `dai token on` first, rendering API spend completely invisible.
 - **Missing or invalid budget schema**: Forgetting to define or validate `.dainexus/budget.yaml`, causing budget alerts to fail silently.
 - **Loading raw log dumps directly**: Appending raw, heavy JSONL logs into the active chat session instead of offloading summaries, resulting in immediate context window bloat.
 - **Ignoring routing/caching evidence**: Using expensive/high-capability routes for routine low-risk steps without checking current runtime tiers, caching support, or measured benefit.
@@ -32,7 +32,7 @@ Format: `n. ACTION | TARGET | CHECK`
 ### Step 1: Ensure local token tracking is active
 ```bash
 # Activate the built-in local token tracking system
-forge token on
+dai token on
 ```
 
 ### Step 2: Inspect the project budget limits

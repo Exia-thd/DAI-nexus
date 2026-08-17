@@ -18,7 +18,7 @@ describe("FilesystemExecutor", () => {
 
   beforeEach(() => {
     // Create temp test directory
-    testDir = path.join(os.tmpdir(), `forge-sandbox-test-${Date.now()}`);
+    testDir = path.join(os.tmpdir(), `dai-sandbox-test-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
 
     config = {

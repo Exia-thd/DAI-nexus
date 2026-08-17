@@ -580,9 +580,7 @@ def main():
         log_error("DAINEXUS_PROVIDER is required for a comparable --live report.")
         sys.exit(1)
     if args.live and not os.environ.get("DAINEXUS_MODEL_SNAPSHOT", "").strip():
-        log_error(
-            "DAINEXUS_MODEL_SNAPSHOT is required for a comparable --live report."
-        )
+        log_error("DAINEXUS_MODEL_SNAPSHOT is required for a comparable --live report.")
         sys.exit(1)
 
     results = []
@@ -590,9 +588,7 @@ def main():
 
     # Absolute paths
     repo_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
-    orchestrator_path = os.path.join(
-        repo_root, "scripts", "dainexus-orchestrator.py"
-    )
+    orchestrator_path = os.path.join(repo_root, "scripts", "dainexus-orchestrator.py")
 
     for task in tasks:
         task_id = task["id"]
@@ -611,7 +607,7 @@ def main():
         )
 
         # 1. Setup workspace
-        temp_dir = tempfile.mkdtemp(prefix=f"forge-eval-{task_id}-")
+        temp_dir = tempfile.mkdtemp(prefix=f"dai-eval-{task_id}-")
         log_info(f"Created temp workspace: {temp_dir}")
 
         if workspace_rel:

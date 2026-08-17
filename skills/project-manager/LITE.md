@@ -30,7 +30,7 @@ Format: `n. ACTION | TARGET | CHECK`
 ### Step 1: Execute project-onboarding command to establish baseline context
 ```bash
 # Run the built-in onboarding sequence to detect tech stack and tool chains
-forge onboard
+dai onboard
 ```
 
 ### Step 2: Create a compliant, lowercase kebab-case sprint tracking file `docs/05-operations/sprint-status.md`

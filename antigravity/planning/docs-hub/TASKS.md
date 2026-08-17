@@ -13,7 +13,7 @@
 
 | ID | Task | Check | Status |
 |---|---|---|---|
-| P1-01 | Register `forge docs` command group | CLI help/golden test | Completed |
+| P1-01 | Register `dai docs` command group | CLI help/golden test | Completed |
 | P1-02 | Implement manifest init/load/validate | Unit and idempotency tests | Completed |
 | P1-03 | Implement global registry | Add/list/remove tests | Completed |
 | P1-04 | Implement legacy source discovery | Mixed-case fixture tests | Completed |
@@ -44,7 +44,7 @@
 
 | ID | Task | Check | Status |
 |---|---|---|---|
-| P4-01 | Add `forge docs doctor` checks and exit codes | Unit/integration tests | Completed |
+| P4-01 | Add `dai docs doctor` checks and exit codes | Unit/integration tests | Completed |
 | P4-02 | Convert wiki-sync scripts to compatibility shims | Existing script tests | Completed — existing scripts remain documented shims |
 | P4-03 | Add DAI Nexus and Pixelworld golden fixtures | Golden CI | Completed |
 | P4-04 | Add browser and accessibility verification | Browser DOM/screenshot audit | Completed — direct tab traversal is adapter-limited |

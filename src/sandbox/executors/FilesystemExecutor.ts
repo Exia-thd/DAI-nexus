@@ -52,7 +52,7 @@ export class FilesystemExecutor {
   constructor(config: FilesystemConfig, policyEngine: PolicyEngine) {
     this.config = config;
     this.policyEngine = policyEngine;
-    this.workspaceDir = config.workspaceDir || "/tmp/forge-sandbox";
+    this.workspaceDir = config.workspaceDir || "/tmp/dai-sandbox";
   }
 
   /**

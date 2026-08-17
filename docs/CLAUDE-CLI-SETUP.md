@@ -256,7 +256,7 @@ Khởi động lại Claude CLI.
 Chạy script xác minh:
 
 ```bash
-bash dai-nexus/scripts/forge-validate.sh
+bash dai-nexus/scripts/dai-validate.sh
 ```
 
 Hoặc kiểm tra thủ công:

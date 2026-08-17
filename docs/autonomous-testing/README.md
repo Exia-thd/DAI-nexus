@@ -6,17 +6,17 @@
 
 ```bash
 # Run tests with auto-fix
-forge test autonomous
+dai test autonomous
 
 # Run specific layers
-forge test run --layer unit
-forge test run --layer integration,visual
+dai test run --layer unit
+dai test run --layer integration,visual
 
 # Auto-fix failures
-forge test fix
+dai test fix
 
 # Update visual baselines
-forge test update-baseline
+dai test update-baseline
 ```
 
 ## Architecture
@@ -95,7 +95,7 @@ forge test update-baseline
 ```yaml
 # .github/workflows/autonomous.yml
 - name: Autonomous Test
-  run: forge test autonomous --max-attempts 3
+  run: dai test autonomous --max-attempts 3
 ```
 
 ## Configuration

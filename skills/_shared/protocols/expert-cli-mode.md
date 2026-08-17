@@ -24,30 +24,30 @@ superseded_by: null
 3. A single CLI is sufficient. Do not require or assume a fallback provider.
 4. Do not auto-switch providers unless `fallbackCli` is explicitly configured.
 5. Missing CLI is a soft failure: warn, log the decision, and continue with normal pipeline behavior.
-6. Token tracking is independent. Expert mode can enable it with `--track-tokens`, but `forge token on` remains the standalone control.
+6. Token tracking is independent. Expert mode can enable it with `--track-tokens`, but `dai token on` remains the standalone control.
 
 ## Commands
 
 ```bash
-forge expert status
-forge expert on
-forge expert off
-forge expert use claude
-forge expert use codex
-forge expert test
-forge expert budget --max-calls 5
-forge expert gates on
-forge expert gates off
+dai expert status
+dai expert on
+dai expert off
+dai expert use claude
+dai expert use codex
+dai expert test
+dai expert budget --max-calls 5
+dai expert gates on
+dai expert gates off
 
-forge token status
-forge token on
-forge token off
-forge token budget --daily 5 --weekly 25 --monthly 80
-forge token report --period day
-forge token dashboard
+dai token status
+dai token on
+dai token off
+dai token budget --daily 5 --weekly 25 --monthly 80
+dai token report --period day
+dai token dashboard
 ```
 
-`fw` aliases may call the same command groups if the installation provides a wrapper, but the canonical CLI binary in this repository is `forge`.
+`fw` aliases may call the same command groups if the installation provides a wrapper, but the canonical CLI binary in this repository is `dai`.
 
 ## Configuration
 
@@ -110,12 +110,12 @@ Recommended fields:
 
 ## Token Tracking
 
-`forge token on` enables local token tracking for DAI Nexus logs and expert CLI decision accounting. It does not delete or modify existing usage data. `forge token off` only disables future tracking.
+`dai token on` enables local token tracking for DAI Nexus logs and expert CLI decision accounting. It does not delete or modify existing usage data. `dai token off` only disables future tracking.
 
 When expert mode is enabled with `--track-tokens`, run the equivalent of:
 
 ```bash
-forge token on
+dai token on
 ```
 
 before the expert-mode configuration is saved.

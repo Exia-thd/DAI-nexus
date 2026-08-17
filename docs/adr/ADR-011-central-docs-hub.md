@@ -47,13 +47,13 @@ The referenced `project-state.json` is the canonical state for project
 structure, roadmap, flows, backlog, and live status. It is project-owned JSON,
 not a generated catalog or a renderer cache.
 
-When `forge docs init` finds an existing valid v1 manifest without this block,
+When `dai docs init` finds an existing valid v1 manifest without this block,
 it migrates the manifest in place without replacing existing sources and
 creates the referenced state only when absent. Read compatibility does not
 weaken the mandatory strict gate.
 
 For material changes, continuity is enforced by the executable
-`forge docs gate [target]`. The gate accepts `--staged`, `--worktree`, and
+`dai docs gate [target]`. The gate accepts `--staged`, `--worktree`, and
 `--base-ref <ref>` views; detects material changes; requires the canonical state
 file in the same changeset; runs an in-memory strict doctor; builds HTML/CSS in
 a temporary directory; verifies the generated output; and fails closed on
@@ -96,7 +96,7 @@ replacing its graph.
 The general quality policy remains proportional, but a project's configured
 continuous documentation contract overrides the usual not-every-local-edit
 default. In this repository, the contract is mandatory for material changes.
-Migration is source-preserving: run `forge docs init [target]`, review the
+Migration is source-preserving: run `dai docs init [target]`, review the
 generated v1 manifest and `docs/project-state.json`, then run the readable scan
 or build and resolve strict doctor diagnostics. Do not migrate by copying
 generated HTML/CSS back into source or by editing generated output.

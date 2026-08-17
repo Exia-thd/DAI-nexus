@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 
-namespace Forgewright.Gameplay
+namespace DaiNexus.Gameplay
 {
     /// <summary>
     /// Professional Encrypted Save/Load system for Unity.

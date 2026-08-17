@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Forgewright.Gameplay
+namespace DaiNexus.Gameplay
 {
     /// <summary>
     /// Professional State-Machine Combat Controller for Unity.

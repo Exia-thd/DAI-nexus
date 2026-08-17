@@ -13,9 +13,9 @@ export const MIGRATION_GUIDE = `
 **No changes required.** All existing commands work exactly as before.
 
 New features available:
-- \`forge tools list\` — List all available tools
-- \`forge doctor\` — Check system health
-- \`forge config\` — Configuration management
+- \`dai tools list\` — List all available tools
+- \`dai doctor\` — Check system health
+- \`dai config\` — Configuration management
 
 ## For AI Agents
 
@@ -29,20 +29,20 @@ ls skills/
 
 After (automated):
 \`\`\`bash
-forge tools list --json | jq '.data.tools[] | .name'
+dai tools list --json | jq '.data.tools[] | .name'
 \`\`\`
 
 ### Structured Output
 
 Before (parse text):
 \`\`\`bash
-forge --version
+dai --version
 # Output: 2.0.0
 \`\`\`
 
 After (parse JSON):
 \`\`\`bash
-forge --version --json
+dai --version --json
 # Output: { "ok": true, "data": { "version": "2.0.0" } }
 \`\`\`
 
@@ -90,10 +90,10 @@ New (recommended):
 export FORGE_DEBUG=1
 
 # Set via config file
-forge config set forge.debug true
+dai config set dai.debug true
 
 # Set via flag
-forge --debug validate
+dai --debug validate
 \`\`\`
 
 ## Breaking Changes
@@ -110,7 +110,7 @@ forge --debug validate
 
 If you need legacy behavior:
 \`\`\`bash
-FORGE_LEGACY_OUTPUT=1 forge validate
+FORGE_LEGACY_OUTPUT=1 dai validate
 \`\`\`
 
 ## Examples
@@ -121,19 +121,19 @@ FORGE_LEGACY_OUTPUT=1 forge validate
 #!/bin/bash
 
 # 1. Check system health
-forge doctor --json || exit 1
+dai doctor --json || exit 1
 
 # 2. List available tools
-TOOLS=$(forge tools list --json | jq -r '.data.tools[].name')
+TOOLS=$(dai tools list --json | jq -r '.data.tools[].name')
 
 # 3. Run quality gate
-forge validate --json --level 3 || {
+dai validate --json --level 3 || {
   echo "Validation failed"
   exit 1
 }
 
 # 4. Get config
-forge config list --json
+dai config list --json
 \`\`\`
 
 ### Agent Integration Example
@@ -142,9 +142,9 @@ forge config list --json
 import subprocess
 import json
 
-def forge_command(cmd: list[str]) -> dict:
+def dai_command(cmd: list[str]) -> dict:
     result = subprocess.run(
-        ["forge", "--json"] + cmd,
+        ["dai", "--json"] + cmd,
         capture_output=True,
         text=True
     )
@@ -156,8 +156,8 @@ def forge_command(cmd: list[str]) -> dict:
     return data["data"]
 
 # Usage
-tools = forge_command(["tools", "list"])
-validate = forge_command(["validate", "--level", "3"])
+tools = dai_command(["tools", "list"])
+validate = dai_command(["validate", "--level", "3"])
 \`\`\`
 `;
 

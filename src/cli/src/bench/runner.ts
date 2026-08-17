@@ -440,7 +440,7 @@ export async function runBenchmarkSuite(
       mkdirSync(projectTmpDir, { recursive: true });
 
       if (resolvedWorkspace && existsSync(resolvedWorkspace)) {
-        const tempBase = join(projectTmpDir, `forge-bench-${task.id}-`);
+        const tempBase = join(projectTmpDir, `dai-bench-${task.id}-`);
         attemptWorkspace = mkdtempSync(tempBase);
         cpSync(resolvedWorkspace, attemptWorkspace, { recursive: true });
         cleanupFn = () => {
@@ -451,7 +451,7 @@ export async function runBenchmarkSuite(
           }
         };
       } else {
-        const tempBase = join(projectTmpDir, `forge-bench-empty-${task.id}-`);
+        const tempBase = join(projectTmpDir, `dai-bench-empty-${task.id}-`);
         attemptWorkspace = mkdtempSync(tempBase);
         cleanupFn = () => {
           try {

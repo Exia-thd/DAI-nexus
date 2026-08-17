@@ -36,7 +36,7 @@ try {
     'mcp',
     'src/cli',
     'tests/golden',
-    'docs/guides/forge-init-onboard.md',
+    'docs/guides/dai-init-onboard.md',
   ]) {
     copy(path);
   }
@@ -45,7 +45,7 @@ try {
   run(npm, ['--prefix', 'mcp', 'run', 'build']);
   run(npm, ['--prefix', 'src/cli', 'run', 'typecheck']);
   run(npm, ['--prefix', 'src/cli', 'run', 'build']);
-  run('node', ['tests/golden/forge-init-onboard.test.mjs']);
+  run('node', ['tests/golden/dai-init-onboard.test.mjs']);
 
   const required = ['mcp/build/index.js', 'src/cli/dist/index.js', 'src/cli/dist/index.d.ts'];
   for (const path of required) {
@@ -56,7 +56,7 @@ try {
 
   console.log('clean install: npm ci PASS');
   console.log('clean build: MCP build + CLI typecheck/build PASS');
-  console.log('clean golden path: forge init/onboard PASS');
+  console.log('clean golden path: dai init/onboard PASS');
   console.log('clean install evidence: PASS');
 } finally {
   rmSync(snapshot, { recursive: true, force: true });

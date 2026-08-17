@@ -8,11 +8,11 @@ P3.3 requires one documented, reproducible project setup path. The command must 
 
 ## Decision
 
-`forge init [target]` creates `.dainexus/project.json`, and `forge onboard [target]` requires that manifest before creating `.dainexus/project-profile.json`. The profile records only deterministic local filesystem facts: Git metadata presence, `package.json` presence, recognized lockfiles, and a readable declared `test` script.
+`dai init [target]` creates `.dainexus/project.json`, and `dai onboard [target]` requires that manifest before creating `.dainexus/project-profile.json`. The profile records only deterministic local filesystem facts: Git metadata presence, `package.json` presence, recognized lockfiles, and a readable declared `test` script.
 
 Existing generated files are preserved by default and return `already_exists`; `--force` explicitly refreshes the corresponding generated file. Both commands support the normal CLI JSON envelope.
 
-The canonical evidence is `tests/golden/forge-init-onboard.test.mjs`. It exercises creation, idempotent reruns, manifest-required failure, protected existing content, and explicit refresh. It is invoked by `npm run test:golden`, the required aggregate gate, and the `cli-init-onboard-golden` GitHub Actions job.
+The canonical evidence is `tests/golden/dai-init-onboard.test.mjs`. It exercises creation, idempotent reruns, manifest-required failure, protected existing content, and explicit refresh. It is invoked by `npm run test:golden`, the required aggregate gate, and the `cli-init-onboard-golden` GitHub Actions job.
 
 ## Consequences
 

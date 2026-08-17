@@ -1,11 +1,11 @@
-# Forge Init and Onboard Golden Path
+# DAI Init and Onboard Golden Path
 
 This is the canonical project-local onboarding path for the DAI Nexus CLI. It records deterministic filesystem facts only; it does not call a model, upload project content, install project dependencies, or claim that the project is production-ready.
 
 ## Prerequisites
 
 - Node.js 18 or newer.
-- The `@dai-nexus/cli` package installed so the `forge` executable is available.
+- The `@dai-nexus/cli` package installed so the `dai` executable is available.
 - A project directory you are authorized to modify.
 
 ## Ten-Minute Sample Workflow
@@ -13,8 +13,8 @@ This is the canonical project-local onboarding path for the DAI Nexus CLI. It re
 Run these commands from the project root:
 
 ```bash
-forge --json init .
-forge --json onboard .
+dai --json init .
+dai --json onboard .
 ```
 
 `init` creates `.dainexus/project.json`. `onboard` then creates `.dainexus/project-profile.json` containing only detected filesystem facts: Git metadata presence, `package.json` presence, recognized lockfiles, and the declared npm test script when readable.
@@ -22,7 +22,7 @@ forge --json onboard .
 Both commands are idempotent by default. Existing files return `already_exists` and are not overwritten. Use `--force` only when deliberately refreshing generated data:
 
 ```bash
-forge --json onboard . --force
+dai --json onboard . --force
 ```
 
 The required golden test executes creation, idempotent re-runs, missing-manifest failure, overwrite protection, and explicit refresh in a temporary project. Its runtime gate is ten minutes:

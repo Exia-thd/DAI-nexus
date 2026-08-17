@@ -117,13 +117,13 @@ Use the DAI Nexus CLI to validate positions:
 
 ```bash
 # Validate position before placing
-forge coords validate "5000,0,0" --engine unity
+dai coords validate "5000,0,0" --engine unity
 
 # Convert from one engine to another
-forge coords convert "10,20,30" --from godot --to unity
+dai coords convert "10,20,30" --from godot --to unity
 
 # Check precision risk
-forge coords validate "10000,0,0" --engine godot
+dai coords validate "10000,0,0" --engine godot
 ```
 
 ## Common Issues & Fixes
@@ -196,4 +196,4 @@ Before marking asset placement as complete:
 - [Coordinate System Cheatsheet](../coordinate-systems/cheatsheet.md)
 - [Import Settings Guide](../coordinate-systems/import-settings.md)
 - [Floating Origin Guide](../guides/floating-origin.md)
-- [CLI Reference: forge coords](../../cli/src/commands/coords.ts)
+- [CLI Reference: dai coords](../../cli/src/commands/coords.ts)

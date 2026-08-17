@@ -60,16 +60,16 @@ This documentation provides:
 
 ```bash
 # List supported engines
-forge coords engines
+dai coords engines
 
 # Convert coordinates
-forge coords convert "10,20,30" --from unity --to godot
+dai coords convert "10,20,30" --from unity --to godot
 
 # Validate position
-forge coords validate "5000,0,0" --engine unity
+dai coords validate "5000,0,0" --engine unity
 
 # Quick reference
-forge coords ref
+dai coords ref
 ```
 
 ## Common Issues
@@ -85,7 +85,7 @@ forge coords ref
 
 1. **Always apply transforms** before exporting from Blender
 2. **Use glTF 2.0** when possible (better consistency)
-3. **Validate positions** with `forge coords validate`
+3. **Validate positions** with `dai coords validate`
 4. **Enable Floating Origin** for worlds > 5000 units
 5. **Test with simple shapes** before complex models
 

@@ -15,7 +15,7 @@ DAI Nexus hiện tại là một orchestration system mạnh mẽ với 55 skill
 
 | Gap | Current | Needed |
 |-----|---------|--------|
-| Tool discovery | ❌ Không có | `forge tools --json` |
+| Tool discovery | ❌ Không có | `dai tools --json` |
 | Structured output | ❌ Human-only | `--json` for agents |
 | Exit codes | ❌ Random | Standardized (0-6) |
 | Config management | ⚠️ Partial | Layered (5 sources) |
@@ -75,7 +75,7 @@ DAI Nexus hiện tại là một orchestration system mạnh mẽ với 55 skill
 ### High-Level Design
 
 ```bash
-forge [global-flags] <command> [args] [flags]
+dai [global-flags] <command> [args] [flags]
 
 # Global flags
   --json              # Force JSON output (agent mode)
@@ -171,14 +171,14 @@ Override: `FORGE_INLINE_FIRST=1` inverts priority.
 | Add `--json` global flag | 1.5h | — | CLI entry |
 | Implement JSON envelope | 1h | — | `--json` flag |
 | Create tool registry | 2h | — | None |
-| Add `forge tools list` | 1h | — | Registry |
-| Add `forge tools call` | 1h | — | Registry |
+| Add `dai tools list` | 1h | — | Registry |
+| Add `dai tools call` | 1h | — | Registry |
 
 **Acceptance Criteria:**
-- [ ] `forge --version` returns JSON when `--json` passed
+- [ ] `dai --version` returns JSON when `--json` passed
 - [ ] All commands accept `--json` flag
 - [ ] Exit codes documented and consistent
-- [ ] `forge tools list --json` returns valid tool registry
+- [ ] `dai tools list --json` returns valid tool registry
 
 ### Phase 2: Enhanced CLI (14h)
 
@@ -186,14 +186,14 @@ Override: `FORGE_INLINE_FIRST=1` inverts priority.
 |------|--------|-------|-------------|
 | Implement config layering | 3h | — | Phase 1 |
 | Add input conventions | 2h | — | Phase 1 |
-| Implement `forge config` | 2h | — | Config layering |
-| Add `forge doctor` | 1h | — | None |
-| Add `forge validate --json` | 2h | — | Phase 1 |
+| Implement `dai config` | 2h | — | Config layering |
+| Add `dai doctor` | 1h | — | None |
+| Add `dai validate --json` | 2h | — | Phase 1 |
 | Migration guide | 1h | — | Phase 1 |
 | Backward compatibility layer | 3h | — | Phase 1 |
 
 **Acceptance Criteria:**
-- [ ] `forge config list` shows config source per key
+- [ ] `dai config list` shows config source per key
 - [ ] `@path/to/file.md` input convention works
 - [ ] stdin (`-`) input convention works
 - [ ] Migration guide covers all breaking changes (if any)
@@ -234,7 +234,7 @@ v3.0               → Legacy flags removed (if any)
 - New `--json` flag available for scripting
 
 ### For AI Agents
-- Use `forge tools list --json` for discovery
+- Use `dai tools list --json` for discovery
 - Parse JSON envelope for structured output
 - Use exit codes for error handling
 
@@ -248,10 +248,10 @@ v3.0               → Legacy flags removed (if any)
 
 ```bash
 # Force legacy behavior if needed
-FORGE_LEGACY_OUTPUT=1 forge validate
+FORGE_LEGACY_OUTPUT=1 dai validate
 
 # Force new behavior
-FORGE_NEW_OUTPUT=1 forge validate
+FORGE_NEW_OUTPUT=1 dai validate
 ```
 
 ---
@@ -296,10 +296,10 @@ main
 ```yaml
 # .github/workflows/cli-test.yml
 - name: Test CLI (legacy mode)
-  run: FORGE_LEGACY_OUTPUT=1 ./scripts/forge-validate.sh --json
+  run: FORGE_LEGACY_OUTPUT=1 ./scripts/dai-validate.sh --json
 
 - name: Test CLI (new mode)
-  run: ./scripts/forge-validate.sh --json
+  run: ./scripts/dai-validate.sh --json
 ```
 
 ---
@@ -358,7 +358,7 @@ describe('JSON Envelope', () => {
 ```bash
 # Test all commands with --json
 for cmd in tools skills validate doctor config; do
-  forge $cmd --json | jq . > /dev/null || exit 1
+  dai $cmd --json | jq . > /dev/null || exit 1
 done
 ```
 
@@ -366,10 +366,10 @@ done
 
 ```bash
 # Human mode: check colored output
-forge validate | grep -q "$(tput colors)"  # Should have color codes
+dai validate | grep -q "$(tput colors)"  # Should have color codes
 
 # Agent mode: check JSON structure
-forge validate --json | jq -e '.ok == true'
+dai validate --json | jq -e '.ok == true'
 ```
 
 ---
@@ -394,9 +394,9 @@ forge validate --json | jq -e '.ok == true'
 npm i -g dai-nexus
 
 ## Quick Start
-forge --version
-forge tools list --json
-forge validate --json
+dai --version
+dai tools list --json
+dai validate --json
 
 ## Global Flags
 --json, -j    Force JSON output
@@ -415,10 +415,10 @@ doctor   Diagnostics
 
 ## Examples
 # Human usage
-forge validate
+dai validate
 
 # Agent usage
-forge --json tools list | jq '.data[] | select(.category=="engineering")'
+dai --json tools list | jq '.data[] | select(.category=="engineering")'
 ```
 
 ---
@@ -457,7 +457,7 @@ Week 2:
 | Metric | Target | Measurement |
 |--------|--------|-------------|
 | CLI adoption | 50% of users use new flags | Survey after 1 month |
-| Agent integration | 3+ external agents use `forge tools --json` | GitHub stars, issues |
+| Agent integration | 3+ external agents use `dai tools --json` | GitHub stars, issues |
 | Zero breaking changes | 0 regressions reported | Support issues < 5 |
 | Build success | 100% CI pass rate | GitHub Actions |
 | Documentation coverage | All commands documented | docs/cli.md completeness |
@@ -470,26 +470,26 @@ Week 2:
 
 | Metric | Current Value |
 |--------|---------------|
-| `forge --version` cold start | ~200ms |
-| `forge tools list` (human) | ~100ms |
-| `forge validate` | ~5s (shell) |
+| `dai --version` cold start | ~200ms |
+| `dai tools list` (human) | ~100ms |
+| `dai validate` | ~5s (shell) |
 
 ### Target Metrics (After)
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| `forge --version` cold start | <250ms (no regression) |
-| `forge tools list` (human) | <150ms (no regression) |
-| `forge tools list --json` | <200ms |
-| `forge validate` | <6s (CI mode) |
+| `dai --version` cold start | <250ms (no regression) |
+| `dai tools list` (human) | <150ms (no regression) |
+| `dai tools list --json` | <200ms |
+| `dai validate` | <6s (CI mode) |
 
 ### Regression Testing
 
 ```bash
 # Benchmark script
-hyperfine --warmup 3 'forge --version'
-hyperfine --warmup 3 'forge tools list'
-hyperfine --warmup 3 'forge tools list --json'
+hyperfine --warmup 3 'dai --version'
+hyperfine --warmup 3 'dai tools list'
+hyperfine --warmup 3 'dai tools list --json'
 ```
 
 **Threshold:** No metric >10% slower than baseline
@@ -570,7 +570,7 @@ hyperfine --warmup 3 'forge tools list --json'
 
 ### DAI Nexus Existing Code
 
-- `scripts/forge-validate.sh` — Reference for CLI structure
+- `scripts/dai-validate.sh` — Reference for CLI structure
 - `.production-grade.yaml` — Current config (extend, not replace)
 - `skills/` — Source of truth for tool registry
 

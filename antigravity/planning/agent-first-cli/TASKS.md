@@ -21,8 +21,8 @@
 - [ ] Set up build (tsup)
 
 **Acceptance:**
-- [ ] `forge --version` outputs version
-- [ ] `forge --help` shows help text
+- [ ] `dai --version` outputs version
+- [ ] `dai --help` shows help text
 
 ---
 
@@ -108,15 +108,15 @@
 **Effort:** 1h
 
 **Subtasks:**
-- [ ] Implement `forge tools list`
+- [ ] Implement `dai tools list`
 - [ ] Add `--category` filter
 - [ ] Add `--format` option
 - [ ] Human-readable table output
 
 **Acceptance:**
-- [ ] `forge tools list` works
-- [ ] `forge tools list --json` returns registry
-- [ ] `forge tools list --category engineering` filters
+- [ ] `dai tools list` works
+- [ ] `dai tools list --json` returns registry
+- [ ] `dai tools list --category engineering` filters
 
 ---
 
@@ -127,13 +127,13 @@
 **Effort:** 1h
 
 **Subtasks:**
-- [ ] Implement `forge tools call <name>`
+- [ ] Implement `dai tools call <name>`
 - [ ] Add `--args` for JSON input
 - [ ] Add `--stdin` for pipe input
 - [ ] Implement result rendering
 
 **Acceptance:**
-- [ ] `forge tools call skills.list --json` works
+- [ ] `dai tools call skills.list --json` works
 - [ ] Error handling for unknown tools
 - [ ] Args validation
 
@@ -151,12 +151,12 @@
 - [ ] Create `src/cli/config/layered.ts`
 - [ ] Implement 5-source resolution
 - [ ] Add `--inline-first` override
-- [ ] Create `forge config` commands
+- [ ] Create `dai config` commands
 
 **Acceptance:**
 - [ ] Priority order correct
 - [ ] Override works
-- [ ] `forge config list` shows sources
+- [ ] `dai config list` shows sources
 
 ---
 
@@ -173,23 +173,23 @@
 - [ ] Add input validation
 
 **Acceptance:**
-- [ ] `forge analyze https://url.com` works
-- [ ] `cat file.md | forge analyze -` works
-- [ ] `forge analyze @file.md` works
+- [ ] `dai analyze https://url.com` works
+- [ ] `cat file.md | dai analyze -` works
+- [ ] `dai analyze @file.md` works
 
 ---
 
-### Task 2.3: Forge Config Commands (2h)
+### Task 2.3: DAI Config Commands (2h)
 
 **Owner:** TBD
 **Status:** Pending
 **Effort:** 2h
 
 **Subtasks:**
-- [ ] `forge config get <key>`
-- [ ] `forge config set <key> <value>`
-- [ ] `forge config list`
-- [ ] `forge config init`
+- [ ] `dai config get <key>`
+- [ ] `dai config set <key> <value>`
+- [ ] `dai config list`
+- [ ] `dai config init`
 
 **Acceptance:**
 - [ ] All subcommands work
@@ -198,7 +198,7 @@
 
 ---
 
-### Task 2.4: Forge Doctor (1h)
+### Task 2.4: DAI Doctor (1h)
 
 **Owner:** TBD
 **Status:** Pending
@@ -211,26 +211,26 @@
 - [ ] Check dependencies
 
 **Acceptance:**
-- [ ] `forge doctor` shows diagnostics
+- [ ] `dai doctor` shows diagnostics
 - [ ] Exit code 0 if healthy
 - [ ] Clear error messages
 
 ---
 
-### Task 2.5: Forge Validate JSON (2h)
+### Task 2.5: DAI Validate JSON (2h)
 
 **Owner:** TBD
 **Status:** Pending
 **Effort:** 2h
 
 **Subtasks:**
-- [ ] Wrap existing `forge-validate.sh`
+- [ ] Wrap existing `dai-validate.sh`
 - [ ] Add JSON output mode
 - [ ] Add `--json` flag
 - [ ] Maintain existing output
 
 **Acceptance:**
-- [ ] `forge validate --json` valid JSON
+- [ ] `dai validate --json` valid JSON
 - [ ] Same results as human mode
 - [ ] Exit codes preserved
 

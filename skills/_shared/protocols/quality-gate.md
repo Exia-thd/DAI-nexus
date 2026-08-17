@@ -44,7 +44,7 @@ crosses that project's materiality boundary. In this repository, the contract
 is mandatory for material changes.
 
 When the contract applies, the postcondition must run
-`forge docs gate [target]` (using the applicable `--staged`, `--worktree`, or
+`dai docs gate [target]` (using the applicable `--staged`, `--worktree`, or
 `--base-ref <ref>` view). The gate requires the configured canonical project state in the
 same changeset, runs strict doctor checks in memory, builds generated HTML/CSS
 in a temporary directory, verifies the output, and fails closed on any missing

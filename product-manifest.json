@@ -104,11 +104,11 @@
       "truthMarker": "| **Codex (OpenAI)** | `AGENTS.md` | ✅ Full | Stable |"
     },
     {
-      "id": "forge-cli",
-      "label": "Forge CLI",
+      "id": "dai-cli",
+      "label": "DAI CLI",
       "maturity": "beta",
       "truthFile": "docs/product-overview.md",
-      "truthMarker": "| **Forge CLI** | `src/cli/package.json` | N/A | Beta |"
+      "truthMarker": "| **DAI CLI** | `src/cli/package.json` | N/A | Beta |"
     }
   ],
   "truthFiles": [

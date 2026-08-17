@@ -30,7 +30,7 @@ Format: `n. ACTION | TARGET | CHECK`
 ### Step 1: Ground prompt configurations and verify token tracking status
 ```bash
 # Enable the built-in token tracker
-forge token on
+dai token on
 cat .dainexus/budget.yaml
 ```
 

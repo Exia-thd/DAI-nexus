@@ -312,7 +312,7 @@ def test_skill_overlays_clean() -> None:
     _w = "".join(("wr", "ight"))
     bad_tokens = (
         "forge" + _w,
-        "Forge" + _w,
+        "DAI" + _w,
         "FORGE" + _w.upper() + "_",
         "buiphuc" + "minhtam",
         "mem" + "0-cli",
@@ -322,23 +322,42 @@ def test_skill_overlays_clean() -> None:
         ".git",
         ".gitnexus",
         ".dainexus",
+        # Hypothesis caches string constants harvested from the tree, so it
+        # echoes back whatever the sources said. Gitignored tool cache, not repo
+        # content.
+        ".hypothesis",
         ".worktrees",
         "__pycache__",
         "node_modules",
     }
+    # Deny binaries, do not allow-list source extensions. An allow-list once let
+    # .hbs templates, .cs presets, .fish completions and .example configs keep
+    # the upstream name for a whole release; "no reference anywhere" cannot be
+    # enforced by a guard that only looks at the extensions we thought of.
+    binary_suffixes = {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".ico",
+        ".pdf",
+        ".zip",
+        ".gz",
+        ".whl",
+        ".so",
+        ".dylib",
+        ".exe",
+        ".db",
+        ".sqlite",
+        ".xlsx",
+        ".xls",
+        ".woff",
+        ".woff2",
+        ".ttf",
+    }
     stale = []
     for p in ROOT.rglob("*"):
-        if not p.is_file() or p.suffix.lower() not in {
-            ".md",
-            ".py",
-            ".json",
-            ".yaml",
-            ".yml",
-            ".ts",
-            ".sh",
-            ".html",
-            ".css",
-        }:
+        if not p.is_file() or p.suffix.lower() in binary_suffixes:
             continue
         if any(part in skip_parts for part in p.parts) or p.name == "smoke.py":
             continue

@@ -702,7 +702,7 @@ Called when pipeline completes OR when session is explicitly ended.
    all code changes made during this session.
 
 6. Update project profile:
-   .dainexus/project-profile.json → forge17.last_session = session_id, total_sessions++
+   .dainexus/project-profile.json → dai-nexus.last_session = session_id, total_sessions++
 ```
 
 ## Session Log Format

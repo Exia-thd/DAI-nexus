@@ -362,7 +362,7 @@ export class ShellExecutor {
    * Get temp directory for sandbox
    */
   getTempDir(): string {
-    return path.join(os.tmpdir(), "forge-sandbox");
+    return path.join(os.tmpdir(), "dai-sandbox");
   }
 
   /**

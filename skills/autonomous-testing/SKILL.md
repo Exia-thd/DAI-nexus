@@ -402,32 +402,32 @@ export class AutoFixer {
 
 ```bash
 # Run all tests
-forge test
+dai test
 
 # Run specific layer
-forge test unit
-forge test integration
-forge test visual
-forge test e2e
-forge test a11y
+dai test unit
+dai test integration
+dai test visual
+dai test e2e
+dai test a11y
 
 # Auto-fix and retry
-forge test:fix
+dai test:fix
 
 # Autonomous mode (auto-fix + continue)
-forge test:autonomous
+dai test:autonomous
 
 # Run with coverage
-forge test --coverage
+dai test --coverage
 
 # Run specific test file
-forge test unit src/utils/format.test.ts
+dai test unit src/utils/format.test.ts
 
 # Debug mode (verbose output)
-forge test --debug
+dai test --debug
 
 # Generate report
-forge test --report
+dai test --report
 ```
 
 ## Configuration

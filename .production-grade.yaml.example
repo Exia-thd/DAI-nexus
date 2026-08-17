@@ -1,16 +1,16 @@
-# Forgewright Production Configuration
-# This file configures Forgewright behavior for this project.
-# Place this file at the project root or in .forgewright/config.yaml
+# DAI Nexus Production Configuration
+# This file configures DAI Nexus behavior for this project.
+# Place this file at the project root or in .dainexus/config.yaml
 
 # ============================================================
 # Optional Expert CLI Mode
 # ============================================================
 expertMode:
-  # Disabled by default. Enable with: forge expert on
+  # Disabled by default. Enable with: dai expert on
   enabled: false
 
   # Supported values: claude | codex
-  # Switch with: forge expert use claude OR forge expert use codex
+  # Switch with: dai expert use claude OR dai expert use codex
   activeCli: "claude"
 
   # Optional explicit fallback. Leave null for single-provider setups.
@@ -33,9 +33,9 @@ expertMode:
 # Token Tracking
 # ============================================================
 token_tracking:
-  # Enabled by default. Disable with: forge token off
+  # Enabled by default. Disable with: dai token off
   enabled: true
-  log_dir: "~/.forgewright/usage"
+  log_dir: "~/.dainexus/usage"
   export_format: jsonl
 
 # ============================================================
@@ -139,7 +139,7 @@ skillVersioning:
   autoBackup: true
   
   # Backup directory
-  backupDir: .forgewright/backups/skills
+  backupDir: .dainexus/backups/skills
 
 # ============================================================
 # Documentation Configuration
@@ -159,7 +159,7 @@ performance:
   enabled: false
   
   # Metrics directory
-  metricsDir: .forgewright/metrics
+  metricsDir: .dainexus/metrics
 
 # ============================================================
 # Example: Disabling Fast-Path for a Project

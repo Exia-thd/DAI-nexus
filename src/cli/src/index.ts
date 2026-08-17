@@ -34,7 +34,7 @@ export function buildProgram(): Command {
   const program = new Command();
 
   program
-    .name("forge")
+    .name("dai")
     .description("DAI Nexus CLI - Agent-First Command Line Interface")
     .version(VERSION, "-V, --version");
 
@@ -69,25 +69,25 @@ export function buildProgram(): Command {
     "after",
     `
 Examples:
-  $ forge tools list                  # List all tools
-  $ forge tools list --json           # JSON output for agents
-  $ forge tools list --category engineering  # Filter by category
-  $ forge skills list                 # List all skills
-  $ forge skills search api           # Search skills
-  $ forge expert status               # Show optional Claude/Codex CLI expert mode
-  $ forge expert use codex --track-tokens  # Switch expert mode to Codex CLI
-  $ forge token on                    # Enable local token tracking
-  $ forge token report --period week  # Show local token usage summary
-  $ forge delegate status             # Show auto-detected controller/worker state
-  $ forge delegate auto               # Auto-enable when Codex/Claude + Agy are available
-  $ forge docs init .                 # Create a privacy-safe docs manifest
-  $ forge docs build .                # Build the static documentation portal
-  $ forge --version                   # Show version
+  $ dai tools list                  # List all tools
+  $ dai tools list --json           # JSON output for agents
+  $ dai tools list --category engineering  # Filter by category
+  $ dai skills list                 # List all skills
+  $ dai skills search api           # Search skills
+  $ dai expert status               # Show optional Claude/Codex CLI expert mode
+  $ dai expert use codex --track-tokens  # Switch expert mode to Codex CLI
+  $ dai token on                    # Enable local token tracking
+  $ dai token report --period week  # Show local token usage summary
+  $ dai delegate status             # Show auto-detected controller/worker state
+  $ dai delegate auto               # Auto-enable when Codex/Claude + Agy are available
+  $ dai docs init .                 # Create a privacy-safe docs manifest
+  $ dai docs build .                # Build the static documentation portal
+  $ dai --version                   # Show version
 
 Agent Mode:
-  $ forge --json tools list | jq .    # Parse JSON output
-  $ forge --json tools list | jq '.data.tools[].name'
-  $ for tool in $(forge --json tools list | jq -r '.data.tools[].name'); do
+  $ dai --json tools list | jq .    # Parse JSON output
+  $ dai --json tools list | jq '.data.tools[].name'
+  $ for tool in $(dai --json tools list | jq -r '.data.tools[].name'); do
       echo "Tool: $tool"
     done
 

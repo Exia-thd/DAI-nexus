@@ -9,7 +9,7 @@ DAI Nexus Node uses KuzuDB as its graph database backend. The MCP server (read-o
 This manifested as:
 ```
 [DAI Nexus Node] ⚠️ KuzuDB lock conflict: MCP server is likely running.
-Could not set lock on file : .forge/
+Could not set lock on file : .dai/
 ```
 
 Multiple DAI Nexus Node MCP servers run concurrently across projects, making this a common race condition.

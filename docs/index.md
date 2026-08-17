@@ -17,7 +17,7 @@ Welcome to DAI Nexus — an adaptive orchestrator with 84 AI skills covering the
 - **[Quickstart Guide](quickstart.md)** — Get up and running with DAI Nexus in 5 minutes
 - **[Setup Guide](SETUP.md)** — Detailed installation instructions
 - **[Configuration Guide](SETUP-REFERENCE.md)** — Configure DAI Nexus for your project
-- **[CLI Init/Onboard Golden Path](guides/forge-init-onboard.md)** — Deterministic project initialization and profiling workflow
+- **[CLI Init/Onboard Golden Path](guides/dai-init-onboard.md)** — Deterministic project initialization and profiling workflow
 - **[Docs Hub](guides/docs-hub.md)** — Build a privacy-safe multi-project HTML/CSS documentation portal
 - **[Peer Collaboration Guide](guides/peer-collaboration.md)** — Use bounded, parent-mediated advisory feedback safely
 

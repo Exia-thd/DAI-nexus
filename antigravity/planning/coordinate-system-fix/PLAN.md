@@ -73,7 +73,7 @@
 
 ### Phase 2: Validation CLI (6h)
 
-#### Task 2.1: `forge validate --asset-coords` Command (2h)
+#### Task 2.1: `dai validate --asset-coords` Command (2h)
 - [ ] Design command interface
 - [ ] Implement coordinate bounds checker
 - [ ] Add JSON output support
@@ -105,7 +105,7 @@
 - [ ] `applyAxisFlip()`
 - [ ] Unit tests with known values
 
-#### Task 3.2: `forge coords convert` Command (1h)
+#### Task 3.2: `dai coords convert` Command (1h)
 - [ ] Parse source/target engine
 - [ ] Apply transformation
 - [ ] Output formatted result
