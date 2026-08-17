@@ -5,3 +5,7 @@
 *.bash text eol=lf
 .husky/* text eol=lf
 .shellcheckrc text eol=lf
+
+# esbuild writes LF. Without this, core.autocrlf keeps trying to convert the
+# committed bundle and leaves it permanently reported as modified.
+src/cli/dist/** text eol=lf
