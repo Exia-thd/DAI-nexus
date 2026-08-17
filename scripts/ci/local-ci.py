@@ -845,10 +845,15 @@ class LocalCI:
             for path in staged
             if path.suffix == ".ts" and (ROOT / "mcp" / "src") in path.parents
         ]
+        # dist/ is emitted by cli-build, which uses its own quote style. Letting
+        # prettier rewrite and restage it makes every commit carry a spurious
+        # dist diff that the next build immediately reverts.
         cli_ts = [
             path
             for path in staged
-            if path.suffix == ".ts" and (ROOT / "src" / "cli") in path.parents
+            if path.suffix == ".ts"
+            and (ROOT / "src" / "cli") in path.parents
+            and (ROOT / "src" / "cli" / "dist") not in path.parents
         ]
         shell_files = [
             path

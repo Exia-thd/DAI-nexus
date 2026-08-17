@@ -612,8 +612,8 @@
     "lifecycle": "active",
     "health": "on_track",
     "phase": "SUSTAIN",
-    "summary": "Kernel and guardrail are aligned with the imported contract tests: the reference kernel is adopted with DAI Nexus tool paths (memory.py, runtime_lease.py, policy_check.py, escalate.py, run_check.py), the FULL_BUILD route to skills/pipeline and the boot-time memory load are re-applied, and guardrail.md carries the full 14-rule catalogue including Documentation Continuity. The response-correlation contract lives in skills/_shared/protocols/response-correlation.md so kernel/VERIFY.md stays inside its 1000-token budget. Measured: kernel contract tests 74/74, core self-tests 68/68, ruff clean, mcp tsc build clean, imported pytest 451 passed / 72 failed against a reference baseline of 459 / 64.",
-    "updated_at": "2026-08-13T11:31:00+07:00",
+    "summary": "The pre-commit gate can now reach green. python-unit-tests compares against tests/known_failures.txt (64 node IDs measured red in the source tree) and fails only on new failures; the suite matches that baseline exactly at 64 failed / 459 passed / 3 skipped. Four runner defects were fixed behind it: steps spawn with stdin closed, the pytest subprocess pins PYTHONUTF8, tools resolve against the runner's effective PATH, and test steps scrub the six repository-scoped GIT_* variables git exports to hooks — that leak had let docs-change-gate fixture commits land in this repository. Eight regressions of our own were repaired (stale skill-test-executor, missing README claim boundary, non-canonical stop-gate wiring). Shell scripts are pinned to LF and shellcheck is clean over all 214 of them, which exposed 41 invalid identifiers and 26 broken memory-CLI paths left by an earlier blanket rename. Build output no longer round-trips between cli-build and prettier.",
+    "updated_at": "2026-08-17T14:06:27+07:00",
     "blockers": [],
     "risks": [],
     "next_actions": [

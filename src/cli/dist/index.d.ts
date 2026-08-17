@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command } from 'commander';
 
 /**
  * DAI Nexus CLI - Agent-First Command Line Interface

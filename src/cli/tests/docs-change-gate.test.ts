@@ -219,7 +219,7 @@ describe("Docs Hub continuity gate", () => {
 
     updateState(root, "Runtime and status updated together.");
     const complete = runDocsGate(root, { worktree: true });
-    expect(complete.status).toBe("pass");
+    expect(complete.status, codes(complete).join(",")).toBe("pass");
     expect(complete.materialPaths).toEqual([
       "docs/project-state.json",
       "src/main.ts",
@@ -234,13 +234,13 @@ describe("Docs Hub continuity gate", () => {
     const docsRoot = createProject("docs-only");
     writeFileSync(join(docsRoot, "docs", "Guide.md"), "# Updated guide\n");
     const docsResult = runDocsGate(docsRoot, { worktree: true });
-    expect(docsResult.status).toBe("pass");
+    expect(docsResult.status, codes(docsResult).join(",")).toBe("pass");
     expect(docsResult.materialPaths).toEqual([]);
 
     const testsRoot = createProject("tests-only");
     writeFileSync(join(testsRoot, "tests", "main.test.ts"), "// changed\n");
     const testsResult = runDocsGate(testsRoot, { worktree: true });
-    expect(testsResult.status).toBe("pass");
+    expect(testsResult.status, codes(testsResult).join(",")).toBe("pass");
     expect(testsResult.materialPaths).toEqual([]);
 
     const truthRoot = createProject("truth-doc");
@@ -283,7 +283,7 @@ describe("Docs Hub continuity gate", () => {
     updateState(stagedRoot, "Staged state update.");
     git(stagedRoot, "add", "src/with space.ts", "docs/project-state.json");
     const staged = runDocsGate(stagedRoot, { staged: true });
-    expect(staged.status).toBe("pass");
+    expect(staged.status, codes(staged).join(",")).toBe("pass");
     expect(staged.changedPaths).toContain("src/with space.ts");
 
     const worktreeRoot = createProject("worktree");
@@ -291,7 +291,7 @@ describe("Docs Hub continuity gate", () => {
     updateState(worktreeRoot, "Worktree state update.");
     const worktree = runDocsGate(worktreeRoot);
     expect(worktree.mode).toBe("worktree");
-    expect(worktree.status).toBe("pass");
+    expect(worktree.status, codes(worktree).join(",")).toBe("pass");
     expect(worktree.changedPaths).toContain("src/new file.ts");
 
     const baseRoot = createProject("base-ref");
@@ -304,7 +304,7 @@ describe("Docs Hub continuity gate", () => {
     git(baseRoot, "commit", "-qm", "material change");
     const base = runDocsGate(baseRoot, { baseRef: "HEAD~1" });
     expect(base.mode).toBe("base-ref");
-    expect(base.status).toBe("pass");
+    expect(base.status, codes(base).join(",")).toBe("pass");
     expect(base.changedPaths).toEqual([
       "docs/project-state.json",
       "src/main.ts",
@@ -379,7 +379,7 @@ describe("Docs Hub continuity gate", () => {
     writeFileSync(join(project, "src", "main.ts"), "export const value = 4;\n");
     updateState(project, "Nested project state update.");
     const nested = runDocsGate(project);
-    expect(nested.status).toBe("pass");
+    expect(nested.status, codes(nested).join(",")).toBe("pass");
     expect(nested.changedPaths).toEqual([
       "docs/project-state.json",
       "src/main.ts",
@@ -414,7 +414,10 @@ describe("Docs Hub continuity gate", () => {
       join(generatedRoot, ".dainexus", "docs-hub", "index.html"),
       "generated baseline\n",
     );
-    expect(runDocsGate(generatedRoot).status).toBe("pass");
+    const generatedBaseline = runDocsGate(generatedRoot);
+    expect(generatedBaseline.status, codes(generatedBaseline).join(",")).toBe(
+      "pass",
+    );
     git(generatedRoot, "add", ".dainexus/docs-hub/index.html");
     git(generatedRoot, "commit", "-qm", "track generated fixture");
     writeFileSync(
@@ -444,7 +447,7 @@ describe("Docs Hub continuity gate", () => {
         temporaryPrefixes.some((prefix) => name.startsWith(prefix)) &&
         !temporaryBefore.has(name),
     );
-    expect(result.status).toBe("pass");
+    expect(result.status, codes(result).join(",")).toBe("pass");
     expect(temporaryAfter).toEqual([]);
     expect(readFileSync(join(root, "docs", "Guide.md"), "utf8")).toBe(
       sourceBefore,
