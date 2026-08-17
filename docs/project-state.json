@@ -612,7 +612,7 @@
     "lifecycle": "active",
     "health": "on_track",
     "phase": "SUSTAIN",
-    "summary": "Evidence schema v2 hardening is complete: exact acceptance and negative-path traceability, final-command replay, RED/GREEN mutation proof, selective full-worktree fingerprints, payment HARD routing, trusted signed review-2, bounded no-follow evidence reads, frozen Codex turn-metadata normalization, executable verification entrypoints, and current GitNexus index metadata are preserved without weakening strict completion correlation.",
+    "summary": "Kernel and guardrail are aligned with the imported contract tests: the reference kernel is adopted with DAI Nexus tool paths (memory.py, runtime_lease.py, policy_check.py, escalate.py, run_check.py), the FULL_BUILD route to skills/pipeline and the boot-time memory load are re-applied, and guardrail.md carries the full 14-rule catalogue including Documentation Continuity. The response-correlation contract lives in skills/_shared/protocols/response-correlation.md so kernel/VERIFY.md stays inside its 1000-token budget. Measured: kernel contract tests 74/74, core self-tests 68/68, ruff clean, mcp tsc build clean, imported pytest 451 passed / 72 failed against a reference baseline of 459 / 64.",
     "updated_at": "2026-08-13T11:31:00+07:00",
     "blockers": [],
     "risks": [],

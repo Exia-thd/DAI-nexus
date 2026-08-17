@@ -69,7 +69,7 @@ PASS=$((PASS + 1))
 # STRICT CHECK 3: Verify scripts/lite/memory.py exists (required for memory operations)
 # ─────────────────────────────────────────────────────────────────────────────
 echo "[CHECK 3] Verifying scripts/lite/memory.py..."
-MEM0_SCRIPT="$scripts/lite/memory.py"
+MEM0_SCRIPT="$SCRIPT_DIR/../../scripts/lite/memory.py"
 if [ ! -f "$MEM0_SCRIPT" ]; then
     fail "FATAL: scripts/lite/memory.py not found at $MEM0_SCRIPT"
     fail "scripts/lite/memory.py is REQUIRED for strict mode memory operations."

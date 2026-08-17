@@ -1,86 +1,43 @@
 # VERIFY — Evidence Contract
 
-Completion requires **observed, current** evidence. Prose, checkboxes, test counts recited from memory, and bare "PASS" markers are `UNVERIFIED`.
+Completion requires observed current workspace/runtime evidence. Schema v2 is the only completion format; Schema v1 is legacy and non-completion after v2 activation. Prose, checkboxes, test counts, and marker-only PASS/GREEN are `UNVERIFIED`.
 
-Machine-written evidence is produced with:
-```bash
-python scripts/lite/run_check.py -- <your-check-command>
-```
-This writes an evidence JSON to `.dainexus/verify/` that the completion gate (`scripts/lite/verify_gate.py`) validates. Evidence you type by hand is FORGED by definition.
+## QUICK — Compact Evidence
+For clear local reversible work: `CHECK: <command/tool check> | EXIT: <code/result> | RESULT: PASS | FAIL`. One focused check may cover tightly coupled acceptance conditions.
 
-## Proportional evidence
-- `QUICK` — one compact line covering the focused check:
-  `CHECK: <command> | EXIT: <code> | RESULT: PASS | FAIL`
-  One check may cover tightly coupled acceptance conditions.
-- `STANDARD` / `DEEP` — report every material behavior using the templates below.
+## UI / Visual Evidence
+A successful build alone must not prove responsiveness or visual quality. Use inspected basis, deterministic checks, and rendered evidence when applicable. Record **Project breakpoints/fallback viewports tested** and **Horizontal overflow checked**; missing basis/render is `UNVERIFIED`.
 
-## Fixes: RED then GREEN
-A fix is not proven by a passing test. Run the **same command unchanged** and show:
-1. **RED** — the check failing before the fix (proves the check actually detects the bug),
-2. **GREEN** — the same check passing after.
+## Executable Logic Evidence
+For non-obvious math/algorithms/state/concurrency, use a focused executable test or scratch script and report its result.
 
-A test that was never seen failing is not evidence that it would catch a regression. If you cannot produce RED, say so explicitly and state what that leaves unproven.
-
-## Template 1: Standard Command / Test Check
-Use this for unit/integration/E2E test runs, compiler output, or command exit code checks.
-```text
-CLAIM: <what you claim now works>
-COMMAND: <the exact command you ran to check/test>
-OUTPUT: <pasted stdout/stderr, last lines>
-EXIT CODE: <number>
-VERDICT: PASS | FAIL
-```
-
-## Template 2: UI / Visual Verification
-A green build never proves responsiveness. Report `CLAIM`, the DOM check command and its output, then the inspected basis:
-breakpoints/viewports tested · horizontal overflow · wrapping and hierarchy · keyboard/focus · component states (loading, empty, error, disabled) · design-token conformance · screenshots/VRT.
-Missing basis or render = `UNVERIFIED`. Verdict caps at `STRUCTURALLY VERIFIED` — aesthetic judgment stays with the user.
-
-## Template 3: Executable Logic Verification
-For math, algorithms, state transitions, parsing, or concurrency: report `CLAIM`, script path, run command, output, exit code, verdict.
-
-## Template 4: Runtime Ledger
-Use this whenever the task started anything long-running — a dev server, watcher, emulator, container. A leaked process is invisible in every other template: the tests pass, the build is green, and RAM keeps climbing.
-```text
-RUNTIME LEDGER
-OPENED:  <lease_id> role=<..> pid=<..>
-CLOSED:  <lease_id>
-LEAKED:  none | <lease_id list>
-COMMAND: python scripts/lite/runtime_lease.py status
-OUTPUT:  <pasted status output>
-VERDICT: CLEAN | LEAKED
-```
-Rules for this block:
-- Start long-running processes with `python scripts/lite/runtime_lease.py run --role <role> -- <command>`. It reuses an already-running instance instead of starting a duplicate, and registers a lease so the process can be reclaimed.
-- `LEAKED` is only acceptable when the lease is deliberately `policy=keep`; say why.
-- A process you started with no lease at all is a `LEAKED` verdict, not an exemption.
+## Runtime Ledger
+For a task-started long-running process, report reclaimed/kept status and actual PID/process state.
 
 ## Rules
-1. Never report PASS from prose or memory. A success claim without pasted `OUTPUT` and `EXIT CODE` / `DOM OUTPUT` is automatically FALSE.
-2. Report `FAIL` immediately; never hide it or narrate it into success.
-3. `QUICK` may use one compact evidence line; `STANDARD`/`DEEP` report each material behavior.
-4. Prefer deterministic checks (tests, linters, build exit codes). If none proves a material behavior, create one before claiming success.
-5. VERIFY proves the code works; AUDIT proves the requirements are covered. Both are required.
+1. Never report `PASS` from prose or memory. Narrative claims without current evidence are automatically FALSE.
+2. Report `FAIL` evidence; never hide or narrate it into success.
+3. Prefer deterministic checks; if none proves a material behavior, create one before claiming success.
+4. `QUICK` may use one compact evidence line; `STANDARD`/`DEEP` reports each material behavior.
+5. Requirement coverage is audited via [AUDIT.md](AUDIT.md); a full matrix is not mandatory for local reversible work.
 6. UI evidence separates structural/tool verification from human aesthetic judgment.
-7. If the task started any long-running process, emit Template 4 too. "The tests passed" is not evidence that the machine was left clean.
+7. Long-running processes must be cleanly reclaimed or deliberately kept.
 
-## Strict block format (correlated)
-When a check has recorded acceptance criteria, the VERIFY block must quote the evidence rather than paraphrase it — six fields, `ACCEPTANCE` first:
-```text
-ACCEPTANCE: <lowercase-slug matching an acceptance id in the evidence>
-CLAIM: <the exact claim text recorded for that id>
-COMMAND: <the exact command from the evidence>
-OUTPUT: sha256:<the evidence output_sha256>
-EXIT CODE: <code>
-VERDICT: PASS | FAIL
+## Evidence Schema v2 — Completion-Critical
+The machine record gives exact acceptance traceability and a derived execution manifest:
+```json
+{"schema_version": "2", "acceptance_criteria": [{"id": "exact-id", "claim": "exact behavior", "test_refs": ["tests/file.py::test_id"]}], "command": ["exact", "argv"], "execution": {"runner": "derived-runner"}, "tier": "unit|contract|integration|runtime|e2e|security|review", "negative_paths": ["observed rejection/failure path"], "negative_path_bindings": [], "limitations": [], "implementer_id": "actor-id", "reviewer": {}, "tree_sha": "TREE:<sha256>", "output_sha256": "<sha256>"}
 ```
-`scripts/lite/rule_validator.py` enforces this and the Stop hook rejects the turn as `MISREPORTED` on any mismatch. Record criteria with `run_check.py --acceptance-id <slug> --claim "<text>"`.
+Each acceptance ID and negative paths entry maps to invoked concrete refs and bindings in the derived manifest; derive it from the command/runner, never caller text.
 
-Emitting **no** block is fine — not every turn makes a verification claim. Emitting a *partial* block is the failure: it reads like proof while proving nothing.
+`tree_sha` covers HEAD/index and tracked, untracked, or ignored project content.
+Only verifier-owned volatile paths are excluded; arbitrary ignored files and
+same-HEAD source changes remain covered.
 
-## Evidence schema
-`run_check.py` writes schema **v2**: the v1 fields (`command`, `exit_code`, `output`, `timestamp_utc`, `workspace`, `tree_sha`) plus
-`output_sha256` (integrity — a hand-edited `output` no longer matches its digest),
-`tier` (`quick|standard|deep`), `acceptance` (what the check is supposed to prove), and
-`negative_paths` (failure/rejection cases actually observed, not assumed).
-The gate accepts v1 and v2; v2 additionally fails on a digest mismatch.
+## Fixes and HARD
+Every fix uses the same command unchanged and must show observed RED then observed GREEN. Payment, billing, IAP/in-app purchase, receipt validation, entitlements, subscription, and checkout are mandatory `HARD` and `DEEP`, regardless of file count. Other HARD fixes require controlled mutation/backcheck: `RED → pre-mutation GREEN → mutation fail → exact final GREEN`, with the clean pre-mutation target tree restored. Completion is blocked until this sequence is observed.
+
+HARD completion requires contract, runtime, and E2E evidence plus a separate signed `review-2` approval. Trust only OpenSSH Ed25519 verification against `DAINEXUS_REVIEW_ALLOWED_SIGNERS` or `~/.dainexus/reviewers.allowed_signers`; signed final evidence must carry its SHA-256, exact tree, turn, acceptance IDs, and `negative_path_bindings`, with `reviewer.status: independent-approved`. Review-1/self-authored JSON is `UNVERIFIED`.
+
+## Proportional Evidence
+`QUICK` may use one focused deterministic check; `STANDARD`/`DEEP` report every material claim. UI needs inspected/rendered evidence; logic needs executable tests; processes need reclaim/lease evidence. Keep execution local-first/provider-neutral; never store secrets or private keys.

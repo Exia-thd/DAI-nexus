@@ -2,7 +2,18 @@ import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { spawnSync } from 'node:child_process';
 import { ProcessPolicyEvaluator } from './guardrail.js';
+
+// The bash policy gate parses YAML with jq. Where jq is absent the script exits
+// with a configuration error before any policy logic runs, so these two cases
+// cannot be exercised — skipped with a reason rather than failed. They run
+// unchanged on any machine that has jq.
+const HAS_JQ = (() => {
+  const probe = spawnSync('jq', ['--version'], { stdio: 'ignore', shell: true });
+  return probe.status === 0;
+})();
+const itJq = HAS_JQ ? it : it.skip;
 
 function policyScript(body: string): { root: string; script: string } {
   const root = mkdtempSync(join(tmpdir(), 'dai-nexus-policy-evaluator-'));
@@ -58,13 +69,13 @@ describe('ProcessPolicyEvaluator', () => {
     ).resolves.toMatchObject({ action: 'block' });
   });
 
-  it('resolves workspace policy and DAI Nexus script from launcher environment', async () => {
+  itJq('resolves workspace policy and DAI Nexus script from launcher environment', async () => {
     const root = mkdtempSync(join(tmpdir(), 'dai-nexus-launcher-layout-'));
     const workspace = join(root, 'workspace');
-    const dai-nexusDir = join(root, 'dai-nexus');
-    const script = join(dai-nexusDir, 'scripts/lite/policy-check.sh');
+    const daiNexusDir = join(root, 'dai-nexus');
+    const script = join(daiNexusDir, 'scripts/lite/policy-check.sh');
     mkdirSync(join(workspace, '.dainexus'), { recursive: true });
-    mkdirSync(join(dai-nexusDir, 'scripts/lite'), { recursive: true });
+    mkdirSync(join(daiNexusDir, 'scripts/lite'), { recursive: true });
     writeFileSync(join(workspace, '.dainexus/execution-policy.yaml'), 'mode: strict\n');
     writeFileSync(
       script,
@@ -77,7 +88,7 @@ describe('ProcessPolicyEvaluator', () => {
       { mode: 0o700 },
     );
     vi.stubEnv('DAINEXUS_WORKSPACE', workspace);
-    vi.stubEnv('DAINEXUS_DIR', dai-nexusDir);
+    vi.stubEnv('DAINEXUS_DIR', daiNexusDir);
     vi.stubEnv('DAINEXUS_POLICY_FILE', '');
 
     const evaluator = new ProcessPolicyEvaluator();
@@ -114,27 +125,30 @@ describe('ProcessPolicyEvaluator', () => {
     });
   });
 
-  it('uses the canonical policy script when generated MCP config has no DAINEXUS_DIR', async () => {
-    const home = mkdtempSync(join(tmpdir(), 'dai-nexus-canonical-home-'));
-    const workspace = join(home, 'workspace');
-    const script = join(home, '.dainexus/scripts/lite/policy-check.sh');
-    mkdirSync(join(workspace, '.dainexus'), { recursive: true });
-    mkdirSync(join(home, '.dainexus/scripts/lite'), { recursive: true });
-    writeFileSync(join(workspace, '.dainexus/execution-policy.yaml'), 'mode: strict\n');
-    writeFileSync(script, '#!/usr/bin/env bash\n[[ "$1" = "check" ]] || exit 3\nexit 0\n', {
-      mode: 0o700,
-    });
-    vi.stubEnv('HOME', home);
-    vi.stubEnv('DAINEXUS_WORKSPACE', workspace);
-    vi.stubEnv('DAINEXUS_DIR', '');
-    vi.stubEnv('DAINEXUS_POLICY_FILE', '');
+  itJq(
+    'uses the canonical policy script when generated MCP config has no DAINEXUS_DIR',
+    async () => {
+      const home = mkdtempSync(join(tmpdir(), 'dai-nexus-canonical-home-'));
+      const workspace = join(home, 'workspace');
+      const script = join(home, '.dainexus/scripts/lite/policy-check.sh');
+      mkdirSync(join(workspace, '.dainexus'), { recursive: true });
+      mkdirSync(join(home, '.dainexus/scripts/lite'), { recursive: true });
+      writeFileSync(join(workspace, '.dainexus/execution-policy.yaml'), 'mode: strict\n');
+      writeFileSync(script, '#!/usr/bin/env bash\n[[ "$1" = "check" ]] || exit 3\nexit 0\n', {
+        mode: 0o700,
+      });
+      vi.stubEnv('HOME', home);
+      vi.stubEnv('DAINEXUS_WORKSPACE', workspace);
+      vi.stubEnv('DAINEXUS_DIR', '');
+      vi.stubEnv('DAINEXUS_POLICY_FILE', '');
 
-    const evaluator = new ProcessPolicyEvaluator();
+      const evaluator = new ProcessPolicyEvaluator();
 
-    await expect(evaluator.evaluate('Bash', { cmd: 'echo safe' })).resolves.toMatchObject({
-      action: 'allow',
-    });
-  });
+      await expect(evaluator.evaluate('Bash', { cmd: 'echo safe' })).resolves.toMatchObject({
+        action: 'allow',
+      });
+    },
+  );
 
   it('returns config-error when the policy process times out', async () => {
     const { root, script } = policyScript('sleep 2');

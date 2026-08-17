@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MEM0_SCRIPT="$scripts/lite/memory.py"
+MEM0_SCRIPT="$SCRIPT_DIR/../../scripts/lite/memory.py"
 DRY_RUN=false
 
 for arg in "$@"; do

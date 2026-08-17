@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Use git root so this works from any subdirectory
 DAINEXUS_DIR="$(git -C "$SCRIPT_DIR/../.." rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR/..")"
 RETRIEVE_SCRIPT="$DAINEXUS_DIR/scripts/memory-retrieve.sh"
-MEM0="$scripts/lite/memory.py"
+MEM0="$SCRIPT_DIR/../../scripts/lite/memory.py"
 
 PASS=0
 FAIL=0

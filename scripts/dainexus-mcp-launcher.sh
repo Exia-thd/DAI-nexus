@@ -201,7 +201,7 @@ NODE
 
 # ─── DAI Nexus Detection ──────────────────────────────────────
 
-find_dai-nexus() {
+find_dai_nexus() {
     local workspace="$1"
 
     log_debug "Searching for dai-nexus in $workspace..."
@@ -254,7 +254,7 @@ find_dai-nexus() {
 resolve_server_cmd() {
     local workspace="$1"
     local manifest="$2"
-    local dai-nexus="$3"
+    local dai_nexus="$3"
 
     log_debug "Resolving server command..."
 
@@ -323,7 +323,7 @@ NODE
 
 auto_generate_manifest() {
     local workspace="$1"
-    local dai-nexus="$2"
+    local dai_nexus="$2"
 
     log_debug "Attempting auto-generation of manifest..."
 
@@ -366,7 +366,7 @@ main() {
     workspace="$(resolve_workspace)" || exit 1
 
     # Step 2: Find dai-nexus
-    dai-nexus="$(find_dai-nexus "$workspace")" || {
+    dai_nexus="$(find_dai_nexus "$workspace")" || {
         log_error "DAI Nexus not found in workspace: $workspace"
         log_info "To fix: Run 'dainexus-mcp-setup.sh' in the project directory"
         exit 1

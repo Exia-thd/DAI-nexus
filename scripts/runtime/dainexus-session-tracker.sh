@@ -179,20 +179,20 @@ with open('$TRACK_FILE', 'w') as f:
         
         # [Graph Layer] Ensure nodes exist in SQLite Graph (TSK-06)
         if command -v python3 &>/dev/null; then
-            python3 "$scripts/lite/memory.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
-            python3 "$scripts/lite/memory.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the DAI Nexus plan quality metrics" 2>/dev/null || true
-            python3 "$scripts/lite/memory.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
-            python3 "$scripts/lite/memory.py" graph-reinforce "current-session" "plan-quality" --factor 1.2 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the DAI Nexus plan quality metrics" 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-reinforce "current-session" "plan-quality" --factor 1.2 2>/dev/null || true
         fi
     else
         warn "Plan score: $score (FAILED - below $threshold)"
         
         # [Graph Layer] Ensure nodes exist in SQLite Graph (TSK-06)
         if command -v python3 &>/dev/null; then
-            python3 "$scripts/lite/memory.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
-            python3 "$scripts/lite/memory.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the DAI Nexus plan quality metrics" 2>/dev/null || true
-            python3 "$scripts/lite/memory.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
-            python3 "$scripts/lite/memory.py" graph-decay "current-session" "plan-quality" --factor 0.5 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the DAI Nexus plan quality metrics" 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
+            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-decay "current-session" "plan-quality" --factor 0.5 2>/dev/null || true
         fi
         
         # A failed plan score is telemetry, not permission to mutate shared skills.
@@ -251,7 +251,7 @@ if '$status' == 'completed':
                 
                 # Insert dynamic nodes via CLI or subprocess
                 subprocess.run([
-                    'python3', '$scripts/lite/memory.py', 'graph-add-node',
+                    'python3', '$SCRIPT_DIR/../../scripts/lite/memory.py', 'graph-add-node',
                     f'proc-{session_id}', 'procedural', f'Optimized procedural circuit for {mode}',
                     f'Successful trajectory consolidated with PES={pes_score}. Summary: {summary}',
                     '--pes', str(pes_score)
@@ -259,7 +259,7 @@ if '$status' == 'completed':
                 
                 # Link procedural node to semantic targets
                 subprocess.run([
-                    'python3', '$scripts/lite/memory.py', 'graph-link',
+                    'python3', '$SCRIPT_DIR/../../scripts/lite/memory.py', 'graph-link',
                     f'proc-{session_id}', 'plan-quality', '--weight', '3.0', '--type', 'solves'
                 ], stderr=subprocess.DEVNULL)
 
@@ -284,7 +284,7 @@ if '$status' == 'completed':
                 
                 steps_json = json.dumps(steps)
                 subprocess.run([
-                    'python3', '$scripts/lite/memory.py', 'graph-save-circuit',
+                    'python3', '$SCRIPT_DIR/../../scripts/lite/memory.py', 'graph-save-circuit',
                     f'proc-{session_id}', f'Optimized procedural circuit for {mode}',
                     steps_json, str(pes_score)
                 ], stderr=subprocess.DEVNULL)

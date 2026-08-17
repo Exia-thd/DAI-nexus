@@ -28,6 +28,16 @@ LOCAL_VENV = ROOT / ".dainexus" / "local-ci-venv"
 MIN_NODE_MAJOR = 22
 NODE_MATRIX = (22, 24)
 
+# Repository-scoped variables git sets for hooks; they must not reach steps.
+GIT_LOCAL_ENV_KEYS = (
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_COMMON_DIR",
+    "GIT_DIR",
+    "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_WORK_TREE",
+)
+
 
 class GateFailure(RuntimeError):
     pass
@@ -86,6 +96,7 @@ class LocalCI:
         check: bool = True,
         timeout: int | None = None,
         env: dict[str, str] | None = None,
+        scrub_git_env: bool = False,
     ) -> int:
         args = [str(item) for item in argv]
         print(f"\n==> local-ci: {name}")
@@ -94,10 +105,22 @@ class LocalCI:
             self.results.append(StepResult(name, args, str(cwd), None, 0, "dry-run"))
             return 0
         started = time.monotonic()
+        step_env = self._effective_env(env)
+        if scrub_git_env:
+            # Git exports these while a hook runs, and they follow every child.
+            # A test that builds a throwaway repository and shells out to git
+            # would read *this* repository's index instead of its own fixture.
+            # Only test steps scrub them: the staged-content gates must keep
+            # reading the exact index git handed us.
+            for key in GIT_LOCAL_ENV_KEYS:
+                step_env.pop(key, None)
         process = subprocess.Popen(
             args,
             cwd=cwd,
-            env=self._effective_env(env),
+            env=step_env,
+            # Git hooks hand us a stdin that never reaches EOF; a step that reads
+            # it would block until the step timeout instead of failing fast.
+            stdin=subprocess.DEVNULL,
             start_new_session=os.name != "nt",
             creationflags=(
                 subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
@@ -153,8 +176,14 @@ class LocalCI:
             if path not in path_parts:
                 path_parts.append(path)
 
-        python_dir = str(Path(self.python).resolve().parent)
-        add_path(python_dir)
+        python_dir = Path(self.python).resolve().parent
+        add_path(str(python_dir))
+        # pip puts console scripts (shellcheck, ruff, …) next to the interpreter
+        # on POSIX but in a sibling Scripts/ directory on Windows. Without this
+        # the runner reports a pip-installed tool as "not installed".
+        scripts_dir = python_dir / "Scripts"
+        if scripts_dir.is_dir():
+            add_path(str(scripts_dir))
         if self.primary_node:
             node_dir = str(Path(self.primary_node).resolve().parent)
             add_path(node_dir)
@@ -168,6 +197,18 @@ class LocalCI:
         if overrides:
             env.update(overrides)
         return env
+
+    def _resolve_tool(self, name: str) -> str | None:
+        """Find a tool on the runner's effective PATH, not just the ambient one.
+
+        `shutil.which` reads os.environ, so a tool that only exists in a
+        directory this runner injects (pip's Scripts/, a node_modules/.bin)
+        would be reported missing even though every step could execute it.
+        """
+        found = shutil.which(name, path=self._effective_env().get("PATH"))
+        if found:
+            return found
+        return _which(name)
 
     def capture(
         self,
@@ -183,6 +224,7 @@ class LocalCI:
             env=self._effective_env() if effective_env else os.environ.copy(),
             text=True,
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             timeout=timeout,
             check=False,
         )
@@ -360,13 +402,9 @@ class LocalCI:
         if configured:
             path = Path(configured).expanduser().resolve()
             if not path.is_file():
-                raise GateFailure(
-                    f"DAINEXUS_NODE_BIN points to a missing file: {path}"
-                )
+                raise GateFailure(f"DAINEXUS_NODE_BIN points to a missing file: {path}")
             if self._raw_node_major(str(path)) < MIN_NODE_MAJOR:
-                raise GateFailure(
-                    f"DAINEXUS_NODE_BIN must be Node >= {MIN_NODE_MAJOR}"
-                )
+                raise GateFailure(f"DAINEXUS_NODE_BIN must be Node >= {MIN_NODE_MAJOR}")
             return str(path)
 
         current = _which("node")
@@ -655,11 +693,13 @@ class LocalCI:
                 f"node{major}-mcp-tests",
                 [runtime, mcp_vitest, "run", "--reporter=basic"],
                 cwd=ROOT / "mcp",
+                scrub_git_env=True,
             )
             self.run(
                 f"node{major}-cli-tests",
                 [runtime, cli_vitest, "run"],
                 cwd=ROOT / "src" / "cli",
+                scrub_git_env=True,
             )
             self.run(f"node{major}-cli-smoke", [runtime, cli_entry, "--version"])
 
@@ -753,9 +793,7 @@ class LocalCI:
             [self.bash, "scripts/ci/verify-wiki-drift.sh", "--threshold", "0.3"],
         )
         if not self.dry_run:
-            (ROOT / ".dainexus" / "cache" / "wiki-sync-needed").unlink(
-                missing_ok=True
-            )
+            (ROOT / ".dainexus" / "cache" / "wiki-sync-needed").unlink(missing_ok=True)
 
     def dependencies(self, *, fix: bool) -> None:
         if fix:
@@ -841,7 +879,7 @@ class LocalCI:
             self.run("cli-prettier-staged", [prettier, "--write", *cli_ts])
             touched.extend(cli_ts)
         if shell_files:
-            shellcheck = _which("shellcheck")
+            shellcheck = self._resolve_tool("shellcheck")
             if not shellcheck:
                 raise GateFailure("shellcheck is required for staged shell scripts")
             excludes = (
@@ -889,12 +927,28 @@ class LocalCI:
             "mcp-tests",
             [self.node, mcp_vitest, "run", "--reporter=basic"],
             cwd=ROOT / "mcp",
+            scrub_git_env=True,
         )
-        self.run("cli-tests", [self.node, cli_vitest, "run"], cwd=ROOT / "src" / "cli")
+        self.run(
+            "cli-tests",
+            [self.node, cli_vitest, "run"],
+            cwd=ROOT / "src" / "cli",
+            scrub_git_env=True,
+        )
         self.run(
             "python-unit-tests",
-            [self.python, "-m", "pytest", "tests/unit_tests/"],
-            timeout=900,
+            [
+                self.python,
+                "scripts/ci/pytest_gate.py",
+                "tests/unit_tests/",
+                "--baseline",
+                "tests/known_failures.txt",
+            ],
+            scrub_git_env=True,
+            # 414s idle, ~1760s when other suites compete for the box. The old
+            # 900s sat inside that spread, so a busy machine reported a timeout
+            # as if it were a test failure.
+            timeout=2700,
         )
 
     def commit_message(self, message_file: str) -> None:
@@ -959,9 +1013,7 @@ class LocalCI:
 
 
 def parser() -> argparse.ArgumentParser:
-    result = argparse.ArgumentParser(
-        description="DAI Nexus provider-neutral local CI"
-    )
+    result = argparse.ArgumentParser(description="DAI Nexus provider-neutral local CI")
     result.add_argument(
         "mode",
         choices=(

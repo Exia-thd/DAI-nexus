@@ -1,0 +1,7 @@
+# Shell scripts must check out with LF on every platform. With core.autocrlf=true
+# a Windows clone rewrites them to CRLF, which shellcheck rejects outright
+# (SC1017) and which breaks the scripts under bash at runtime.
+*.sh text eol=lf
+*.bash text eol=lf
+.husky/* text eol=lf
+.shellcheckrc text eol=lf

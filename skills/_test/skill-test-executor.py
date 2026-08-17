@@ -1,370 +1,435 @@
 #!/usr/bin/env python3
-"""
-skills/_test/skill-test-executor.py
-Skill test-contract validator and adapter runner (pure Python, zero-dependency).
-
-This tool NEVER fabricates skill output. It does exactly two things:
-
-  validate  — check every skills/_test/skills/<skill>/test.yaml contract is
-              well-formed: unique kebab-case ids, known validators, parseable
-              timeouts, expectations that the declared validators can actually
-              consume. Runs in CI, needs no model.
-  run       — execute a contract against a REAL adapter command supplied by the
-              caller (`--adapter "<cmd>"`); the input is passed on stdin and the
-              adapter's real stdout is checked against `expected`. With no
-              adapter configured it refuses to run rather than simulate.
-
-Usage:
-    python skills/_test/skill-test-executor.py validate [skill ...]
-    python skills/_test/skill-test-executor.py run <skill> --adapter "<command>" [--id <test-id>]
-    python skills/_test/skill-test-executor.py list
-
-Exit codes: 0 = pass, 1 = failures, 2 = usage/config error.
-"""
+"""Validate skill test contracts and optionally execute them through an adapter."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shlex
+import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
-TEST_ROOT = Path(__file__).resolve().parent / "skills"
-TEST_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-TIMEOUT_RE = re.compile(r"^(\d+)(ms|s|m)$")
+import yaml
 
-# validator -> the `expected:` key it consumes (None = standalone)
-VALIDATORS = {
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+TEST_ROOT = SCRIPT_DIR / "skills"
+SKILLS_ROOT = SCRIPT_DIR.parent
+MAX_ADAPTER_OUTPUT_BYTES = 1_000_000
+TEST_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+TIMEOUT = re.compile(r"^(\d+)(ms|s|m)$")
+
+EXPECTED_VALIDATORS = {
     "output_contains_all": "contains",
     "output_excludes_none": "not_contains",
     "file_count_matches": "files_created",
     "min_lines_satisfied": "min_lines",
     "severity_counts_match": "severity_count",
-    "no_todos": None,
 }
+STANDALONE_VALIDATORS = {"no_todos"}
 
-# Open family: `min_<thing>_satisfied` consumes `expected.min_<thing>` and asserts
-# the adapter reported at least that many of <thing>.
-MIN_FAMILY_RE = re.compile(r"^min_([a-z0-9_]+)_satisfied$")
-
-
-def expected_key_for(validator: str) -> str | None | bool:
-    """Return the required `expected` key, None for standalone, False if unknown."""
-    if validator in VALIDATORS:
-        return VALIDATORS[validator]
-    m = MIN_FAMILY_RE.match(validator)
-    return f"min_{m.group(1)}" if m else False
+USE_COLOR = True
 
 
-# ── minimal YAML subset reader ────────────────────────────────────────────────
-# The contracts use a fixed shape (mapping / list-of-mappings / block scalars).
-# A constrained reader keeps this tool dependency-free; anything it cannot parse
-# is reported as a contract error rather than silently skipped.
-
-def parse_yaml(text: str) -> dict:
-    root: dict = {}
-    stack: list[tuple[int, object]] = [(-1, root)]
-    lines = text.splitlines()
-    i = 0
-    while i < len(lines):
-        raw = lines[i]
-        line = raw.split(" #", 1)[0].rstrip() if not raw.strip().startswith("#") else ""
-        if not line.strip():
-            i += 1
-            continue
-        indent = len(line) - len(line.lstrip())
-        content = line.strip()
-
-        while stack and indent <= stack[-1][0]:
-            stack.pop()
-        parent = stack[-1][1] if stack else root
-
-        if content.startswith("- "):
-            item_body = content[2:].strip()
-            if not isinstance(parent, list):
-                i += 1
-                continue
-            if ":" in item_body:
-                item: dict = {}
-                parent.append(item)
-                stack.append((indent, item))
-                key, _, val = item_body.partition(":")
-                _assign(item, key.strip(), val.strip(), lines, i, indent + 2, stack)
-            else:
-                parent.append(_scalar(item_body))
-            i += 1
-            continue
-
-        if ":" in content:
-            key, _, val = content.partition(":")
-            if isinstance(parent, dict):
-                i = _assign(parent, key.strip(), val.strip(), lines, i, indent, stack)
-        i += 1
-    return root
+def color(code: str, text: str) -> str:
+    return f"\033[{code}m{text}\033[0m" if USE_COLOR else text
 
 
-def _assign(container: dict, key: str, val: str, lines: list[str], i: int,
-            indent: int, stack: list) -> int:
-    if val in ("|", ">", "|-", ">-"):          # block scalar
-        block, j = [], i + 1
-        while j < len(lines):
-            nxt = lines[j]
-            if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
-                break
-            block.append(nxt[indent + 2:] if len(nxt) > indent + 2 else "")
-            j += 1
-        container[key] = "\n".join(block).rstrip()
-        return j - 1
-    if val == "":                                # nested block: dict or list
-        nxt = next((ln for ln in lines[i + 1:] if ln.strip()), "")
-        child: object = [] if nxt.strip().startswith("- ") else {}
-        container[key] = child
-        stack.append((indent, child))
-        return i
-    container[key] = _scalar(val)
-    return i
+def available_skills() -> list[str]:
+    if not TEST_ROOT.is_dir():
+        return []
+    return sorted(
+        path.name
+        for path in TEST_ROOT.iterdir()
+        if path.is_dir() and (path / "test.yaml").is_file()
+    )
 
 
-def _scalar(val: str):
-    val = val.strip()
-    if val.startswith("[") and val.endswith("]"):
-        return [_scalar(v) for v in val[1:-1].split(",") if v.strip()]
-    if len(val) >= 2 and val[0] == val[-1] and val[0] in "\"'":
-        return val[1:-1]
-    if val.lower() in ("true", "false"):
-        return val.lower() == "true"
-    if re.fullmatch(r"-?\d+", val):
-        return int(val)
-    return val
-
-
-# ── contract validation ───────────────────────────────────────────────────────
-
-def validate_contract(path: Path) -> list[str]:
-    errors: list[str] = []
+def load_contract(skill_name: str) -> dict[str, Any]:
+    test_file = TEST_ROOT / skill_name / "test.yaml"
+    if not test_file.is_file():
+        raise ValueError(f"test contract not found: {test_file}")
     try:
-        data = parse_yaml(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as e:
-        return [f"unreadable contract: {e}"]
+        document = yaml.safe_load(test_file.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise ValueError(f"cannot read test contract {test_file}: {exc}") from exc
+    if not isinstance(document, dict):
+        raise ValueError(f"test contract root must be an object: {test_file}")
+    return document
 
-    if not data.get("skill"):
-        errors.append("missing top-level `skill:`")
-    skill_dir = path.parent.name
-    if data.get("skill") and data["skill"] != skill_dir:
-        errors.append(f"`skill: {data['skill']}` does not match directory `{skill_dir}`")
-    if not (TEST_ROOT.parent.parent / str(data.get("skill", ""))).is_dir():
-        errors.append(f"contract targets a skill that does not exist: {data.get('skill')!r}")
 
-    tests = data.get("tests")
+def _string_list(value: Any) -> bool:
+    return (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(item, str) and item.strip() for item in value)
+    )
+
+
+def _validator_expected_key(validator: str) -> str | None:
+    if validator in STANDALONE_VALIDATORS:
+        return ""
+    if validator in EXPECTED_VALIDATORS:
+        return EXPECTED_VALIDATORS[validator]
+    match = re.fullmatch(r"min_([a-z0-9_]+)_satisfied", validator)
+    return f"min_{match.group(1)}" if match else None
+
+
+def validate_contract_document(
+    skill_name: str, document: Any, skills_root: Path = SKILLS_ROOT
+) -> list[str]:
+    """Return deterministic schema errors for one skill test contract."""
+    errors: list[str] = []
+    if not isinstance(document, dict):
+        return ["contract root must be an object"]
+    if document.get("skill") != skill_name:
+        errors.append(f"skill field must equal directory name: {skill_name}")
+    if not isinstance(document.get("version"), str) or not document["version"].strip():
+        errors.append("version must be a non-empty string")
+    if not (skills_root / skill_name / "SKILL.md").is_file():
+        errors.append(f"skill source is missing: skills/{skill_name}/SKILL.md")
+
+    tests = document.get("tests")
     if not isinstance(tests, list) or not tests:
-        return errors + ["`tests:` must be a non-empty list"]
+        errors.append("tests must be a non-empty array")
+        return errors
 
     seen: set[str] = set()
-    for idx, test in enumerate(tests, 1):
+    for index, test in enumerate(tests):
+        prefix = f"tests[{index}]"
         if not isinstance(test, dict):
-            errors.append(f"test #{idx}: not a mapping")
+            errors.append(f"{prefix} must be an object")
             continue
-        tid = test.get("id", "")
-        label = tid or f"#{idx}"
-        if not tid:
-            errors.append(f"test {label}: missing `id`")
-        elif not TEST_ID_RE.match(str(tid)):
-            errors.append(f"test {label}: id must be kebab-case")
-        elif tid in seen:
-            errors.append(f"test {label}: duplicate id")
-        seen.add(tid)
-
+        test_id = test.get("id")
+        if not isinstance(test_id, str) or not TEST_ID.fullmatch(test_id):
+            errors.append(f"{prefix}.id must use lowercase kebab-case")
+        elif test_id in seen:
+            errors.append(f"duplicate test id: {test_id}")
+        else:
+            seen.add(test_id)
+        if (
+            not isinstance(test.get("description"), str)
+            or not test["description"].strip()
+        ):
+            errors.append(f"{prefix}.description must be a non-empty string")
+        if not isinstance(test.get("input"), dict):
+            errors.append(f"{prefix}.input must be an object")
+        if not _string_list(test.get("tags")):
+            errors.append(f"{prefix}.tags must be a non-empty string array")
         timeout = test.get("timeout")
-        if timeout is not None and not TIMEOUT_RE.match(str(timeout)):
-            errors.append(f"test {label}: timeout {timeout!r} must look like 500ms / 60s / 5m")
+        if not isinstance(timeout, str) or not TIMEOUT.fullmatch(timeout):
+            errors.append(f"{prefix}.timeout must look like 500ms, 30s, or 2m")
 
-        validators = test.get("validate") or []
-        if not isinstance(validators, list) or not validators:
-            errors.append(f"test {label}: `validate:` must list at least one validator")
-            continue
-        expected = test.get("expected") or {}
-        for v in validators:
-            needs = expected_key_for(v)
-            if needs is False:
-                errors.append(f"test {label}: unknown validator {v!r} (known: "
-                              f"{', '.join(sorted(VALIDATORS))}, min_<thing>_satisfied)")
-                continue
-            if needs and needs not in expected:
-                errors.append(f"test {label}: validator {v!r} needs `expected.{needs}`")
+        expected = test.get("expected")
+        validators = test.get("validate")
+        if not isinstance(expected, dict) or not expected:
+            errors.append(f"{prefix}.expected must be a non-empty object")
+            expected = {}
+        if not _string_list(validators):
+            errors.append(f"{prefix}.validate must be a non-empty string array")
+            validators = []
+
+        for key, value in expected.items():
+            if key in {"contains", "not_contains"}:
+                if not _string_list(value):
+                    errors.append(f"{prefix}.expected.{key} must be a string array")
+            elif key == "severity_count":
+                if not isinstance(value, dict) or not all(
+                    isinstance(name, str)
+                    and isinstance(count, int)
+                    and not isinstance(count, bool)
+                    and count >= 0
+                    for name, count in value.items()
+                ):
+                    errors.append(
+                        f"{prefix}.expected.severity_count must map names to counts"
+                    )
+            elif key == "files_created" or key.startswith("min_"):
+                if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                    errors.append(
+                        f"{prefix}.expected.{key} must be a non-negative integer"
+                    )
+            else:
+                errors.append(f"{prefix}.expected has unsupported key: {key}")
+
+        for validator in validators:
+            expected_key = _validator_expected_key(validator)
+            if expected_key is None:
+                errors.append(f"{prefix} has unknown validator: {validator}")
+            elif expected_key and expected_key not in expected:
+                errors.append(
+                    f"{prefix} validator {validator} requires expected.{expected_key}"
+                )
     return errors
 
 
-# ── adapter execution (real output only) ──────────────────────────────────────
+def parse_timeout(value: str) -> float:
+    match = TIMEOUT.fullmatch(value)
+    if not match:
+        raise ValueError(f"invalid timeout: {value}")
+    amount = int(match.group(1))
+    unit = match.group(2)
+    if unit == "ms":
+        return max(amount / 1000, 0.001)
+    if unit == "m":
+        return amount * 60
+    return float(amount)
 
-def timeout_seconds(raw: str | None) -> int:
+
+def validate_live_result(result: Any, test: dict[str, Any]) -> list[str]:
+    """Validate adapter output without inventing semantic metrics."""
+    if not isinstance(result, dict):
+        return ["adapter response must be a JSON object"]
+    unexpected = sorted(set(result) - {"output", "metrics"})
+    errors = [f"adapter response has unexpected field: {key}" for key in unexpected]
+    output = result.get("output")
+    metrics = result.get("metrics", {})
+    if not isinstance(output, str):
+        errors.append("adapter response output must be a string")
+        output = ""
+    if not isinstance(metrics, dict):
+        errors.append("adapter response metrics must be an object")
+        metrics = {}
+
+    expected = test.get("expected", {})
+    for item in expected.get("contains", []):
+        if item not in output:
+            errors.append(f"missing expected content: {item}")
+    for item in expected.get("not_contains", []):
+        if item in output:
+            errors.append(f"found forbidden content: {item}")
+    if "no_todos" in test.get("validate", []) and re.search(
+        r"\b(?:TODO|FIXME)\b", output
+    ):
+        errors.append("output contains TODO or FIXME")
+    if "min_lines" in expected and len(output.splitlines()) < expected["min_lines"]:
+        errors.append(
+            f"line count {len(output.splitlines())} < {expected['min_lines']}"
+        )
+
+    for key, minimum in expected.items():
+        if not key.startswith("min_") or key == "min_lines":
+            continue
+        metric = key.removeprefix("min_")
+        actual = metrics.get(metric)
+        if not isinstance(actual, (int, float)) or isinstance(actual, bool):
+            errors.append(f"missing metric: {metric}")
+        elif actual < minimum:
+            errors.append(f"metric {metric} {actual} < {minimum}")
+
+    if "files_created" in expected:
+        actual = metrics.get("files_created")
+        if not isinstance(actual, int) or isinstance(actual, bool):
+            errors.append("missing metric: files_created")
+        elif actual != expected["files_created"]:
+            errors.append(
+                f"metric files_created {actual} != {expected['files_created']}"
+            )
+
+    if "severity_count" in expected:
+        actual = metrics.get("severity_count")
+        if not isinstance(actual, dict):
+            errors.append("missing metric: severity_count")
+        else:
+            for severity, minimum in expected["severity_count"].items():
+                count = actual.get(severity)
+                if (
+                    not isinstance(count, int)
+                    or isinstance(count, bool)
+                    or count < minimum
+                ):
+                    errors.append(
+                        f"metric severity_count.{severity} {count!r} < {minimum}"
+                    )
+    return errors
+
+
+def resolve_adapter(command: str | None) -> list[str] | None:
+    raw = command or os.environ.get("DAINEXUS_SKILL_TEST_ADAPTER")
     if not raw:
-        return 120
-    m = TIMEOUT_RE.match(str(raw))
-    if not m:
-        return 120
-    n, unit = int(m.group(1)), m.group(2)
-    return max(1, {"ms": n // 1000, "s": n, "m": n * 60}[unit])
+        return None
+    argv = shlex.split(raw)
+    if not argv:
+        raise ValueError("live adapter command is empty")
+    executable = shutil.which(argv[0])
+    if executable is None:
+        raise ValueError(f"live adapter executable not found: {argv[0]}")
+    argv[0] = executable
+    return argv
 
 
-def check_expectations(output: str, expected: dict, validators: list[str]) -> list[str]:
-    failures: list[str] = []
-    for v in validators:
-        if v == "output_contains_all":
-            for needle in expected.get("contains", []) or []:
-                if str(needle).lower() not in output.lower():
-                    failures.append(f"output missing expected content: {needle!r}")
-        elif v == "output_excludes_none":
-            for needle in expected.get("not_contains", []) or []:
-                if str(needle).lower() in output.lower():
-                    failures.append(f"output contains forbidden content: {needle!r}")
-        elif v == "min_lines_satisfied":
-            want = int(expected.get("min_lines", 0) or 0)
-            got = len(output.splitlines())
-            if got < want:
-                failures.append(f"output has {got} lines, expected >= {want}")
-        elif v == "no_todos":
-            if re.search(r"\b(TODO|FIXME)\b", output):
-                failures.append("output contains TODO/FIXME stubs")
-        elif v == "severity_counts_match":
-            for sev, want in (expected.get("severity_count") or {}).items():
-                got = len(re.findall(rf"\b{re.escape(str(sev))}\b", output, re.IGNORECASE))
-                if got < int(want):
-                    failures.append(f"severity '{sev}': found {got}, expected >= {want}")
-        elif v == "file_count_matches":
-            want = int(expected.get("files_created", 0) or 0)
-            got = len(re.findall(r"^\s*(?:created|wrote)\s+\S+", output, re.IGNORECASE | re.MULTILINE))
-            if got != want:
-                failures.append(f"files created: found {got}, expected {want}")
-        else:
-            m = MIN_FAMILY_RE.match(v)
-            if not m:
-                continue
-            thing = m.group(1)
-            want = int(expected.get(f"min_{thing}", 0) or 0)
-            counts = adapter_counts(output)
-            if thing not in counts:
-                # Refuse to guess. An unverifiable expectation is a failure, not a pass.
-                failures.append(
-                    f"cannot verify min_{thing}: adapter emitted no machine-readable "
-                    f'count (expected a JSON line like {{"counts": {{"{thing}": N}}}})'
-                )
-            elif counts[thing] < want:
-                failures.append(f"{thing}: adapter reported {counts[thing]}, expected >= {want}")
-    return failures
+def execute_adapter(
+    argv: list[str], skill_name: str, test: dict[str, Any]
+) -> dict[str, Any]:
+    skill_file = SKILLS_ROOT / skill_name / "SKILL.md"
+    request = {
+        "protocol_version": 1,
+        "skill": skill_name,
+        "test": test,
+        "skill_prompt": skill_file.read_text(encoding="utf-8"),
+    }
+    completed = subprocess.run(
+        argv,
+        input=json.dumps(request),
+        text=True,
+        capture_output=True,
+        timeout=parse_timeout(test["timeout"]),
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or completed.stdout.strip()
+        raise RuntimeError(f"adapter exited {completed.returncode}: {detail[:1000]}")
+    if len(completed.stdout.encode("utf-8")) > MAX_ADAPTER_OUTPUT_BYTES:
+        raise RuntimeError("adapter output exceeded 1000000 bytes")
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"adapter output is not JSON: {exc}") from exc
+    if not isinstance(result, dict):
+        raise RuntimeError("adapter response must be a JSON object")
+    return result
 
 
-def adapter_counts(output: str) -> dict:
-    """Read `{"counts": {...}}` from any JSON line the adapter printed."""
-    for line in output.splitlines():
-        line = line.strip()
-        if not (line.startswith("{") and line.endswith("}")):
-            continue
-        try:
-            data = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        counts = data.get("counts")
-        if isinstance(counts, dict):
-            return {str(k): int(v) for k, v in counts.items() if str(v).lstrip("-").isdigit()}
-    return {}
-
-
-def run_contract(skill: str, adapter: str, only_id: str | None) -> int:
-    path = TEST_ROOT / skill / "test.yaml"
-    if not path.is_file():
-        print(f"[skill-test] no contract for skill {skill!r}", file=sys.stderr)
-        return 2
-    data = parse_yaml(path.read_text(encoding="utf-8"))
-    tests = [t for t in (data.get("tests") or [])
-             if isinstance(t, dict) and (not only_id or t.get("id") == only_id)]
-    if not tests:
-        print(f"[skill-test] no matching tests in {path}", file=sys.stderr)
-        return 2
-
-    failed = 0
+def selected_tests(
+    tests: list[dict[str, Any]], test_id: str | None, tags: set[str]
+) -> list[dict[str, Any]]:
+    selected = []
     for test in tests:
-        tid = test.get("id", "?")
-        payload = json.dumps({"skill": skill, "input": test.get("input", {})},
-                             ensure_ascii=False)
-        try:
-            proc = subprocess.run(adapter, shell=True, input=payload, capture_output=True,
-                                  text=True, timeout=timeout_seconds(test.get("timeout")))
-        except subprocess.TimeoutExpired:
-            print(f"  [FAIL] {tid}: adapter timed out", file=sys.stderr)
-            failed += 1
+        if test_id and test.get("id") != test_id:
             continue
-        if proc.returncode != 0:
-            print(f"  [FAIL] {tid}: adapter exited {proc.returncode}: {proc.stderr.strip()[:200]}",
-                  file=sys.stderr)
-            failed += 1
+        if tags and not tags.intersection(test.get("tags", [])):
             continue
-        failures = check_expectations(proc.stdout, test.get("expected") or {},
-                                      test.get("validate") or [])
-        if failures:
-            failed += 1
-            print(f"  [FAIL] {tid}", file=sys.stderr)
-            for f in failures:
-                print(f"      - {f}", file=sys.stderr)
-        else:
-            print(f"  [PASS] {tid}")
-    return 1 if failed else 0
+        selected.append(test)
+    return selected
 
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
-
-def _utf8_io() -> None:
-    """Windows consoles default to a legacy codepage; non-ASCII output would
-    crash the tool instead of printing. Force UTF-8 on our own streams."""
-    for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8", errors="replace")
+def write_report(path: Path, report: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
-def main() -> None:
-    _utf8_io()
-    p = argparse.ArgumentParser(description="Skill test contract validator / adapter runner")
-    sub = p.add_subparsers(dest="cmd", required=True)
-    sp = sub.add_parser("validate")
-    sp.add_argument("skills", nargs="*")
-    sp = sub.add_parser("run")
-    sp.add_argument("skill")
-    sp.add_argument("--adapter", required=True,
-                    help="real command that receives {skill,input} JSON on stdin")
-    sp.add_argument("--id")
-    sub.add_parser("list")
-    args = p.parse_args()
+def main(argv: list[str] | None = None) -> int:
+    global USE_COLOR
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("skill", nargs="?", help="Skill name to test")
+    parser.add_argument("test_id", nargs="?", help="Specific test ID")
+    parser.add_argument("--all", action="store_true", help="Run every contract")
+    parser.add_argument("--list", action="store_true", help="List test contracts")
+    parser.add_argument("--tag", help="Comma-separated tag filter")
+    parser.add_argument(
+        "--contract-only", action="store_true", help="Validate contracts only"
+    )
+    parser.add_argument(
+        "--require-live", action="store_true", help="Fail unless a live adapter is set"
+    )
+    parser.add_argument("--adapter-command", help="Live adapter command (no shell)")
+    parser.add_argument("--report", type=Path, help="Write a JSON result report")
+    parser.add_argument("--no-color", action="store_true", help="Disable ANSI colors")
+    args = parser.parse_args(argv)
+    USE_COLOR = not args.no_color
 
-    if args.cmd == "list":
-        for d in sorted(TEST_ROOT.iterdir()):
-            if (d / "test.yaml").is_file():
-                print(f"  {d.name}")
-        sys.exit(0)
+    if args.contract_only and args.require_live:
+        parser.error("--contract-only and --require-live are mutually exclusive")
 
-    if args.cmd == "validate":
-        targets = ([TEST_ROOT / s / "test.yaml" for s in args.skills] if args.skills
-                   else sorted(TEST_ROOT.glob("*/test.yaml")))
-        failed = 0
-        for path in targets:
-            if not path.is_file():
-                print(f"[skill-test] FAIL {path}: missing", file=sys.stderr)
-                failed += 1
+    skills = available_skills()
+    if args.list:
+        print("Available Skill Tests")
+        for skill in skills:
+            document = load_contract(skill)
+            print(f"{skill}: {len(document.get('tests', []))}")
+        return 0
+    if not args.all and not args.skill:
+        parser.print_help()
+        return 0
+    if args.skill and args.skill not in skills:
+        print(f"Unknown skill test contract: {args.skill}", file=sys.stderr)
+        return 2
+
+    try:
+        adapter = None if args.contract_only else resolve_adapter(args.adapter_command)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    if args.require_live and adapter is None:
+        print("A live adapter is required but none was configured.", file=sys.stderr)
+        return 2
+
+    mode = "live" if adapter else "contract-only"
+    print(f"Mode: {mode}")
+    target_skills = skills if args.all else [args.skill]
+    tag_filter = {tag.strip() for tag in (args.tag or "").split(",") if tag.strip()}
+    report: dict[str, Any] = {
+        "schema_version": 1,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "mode": mode,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "tests": [],
+    }
+
+    for skill in target_skills:
+        document = load_contract(skill)
+        contract_errors = validate_contract_document(skill, document)
+        if contract_errors:
+            for error in contract_errors:
+                print(color("31", f"[FAIL] {skill}: {error}"))
+            report["failed"] += len(contract_errors)
+            continue
+        tests = selected_tests(document["tests"], args.test_id, tag_filter)
+        if args.test_id and not tests:
+            print(f"Test ID not found: {args.test_id}", file=sys.stderr)
+            return 2
+        for test in tests:
+            test_id = test["id"]
+            if test.get("deprecated") or test.get("skip"):
+                report["skipped"] += 1
+                report["tests"].append(
+                    {"skill": skill, "id": test_id, "status": "skipped"}
+                )
                 continue
-            errors = validate_contract(path)
+            errors: list[str] = []
+            if adapter:
+                try:
+                    result = execute_adapter(adapter, skill, test)
+                    errors = validate_live_result(result, test)
+                except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+                    errors = [str(exc)]
             if errors:
-                failed += 1
-                print(f"[skill-test] FAIL {path.parent.name}", file=sys.stderr)
-                for e in errors:
-                    print(f"    - {e}", file=sys.stderr)
-        if failed:
-            print(f"[skill-test] {failed}/{len(targets)} contract(s) invalid", file=sys.stderr)
-            sys.exit(1)
-        print(f"[skill-test] OK — {len(targets)} contract(s) valid")
-        sys.exit(0)
+                report["failed"] += 1
+                report["tests"].append(
+                    {
+                        "skill": skill,
+                        "id": test_id,
+                        "status": "failed",
+                        "errors": errors,
+                    }
+                )
+                print(color("31", f"[FAIL] {skill}/{test_id}: {'; '.join(errors)}"))
+            else:
+                report["passed"] += 1
+                report["tests"].append(
+                    {"skill": skill, "id": test_id, "status": "passed"}
+                )
+                label = "Live passed" if adapter else "Contract passed"
+                print(color("32", f"[PASS] {label}: {skill}/{test_id}"))
 
-    sys.exit(run_contract(args.skill, args.adapter, args.id))
+    print(
+        f"Results: passed={report['passed']} failed={report['failed']} "
+        f"skipped={report['skipped']}"
+    )
+    if args.report:
+        write_report(args.report, report)
+    return 0 if report["failed"] == 0 else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

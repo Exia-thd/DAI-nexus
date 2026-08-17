@@ -36,7 +36,6 @@ import re
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 
 DB_PATH = os.path.join(".dainexus", "memory.db")
@@ -70,17 +69,47 @@ CATEGORY_WEIGHTS = {
 }
 
 AUTO_TAG_PATTERNS = [
-    (r"\b(auth|jwt|oauth|token|credential|password|passphrase|secret|api[_-]?key)\b", "auth"),
-    (r"\b(architecture|design|pattern|schema|model|structure|layer|component|module|interface)\b", "architecture"),
-    (r"\b(sql|database|db|postgres|mysql|mongodb|migration|query|index|table)\b", "database"),
-    (r"\b(performance|speed|optimize|cache|benchmark|profiling|latency|throughput)\b", "performance"),
-    (r"\b(api|rest|graphql|webhook|endpoint|http|request|response|integration)\b", "api"),
-    (r"\b(security|vulnerable|exploit|injection|xss|csrf|encryption|hash|encrypt)\b", "security"),
-    (r"\b(test|spec|coverage|unittest|pytest|jest|qa|verification|validation)\b", "testing"),
-    (r"\b(deploy|docker|kubernetes|ci|cd|pipeline|terraform|infrastructure|cloud|aws|gcp)\b", "devops"),
-    (r"\b(memory|checkpoint|retrieval|context|session|conversation|history)\b", "memory"),
+    (
+        r"\b(auth|jwt|oauth|token|credential|password|passphrase|secret|api[_-]?key)\b",
+        "auth",
+    ),
+    (
+        r"\b(architecture|design|pattern|schema|model|structure|layer|component|module|interface)\b",
+        "architecture",
+    ),
+    (
+        r"\b(sql|database|db|postgres|mysql|mongodb|migration|query|index|table)\b",
+        "database",
+    ),
+    (
+        r"\b(performance|speed|optimize|cache|benchmark|profiling|latency|throughput)\b",
+        "performance",
+    ),
+    (
+        r"\b(api|rest|graphql|webhook|endpoint|http|request|response|integration)\b",
+        "api",
+    ),
+    (
+        r"\b(security|vulnerable|exploit|injection|xss|csrf|encryption|hash|encrypt)\b",
+        "security",
+    ),
+    (
+        r"\b(test|spec|coverage|unittest|pytest|jest|qa|verification|validation)\b",
+        "testing",
+    ),
+    (
+        r"\b(deploy|docker|kubernetes|ci|cd|pipeline|terraform|infrastructure|cloud|aws|gcp)\b",
+        "devops",
+    ),
+    (
+        r"\b(memory|checkpoint|retrieval|context|session|conversation|history)\b",
+        "memory",
+    ),
     (r"\b(plan|scoring|quality|protocol|process|workflow|gate|approval)\b", "process"),
-    (r"\b(ui|ux|frontend|react|vue|component|style|animation|responsive)\b", "frontend"),
+    (
+        r"\b(ui|ux|frontend|react|vue|component|style|animation|responsive)\b",
+        "frontend",
+    ),
     (r"\b(unity|unreal|godot|game|sprite|physics|level|scene)\b", "game"),
     (r"\b(llm|rag|embedding|vector|nlp|model|train|inference)\b", "ai"),
 ]
@@ -137,6 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_obs_archived ON observations(archived);
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
+
 
 def get_project_id() -> str:
     pid = os.environ.get("DAINEXUS_PROJECT_ID")
@@ -195,6 +225,7 @@ def rrf_merge(*ranked_lists: list, k: int = RRF_K) -> list:
 
 # ── database ──────────────────────────────────────────────────────────────────
 
+
 class MemoryDB:
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
@@ -234,10 +265,14 @@ class MemoryDB:
             results = []
             for row in rows:
                 score = (row["importance"] * 0.3) + (min(row["access_count"], 5) * 0.3)
-                results.append({
-                    "id": row["id"], "type": row["type"],
-                    "title": row["title"], "score": round(score, 2),
-                })
+                results.append(
+                    {
+                        "id": row["id"],
+                        "type": row["type"],
+                        "title": row["title"],
+                        "score": round(score, 2),
+                    }
+                )
             return results
         finally:
             conn.close()
@@ -264,11 +299,16 @@ class MemoryDB:
                 ).fetchall()
                 for row in rows:
                     content = row["content"] or ""
-                    fts_results.append({
-                        "id": row["id"], "type": row["type"], "title": row["title"],
-                        "summary": content[:200] + ("..." if len(content) > 200 else ""),
-                        "bm25": round(row["rank"], 3),
-                    })
+                    fts_results.append(
+                        {
+                            "id": row["id"],
+                            "type": row["type"],
+                            "title": row["title"],
+                            "summary": content[:200]
+                            + ("..." if len(content) > 200 else ""),
+                            "bm25": round(row["rank"], 3),
+                        }
+                    )
 
             index_results = self.memory_index(query, limit=limit * 3)
             fused = rrf_merge(fts_results, index_results)[:limit]
@@ -280,7 +320,9 @@ class MemoryDB:
                         "SELECT content FROM observations WHERE id = ?", (item["id"],)
                     ).fetchone()
                     content = (row["content"] if row else "") or ""
-                    item["summary"] = content[:200] + ("..." if len(content) > 200 else "")
+                    item["summary"] = content[:200] + (
+                        "..." if len(content) > 200 else ""
+                    )
 
             ids = [item["id"] for item in fused]
             if ids:
@@ -309,9 +351,15 @@ class MemoryDB:
 
     # ── CRUD ─────────────────────────────────────────────────────────────────
 
-    def add(self, text: str, category: str = "general", source: str = "manual",
-            title: str | None = None, tags: list[str] | None = None,
-            importance: int = 5) -> dict:
+    def add(
+        self,
+        text: str,
+        category: str = "general",
+        source: str = "manual",
+        title: str | None = None,
+        tags: list[str] | None = None,
+        importance: int = 5,
+    ) -> dict:
         text = redact_secrets(text)
         content_hash = make_hash(text)
         project_root = get_project_id()
@@ -333,9 +381,12 @@ class MemoryDB:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    project_root, category,
+                    project_root,
+                    category,
                     title or text[:100].replace("\n", " "),
-                    text, content_hash, source,
+                    text,
+                    content_hash,
+                    source,
                     json.dumps(tags, ensure_ascii=False),
                     max(1, min(10, importance)),
                 ),
@@ -389,7 +440,9 @@ class MemoryDB:
                     "SELECT type, COUNT(*) AS c FROM observations WHERE archived = 0 GROUP BY type"
                 )
             }
-            size = Path(self.db_path).stat().st_size if Path(self.db_path).exists() else 0
+            size = (
+                Path(self.db_path).stat().st_size if Path(self.db_path).exists() else 0
+            )
             return {"total": self.count(), "by_type": by_type, "size_bytes": size}
         finally:
             conn.close()
@@ -429,6 +482,7 @@ class MemoryDB:
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
+
 
 def _utf8_io() -> None:
     """Windows consoles default to a legacy codepage; non-ASCII output would
@@ -477,12 +531,19 @@ def main() -> None:
 
     if args.cmd == "add":
         tags = args.tags.split(",") if args.tags else None
-        entry = db.add(args.text, category=args.category, title=args.title,
-                       tags=tags, importance=args.importance)
+        entry = db.add(
+            args.text,
+            category=args.category,
+            title=args.title,
+            tags=tags,
+            importance=args.importance,
+        )
         if entry["duplicate"]:
             print(f"= duplicate [id={entry['id']}]")
         else:
-            print(f"+ added [id={entry['id']}] ({args.category}, tags={','.join(entry['tags']) or '-'})")
+            print(
+                f"+ added [id={entry['id']}] ({args.category}, tags={','.join(entry['tags']) or '-'})"
+            )
     elif args.cmd == "search":
         results = db.memory_search(args.query, limit=args.limit)
         if args.format == "json":
@@ -491,13 +552,19 @@ def main() -> None:
             print("No memories found.")
         else:
             for m in results:
-                print(f"  [{m['id']}] ({m['type']}, rrf={m['rrf']}) {m['summary'][:160]}")
+                print(
+                    f"  [{m['id']}] ({m['type']}, rrf={m['rrf']}) {m['summary'][:160]}"
+                )
     elif args.cmd == "index":
         for r in db.memory_index(args.query, limit=args.limit):
             print(f"  [{r['id']}] {r['type']}: {r['title'][:80]} (score={r['score']})")
     elif args.cmd == "get":
         obs = db.memory_get(args.id)
-        print(json.dumps(obs, indent=2, ensure_ascii=False, default=str) if obs else f"Not found: {args.id}")
+        print(
+            json.dumps(obs, indent=2, ensure_ascii=False, default=str)
+            if obs
+            else f"Not found: {args.id}"
+        )
     elif args.cmd == "list":
         for m in db.list_all(category=args.category, limit=args.limit):
             print(f"  [{m['id']}] [{m['type']}] {m['title'][:120]}")

@@ -71,10 +71,10 @@ fi
 echo ""
 echo "T6: Dry run does not modify memory"
 ((TESTS++))
-count_before=$(python3 "$scripts/lite/memory.py" stats 2>/dev/null | grep "Observations:" | grep -oE "[0-9]+" || echo "0")
+count_before=$(python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" stats 2>/dev/null | grep "Observations:" | grep -oE "[0-9]+" || echo "0")
 sleep 1
 output=$(bash "$HYGIENE_SCRIPT" --dry-run 2>&1)
-count_after=$(python3 "$scripts/lite/memory.py" stats 2>/dev/null | grep "Observations:" | grep -oE "[0-9]+" || echo "0")
+count_after=$(python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" stats 2>/dev/null | grep "Observations:" | grep -oE "[0-9]+" || echo "0")
 if [[ "$count_before" -eq "$count_after" ]]; then
     pass "Dry run unchanged: $count_before obs"
 else

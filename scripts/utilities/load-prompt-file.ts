@@ -52,8 +52,8 @@ interface LoadResult {
  * @returns Load result with content or error
  */
 export function loadPromptFile(skillName: string, promptName: string): LoadResult {
-  const dai-nexusDir = detectDaiNexusDir();
-  const promptPath = resolve(dai-nexusDir, 'skills', skillName, 'prompts', promptName);
+  const daiNexusDir = detectDaiNexusDir();
+  const promptPath = resolve(daiNexusDir, 'skills', skillName, 'prompts', promptName);
 
   if (!existsSync(promptPath)) {
     return {
@@ -122,8 +122,8 @@ export function resolvePromptReference(skillMdPath: string, fileRef: string): Lo
  * List available prompt files for a skill
  */
 export function listPromptFiles(skillName: string): string[] {
-  const dai-nexusDir = detectDaiNexusDir();
-  const promptsDir = resolve(dai-nexusDir, 'skills', skillName, 'prompts');
+  const daiNexusDir = detectDaiNexusDir();
+  const promptsDir = resolve(daiNexusDir, 'skills', skillName, 'prompts');
 
   if (!existsSync(promptsDir)) {
     return [];

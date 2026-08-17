@@ -1,4 +1,5 @@
 import {
+  rmSync,
   mkdtempSync,
   mkdirSync,
   readdirSync,
@@ -14,6 +15,23 @@ import { exportObsidianVault } from "../src/docs/obsidian.js";
 import { buildDocsHub, renderStaticSite } from "../src/docs/render.js";
 import { buildSearchIndex, searchDocuments } from "../src/docs/search.js";
 import type { DocsCatalog, DocsProjectState } from "../src/docs/types.js";
+
+// Symlink creation on Windows needs SeCreateSymbolicLinkPrivilege (Developer
+// Mode or an elevated shell). Without it these cases cannot exercise their
+// subject at all, so they are gated on a probe rather than reported as
+// failures — they run unchanged wherever the privilege exists.
+const CAN_SYMLINK = (() => {
+  const probe = mkdtempSync(join(tmpdir(), "symlink-probe-"));
+  try {
+    symlinkSync(join(probe, "target"), join(probe, "link"), "dir");
+    return true;
+  } catch {
+    return false;
+  } finally {
+    rmSync(probe, { recursive: true, force: true });
+  }
+})();
+const itSymlink = CAN_SYMLINK ? it : it.skip;
 
 function catalog(root: string): DocsCatalog {
   const doc = {
@@ -432,7 +450,7 @@ describe("Docs Hub static presentation", () => {
       searchDocuments(index, "demo safe").map((entry) => entry.id),
     ).toEqual(["doc-1"]);
   });
-  it("exports outside roots without modifying source", () => {
+  itSymlink("exports outside roots without modifying source", () => {
     const root = mkdtempSync(join(tmpdir(), "dai-nexus-obsidian-"));
     const source = join(root, "Docs");
     require("node:fs").mkdirSync(source);
@@ -460,62 +478,72 @@ describe("Docs Hub static presentation", () => {
     expect(readFileSync(join(source, "Guide.md"), "utf8")).toBe("# Source\n");
   });
 
-  it("rejects nested project, document, and asset symlink destinations", () => {
-    const scenarios = [
-      { name: "project", relativePath: join("projects", "demo") },
-      {
-        name: "document",
-        relativePath: join("projects", "demo", "docs", "Docs"),
-      },
-      {
-        name: "asset",
-        relativePath: join("projects", "demo", "assets", "Docs", "assets"),
-      },
-      {
-        name: "broken document",
-        relativePath: join("projects", "demo", "docs", "Docs"),
-        broken: true,
-      },
-      {
-        name: "document file target",
-        relativePath: join("projects", "demo", "docs", "Docs", "Guide.md.html"),
-        file: true,
-      },
-      {
-        name: "asset file target",
-        relativePath: join(
-          "projects",
-          "demo",
-          "assets",
-          "Docs",
-          "assets",
-          "diagram.svg",
-        ),
-        file: true,
-      },
-    ];
+  itSymlink(
+    "rejects nested project, document, and asset symlink destinations",
+    () => {
+      const scenarios = [
+        { name: "project", relativePath: join("projects", "demo") },
+        {
+          name: "document",
+          relativePath: join("projects", "demo", "docs", "Docs"),
+        },
+        {
+          name: "asset",
+          relativePath: join("projects", "demo", "assets", "Docs", "assets"),
+        },
+        {
+          name: "broken document",
+          relativePath: join("projects", "demo", "docs", "Docs"),
+          broken: true,
+        },
+        {
+          name: "document file target",
+          relativePath: join(
+            "projects",
+            "demo",
+            "docs",
+            "Docs",
+            "Guide.md.html",
+          ),
+          file: true,
+        },
+        {
+          name: "asset file target",
+          relativePath: join(
+            "projects",
+            "demo",
+            "assets",
+            "Docs",
+            "assets",
+            "diagram.svg",
+          ),
+          file: true,
+        },
+      ];
 
-    for (const scenario of scenarios) {
-      const root = mkdtempSync(
-        join(tmpdir(), `dai-nexus-renderer-${scenario.name}-`),
-      );
-      const output = join(root, "site");
-      const outside = join(root, "outside");
-      mkdirSync(outside, { recursive: true });
-      const link = join(output, scenario.relativePath);
-      mkdirSync(dirname(link), { recursive: true });
-      symlinkSync(
-        scenario.broken ? join(outside, "missing") : outside,
-        link,
-        scenario.file ? undefined : "dir",
-      );
+      for (const scenario of scenarios) {
+        const root = mkdtempSync(
+          join(tmpdir(), `dai-nexus-renderer-${scenario.name}-`),
+        );
+        const output = join(root, "site");
+        const outside = join(root, "outside");
+        mkdirSync(outside, { recursive: true });
+        const link = join(output, scenario.relativePath);
+        mkdirSync(dirname(link), { recursive: true });
+        symlinkSync(
+          scenario.broken ? join(outside, "missing") : outside,
+          link,
+          scenario.file ? undefined : "dir",
+        );
 
-      expect(
-        () => renderStaticSite([catalogWithAsset(root)], { outputDir: output }),
-        scenario.name,
-      ).toThrow(/contains a symlink/);
-    }
-  });
+        expect(
+          () =>
+            renderStaticSite([catalogWithAsset(root)], { outputDir: output }),
+          scenario.name,
+        ).toThrow(/contains a symlink/);
+      }
+    },
+  );
 
   it("writes normal nested document and asset destinations", () => {
     const root = mkdtempSync(join(tmpdir(), "dai-nexus-renderer-nested-"));
@@ -544,55 +572,58 @@ describe("Docs Hub static presentation", () => {
     ).toBe("<svg />\n");
   });
 
-  it("rejects nested project, document, and asset symlinks in Obsidian output", () => {
-    const scenarios = [
-      { name: "project", relativePath: join("demo") },
-      { name: "document", relativePath: join("demo", "Docs") },
-      {
-        name: "asset",
-        relativePath: join("demo", "Docs", "assets"),
-      },
-      {
-        name: "broken document",
-        relativePath: join("demo", "Docs"),
-        broken: true,
-      },
-      {
-        name: "document file target",
-        relativePath: join("demo", "Docs", "Guide.md"),
-        file: true,
-      },
-      {
-        name: "asset file target",
-        relativePath: join("demo", "Docs", "assets", "diagram.svg"),
-        file: true,
-      },
-    ];
+  itSymlink(
+    "rejects nested project, document, and asset symlinks in Obsidian output",
+    () => {
+      const scenarios = [
+        { name: "project", relativePath: join("demo") },
+        { name: "document", relativePath: join("demo", "Docs") },
+        {
+          name: "asset",
+          relativePath: join("demo", "Docs", "assets"),
+        },
+        {
+          name: "broken document",
+          relativePath: join("demo", "Docs"),
+          broken: true,
+        },
+        {
+          name: "document file target",
+          relativePath: join("demo", "Docs", "Guide.md"),
+          file: true,
+        },
+        {
+          name: "asset file target",
+          relativePath: join("demo", "Docs", "assets", "diagram.svg"),
+          file: true,
+        },
+      ];
 
-    for (const scenario of scenarios) {
-      const root = mkdtempSync(
-        join(tmpdir(), `dai-nexus-obsidian-${scenario.name}-`),
-      );
-      const output = join(
-        resolve(root, ".."),
-        `vault-${scenario.name}-${Date.now()}`,
-      );
-      const outside = join(root, "outside");
-      mkdirSync(outside, { recursive: true });
-      const link = join(output, scenario.relativePath);
-      mkdirSync(dirname(link), { recursive: true });
-      symlinkSync(
-        scenario.broken ? join(outside, "missing") : outside,
-        link,
-        scenario.file ? undefined : "dir",
-      );
+      for (const scenario of scenarios) {
+        const root = mkdtempSync(
+          join(tmpdir(), `dai-nexus-obsidian-${scenario.name}-`),
+        );
+        const output = join(
+          resolve(root, ".."),
+          `vault-${scenario.name}-${Date.now()}`,
+        );
+        const outside = join(root, "outside");
+        mkdirSync(outside, { recursive: true });
+        const link = join(output, scenario.relativePath);
+        mkdirSync(dirname(link), { recursive: true });
+        symlinkSync(
+          scenario.broken ? join(outside, "missing") : outside,
+          link,
+          scenario.file ? undefined : "dir",
+        );
 
-      expect(
-        () => exportObsidianVault([catalogWithAsset(root)], output),
-        scenario.name,
-      ).toThrow(/contains a symlink/);
-    }
-  });
+        expect(
+          () => exportObsidianVault([catalogWithAsset(root)], output),
+          scenario.name,
+        ).toThrow(/contains a symlink/);
+      }
+    },
+  );
 
   it("writes normal nested document and asset destinations to Obsidian", () => {
     const root = mkdtempSync(join(tmpdir(), "dai-nexus-obsidian-nested-"));

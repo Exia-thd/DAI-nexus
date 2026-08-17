@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py -3 scripts/lite/verify_gate.py --hook"
+            "command": "bash scripts/lite/stop-gate.sh --platform CLAUDE"
           }
         ]
       }

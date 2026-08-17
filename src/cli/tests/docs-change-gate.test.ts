@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   classifyMaterialPaths,
   isMaterialDocsPath,
@@ -25,8 +25,30 @@ function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
+// Git exports these to hooks, and `-C <root>` does not override them: an
+// inherited GIT_DIR/GIT_INDEX_FILE sends these fixture commits into whatever
+// repository launched the test run. Strip them so the fixture can only ever
+// touch itself.
+const GIT_LOCAL_ENV_KEYS = [
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_COMMON_DIR",
+  "GIT_DIR",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_WORK_TREE",
+] as const;
+
+function isolatedGitEnv(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const key of GIT_LOCAL_ENV_KEYS) delete env[key];
+  return env;
+}
+
 function git(root: string, ...args: string[]): void {
-  execFileSync("git", ["-C", root, ...args], { stdio: "ignore" });
+  execFileSync("git", ["-C", root, ...args], {
+    stdio: "ignore",
+    env: isolatedGitEnv(),
+  });
 }
 
 function currentState(summary = "Current project status.") {
@@ -117,6 +139,26 @@ function codes(result: ReturnType<typeof runDocsGate>): string[] {
 afterEach(() => {
   for (const root of roots.splice(0)) {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// runDocsGate runs in-process and reads process.env for its own git calls, so
+// isolating only the helper above would still leave the gate pointed at the
+// launching repository.
+const savedGitEnv: Record<string, string | undefined> = {};
+
+beforeAll(() => {
+  for (const key of GIT_LOCAL_ENV_KEYS) {
+    savedGitEnv[key] = process.env[key];
+    delete process.env[key];
+  }
+});
+
+afterAll(() => {
+  for (const key of GIT_LOCAL_ENV_KEYS) {
+    const value = savedGitEnv[key];
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
   }
 });
 
@@ -388,10 +430,7 @@ describe("Docs Hub continuity gate", () => {
     const root = createProject("no-mutation");
     writeFileSync(join(root, "docs", "Guide.md"), "# Fresh guide\n");
     const sourceBefore = readFileSync(join(root, "docs", "Guide.md"), "utf8");
-    const temporaryPrefixes = [
-      "dai-nexus-docs-gate-",
-      "dai-nexus-docs-view-",
-    ];
+    const temporaryPrefixes = ["dai-nexus-docs-gate-", "dai-nexus-docs-view-"];
     const temporaryBefore = new Set(
       readdirSync(tmpdir()).filter((name) =>
         temporaryPrefixes.some((prefix) => name.startsWith(prefix)),

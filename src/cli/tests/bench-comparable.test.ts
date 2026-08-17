@@ -18,6 +18,12 @@ import {
   type ComparableReport,
 } from "../src/bench/compare.js";
 
+// The fake binary is a shebang script. Windows has no shebang support, so the
+// spawn fails before the adapter under test is ever reached — gated on a probe
+// rather than reported as a failure. Runs unchanged on POSIX.
+const CAN_RUN_SHEBANG = process.platform !== "win32";
+const itShebang = CAN_RUN_SHEBANG ? it : it.skip;
+
 // ---------------------------------------------------------------------------
 // Helper: create a mock spawn that returns a fixed exit code / stdout / stderr.
 // ---------------------------------------------------------------------------
@@ -43,86 +49,89 @@ function createMockSpawn(exitCode: number, stdoutText = "", stderrText = "") {
 //    the actual process-spawning code path is exercised (not a constant mock).
 // ---------------------------------------------------------------------------
 describe("Gemini adapter — fake-binary integration", () => {
-  it("invokes gemini binary with -m <model> -y -p <prompt> and captures stdout", async () => {
-    const tempDir = join(tmpdir(), `test-gemini-fakebin-${Date.now()}`);
-    mkdirSync(tempDir, { recursive: true });
+  itShebang(
+    "invokes gemini binary with -m <model> -y -p <prompt> and captures stdout",
+    async () => {
+      const tempDir = join(tmpdir(), `test-gemini-fakebin-${Date.now()}`);
+      mkdirSync(tempDir, { recursive: true });
 
-    // Fake 'gemini' binary: echoes its argv to stdout then exits 0.
-    const fakeBinDir = join(tempDir, "bin");
-    mkdirSync(fakeBinDir, { recursive: true });
-    const fakeBin = join(fakeBinDir, "gemini");
-    writeFileSync(
-      fakeBin,
-      [
-        "#!/usr/bin/env node",
-        // Print all argv after "node <script>" as comma-separated.
-        "process.stdout.write('fake-gemini-args:' + process.argv.slice(2).join(',') + '\\n');",
-        "process.exit(0);",
-        "",
-      ].join("\n"),
-      { mode: 0o755 },
-    );
+      // Fake 'gemini' binary: echoes its argv to stdout then exits 0.
+      const fakeBinDir = join(tempDir, "bin");
+      mkdirSync(fakeBinDir, { recursive: true });
+      const fakeBin = join(fakeBinDir, "gemini");
+      writeFileSync(
+        fakeBin,
+        [
+          "#!/usr/bin/env node",
+          // Print all argv after "node <script>" as comma-separated.
+          "process.stdout.write('fake-gemini-args:' + process.argv.slice(2).join(',') + '\\n');",
+          "process.exit(0);",
+          "",
+        ].join("\n"),
+        { mode: 0o755 },
+      );
 
-    // Verifier that always passes.
-    writeFileSync(join(tempDir, "verify.js"), "process.exit(0);\n", "utf8");
+      // Verifier that always passes.
+      writeFileSync(join(tempDir, "verify.js"), "process.exit(0);\n", "utf8");
 
-    const suitePath = join(tempDir, "suite.json");
-    writeFileSync(
-      suitePath,
-      JSON.stringify({
-        version: "1.0",
-        name: "Gemini Fake Binary Suite",
-        defaultProviderSettings: {
-          provider: "gemini",
-          model: "gemini-2.5-flash",
-        },
-        defaultAttempts: 1,
-        defaultTimeoutMs: 5000,
-        tasks: [
-          {
-            id: "gemini-fake-1",
-            category: "smoke",
-            prompt: "hello world",
-            verifierCommands: ["node verify.js"],
+      const suitePath = join(tempDir, "suite.json");
+      writeFileSync(
+        suitePath,
+        JSON.stringify({
+          version: "1.0",
+          name: "Gemini Fake Binary Suite",
+          defaultProviderSettings: {
+            provider: "gemini",
+            model: "gemini-2.5-flash",
           },
-        ],
-      }),
-      "utf8",
-    );
+          defaultAttempts: 1,
+          defaultTimeoutMs: 5000,
+          tasks: [
+            {
+              id: "gemini-fake-1",
+              category: "smoke",
+              prompt: "hello world",
+              verifierCommands: ["node verify.js"],
+            },
+          ],
+        }),
+        "utf8",
+      );
 
-    // Inject the fake bin directory at the front of PATH.
-    const patchedPath = `${fakeBinDir}:${process.env.PATH ?? ""}`;
+      // Inject the fake bin directory at the front of PATH.
+      const patchedPath = `${fakeBinDir}:${process.env.PATH ?? ""}`;
 
-    const { spawn: realSpawn } = await import("node:child_process");
-    const patchedSpawn: typeof realSpawn = (program, args, options) => {
-      const merged = {
-        ...(options ?? {}),
-        env: { ...(options as any)?.env, PATH: patchedPath },
+      const { spawn: realSpawn } = await import("node:child_process");
+      const patchedSpawn: typeof realSpawn = (program, args, options) => {
+        const merged = {
+          ...(options ?? {}),
+          env: { ...(options as any)?.env, PATH: patchedPath },
+        };
+        return realSpawn(program, args as string[], merged as any) as any;
       };
-      return realSpawn(program, args as string[], merged as any) as any;
-    };
 
-    const { report } = await runBenchmarkSuite(suitePath, {
-      run: true,
-      spawnFn: patchedSpawn as any,
-    });
+      const { report } = await runBenchmarkSuite(suitePath, {
+        run: true,
+        spawnFn: patchedSpawn as any,
+      });
 
-    expect(report).toBeDefined();
-    const attempt = report!.tasks[0].attempts[0];
+      expect(report).toBeDefined();
+      const attempt = report!.tasks[0].attempts[0];
 
-    // Process must have exited cleanly.
-    expect(attempt.exitStatus).toBe(0);
+      // Process must have exited cleanly.
+      expect(attempt.exitStatus).toBe(0);
 
-    // stdout must contain the argv proving the correct flags were forwarded.
-    const stdout = attempt.stdout ?? "";
-    expect(stdout).toContain("-m");
-    expect(stdout).toContain("gemini-2.5-flash");
-    expect(stdout).toContain("-y");
-    expect(stdout).toContain("-p");
-    expect(stdout).toContain("hello world");
+      // stdout must contain the argv proving the correct flags were forwarded.
+      const stdout = attempt.stdout ?? "";
+      expect(stdout).toContain("-m");
+      expect(stdout).toContain("gemini-2.5-flash");
+      expect(stdout).toContain("-y");
+      expect(stdout).toContain("-p");
+      expect(stdout).toContain("hello world");
 
-    rmSync(tempDir, { recursive: true, force: true });
-  });
+      rmSync(tempDir, { recursive: true, force: true });
+    },
+  );
 });
 
 // ---------------------------------------------------------------------------

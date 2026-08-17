@@ -1,38 +1,43 @@
 # AUDIT — Proportional Requirement Coverage
 
-Audit against the original objective + current workspace evidence before declaring success. Depth scales with risk and blast radius.
+Audit against the **original user objective + current workspace evidence** before declaring success. The depth scales with risk and blast radius.
 
 ## QUICK
-For a local, reversible change: inspect the final diff and affected context, confirm the explicit acceptance condition with current evidence, and check that no unrelated path changed. No matrix, no full-repository reread.
+For a local, reversible change:
+- Inspect the final diff and affected context.
+- Confirm the explicit acceptance condition with current evidence.
+- Check that no unrelated path changed.
+- No matrix or full-repository reread is required.
 
-**Exception that always applies:** if the changed file is itself an instruction/rule/config file whose consumer reads the whole document (kernel files, overlays, protocols, policy), read that file **in full** for contradictions even when the edit is one line.
+If the changed file is itself an instruction/rule/config file whose consumer reads the whole document, read that file in full for contradictions even when the edit is small.
 
 ## STANDARD
-A concise checklist covering each material requirement, each changed surface, and adjacent regression risk. Expand to the matrix below only when it improves traceability.
+Use a concise requirement checklist covering each material requirement, changed surface, and relevant adjacent regression risk. Expand to a matrix only if it improves traceability.
 
-## DEEP — full structure
+## DEEP
+Use the full coverage structure where appropriate:
 ```text
 REQUIREMENT COVERAGE MATRIX:
-| # | Requirement (from user request) | File(s) changed | Covered? | Evidence |
-|---|------|------|------|------|
+| # | Requirement | File(s)/surface | Covered? | Evidence |
+|---|---|---|---|---|
 | 1 | ... | ... | ✅ / ⚠️ / ❌ | ... |
 
 CONTRADICTION SCAN:
-| File | Rule/instruction says | Example/template shows | Conflict? |
-|---|---|---|---|
-| ... | ... | ... | ✅ OK / ❌ CONFLICT |
-
-CROSS-ENTRY CONSISTENCY: (if multiple files serve the same role)
-| Concept | File A says | File B says | Aligned? |
+| Surface | Active rule | Example/prose | Conflict? |
 |---|---|---|---|
 | ... | ... | ... | ✅ / ❌ |
 
-VERDICT: FULL COVERAGE | GAPS FOUND → fix before delivery
+CROSS-ENTRY CONSISTENCY:
+| Concept | Surface A | Surface B | Aligned? |
+|---|---|---|---|
+| ... | ... | ... | ✅ / ❌ |
+
+VERDICT: FULL COVERAGE | GAPS FOUND
 ```
 
 ## Rules
-1. `STANDARD`/`DEEP`: re-read changed files IN FULL, not diffs — an agent consumes the whole file. `QUICK`: the diff plus affected context is enough, except for instruction/rule/config files (read in full always).
-2. Every numbered requirement from the user's request gets its own row in `DEEP`.
-3. If examples/templates contradict rules in the same file → ❌ CONFLICT.
-4. GAPS FOUND verdict requires fixing before declaring done.
-5. If the task involved tool calls, verify no guardrail DENY events were suppressed or bypassed.
+1. Audit material requirements, not arbitrary template rows.
+2. Examples/templates must not contradict active rules; current workspace/runtime truth outranks stale prose.
+3. `GAPS FOUND` requires correction or explicit blocker reporting before success.
+4. Review guardrail/permission denials when they occurred; never suppress them to obtain a green verdict.
+5. Do not broaden scope merely because the audit noticed optional improvements; put them under `Out of scope` / `Later`.

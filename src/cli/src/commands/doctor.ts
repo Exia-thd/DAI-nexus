@@ -43,7 +43,7 @@ async function handleDoctor(options: {
   checks.push(checkDaiNexus());
   checks.push(checkConfig());
   checks.push(checkMemory());
-  checks.push(checkDaiNexus Node());
+  checks.push(checkDaiNexusNode());
 
   const healthy = checks.filter((c) => c.status === "ok").length;
   const warnings = checks.filter((c) => c.status === "warning").length;
@@ -125,9 +125,9 @@ function checkNodeVersion(): HealthCheck {
 function checkDaiNexus(): HealthCheck {
   // Check if we're in a dai-nexus project
   const cwd = process.cwd();
-  const dai-nexusRoot = findDaiNexusRoot(cwd);
+  const daiNexusRoot = findDaiNexusRoot(cwd);
 
-  if (!dai-nexusRoot) {
+  if (!daiNexusRoot) {
     return {
       name: "DAI Nexus Project",
       status: "warning",
@@ -139,17 +139,12 @@ function checkDaiNexus(): HealthCheck {
   return {
     name: "DAI Nexus Project",
     status: "ok",
-    message: `Found at ${dai-nexusRoot}`,
+    message: `Found at ${daiNexusRoot}`,
   };
 }
 
 function checkConfig(): HealthCheck {
-  const userConfig = resolve(
-    homedir(),
-    ".config",
-    "dai-nexus",
-    "config.json",
-  );
+  const userConfig = resolve(homedir(), ".config", "dai-nexus", "config.json");
   const legacyConfig = resolve(homedir(), ".dainexus", "config.json");
 
   if (existsSync(userConfig)) {
@@ -198,7 +193,7 @@ function checkMemory(): HealthCheck {
   };
 }
 
-function checkDaiNexus Node(): HealthCheck {
+function checkDaiNexusNode(): HealthCheck {
   try {
     // Try to find dainexus-node
     const result = execSync(

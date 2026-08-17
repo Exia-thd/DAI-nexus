@@ -381,7 +381,7 @@ main { padding-top: 28px; }
   <h1>Memory — <span class="accent">một file, mang đi đâu cũng chạy</span></h1>
   <p class="lead">
     Trang này viết cho người <strong>không dùng DAI Nexus</strong> mà chỉ muốn lấy phần trí nhớ.
-    Toàn bộ nằm trong <strong>một file Python 515 dòng</strong>, chỉ dùng thư viện chuẩn:
+    Toàn bộ nằm trong <strong>một file Python 582 dòng</strong>, chỉ dùng thư viện chuẩn:
     không pip install, không service, không API key, không cần phần còn lại của repo này.
   </p>
   <div class="grid cols-4"><div class="stat"><div class="val">1</div><div class="lbl">file cần copy</div></div><div class="stat"><div class="val">0</div><div class="lbl">dependency</div></div><div class="stat"><div class="val">9</div><div class="lbl">hàm public</div></div><div class="stat"><div class="val">8</div><div class="lbl">lệnh CLI</div></div></div>
@@ -403,7 +403,7 @@ python tools/memory.py search "database"</code></pre></div>
 <h2><span class="num">02</span> Bên trong có gì (đủ để bạn tin nó)</h2>
 <p>Một bảng thật + một bảng FTS5 ảo + 3 trigger giữ đồng bộ + 5 index.
 Hết. Không có tầng trừu tượng nào khác:</p>
-<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:89</span><span class=cap>bảng chính</span></div><pre><code>CREATE TABLE IF NOT EXISTS observations (
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:118</span><span class=cap>bảng chính</span></div><pre><code>CREATE TABLE IF NOT EXISTS observations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_root TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'general',
@@ -417,7 +417,7 @@ Hết. Không có tầng trừu tượng nào khác:</p>
     pinned INTEGER DEFAULT 0,</code></pre></div>
 <p>Điểm đáng chú ý là FTS được cập nhật bằng <strong>trigger</strong> (<code>obs_ai</code>, <code>obs_ad</code>, <code>obs_au</code>),
 không phải rebuild index mỗi lần tìm. Đây là khác biệt giữa tìm kiếm tức thì và tìm kiếm chậm dần theo dữ liệu:</p>
-<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:116</span><span class=cap>đồng bộ FTS</span></div><pre><code>CREATE TRIGGER IF NOT EXISTS obs_ai AFTER INSERT ON observations BEGIN
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:145</span><span class=cap>đồng bộ FTS</span></div><pre><code>CREATE TRIGGER IF NOT EXISTS obs_ai AFTER INSERT ON observations BEGIN
     INSERT INTO observations_fts(rowid, title, content, tags)
     VALUES (new.id, new.title, new.content, new.tags);
 END;
@@ -441,7 +441,7 @@ thì không cần thư viện nào cả — cái khó là <em>không</em> làm t
 <p>Hai bảng xếp hạng độc lập được hợp nhất bằng Reciprocal Rank Fusion — thứ gì đứng cao ở
 <em>cả hai</em> sẽ thắng, nên một ghi chú vừa đúng từ khoá vừa quan trọng sẽ vượt lên trên
 một ghi chú chỉ trùng từ khoá:</p>
-<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:181</span></div><pre><code>def rrf_merge(*ranked_lists: list, k: int = RRF_K) -&gt; list:
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:211</span></div><pre><code>def rrf_merge(*ranked_lists: list, k: int = RRF_K) -&gt; list:
     """Reciprocal Rank Fusion: score = sum(1 / (k + rank)) across lists."""
     scores: dict = {}
     metadata: dict = {}
@@ -497,13 +497,13 @@ TOOLS = {</code></pre></div>
 
 <h2><span class="num">04</span> Sửa cho hợp cấu trúc của bạn</h2>
 <p>Tất cả điểm cấu hình nằm ở đầu file, dạng hằng số — không có lớp config nào:</p>
-<table><thead><tr><th>Điểm</th><th>Hiện tại</th><th>Đổi khi nào</th></tr></thead><tbody><tr><td><code>DB_PATH</code></td><td>hằng số đầu file</td><td>Nơi đặt file .db. Đổi sang <code>.myagent/memory.db</code> hoặc bất kỳ đường dẫn nào hợp với cấu trúc của bạn.</td></tr><tr><td><code>DAINEXUS_MAX_OBS</code> · <code>DAINEXUS_NO_REDACT</code> · <code>DAINEXUS_PROJECT_ID</code></td><td>biến môi trường</td><td>Namespace project · ngưỡng GC · tắt redaction (không khuyến nghị).</td></tr><tr><td><code>CATEGORY_WEIGHTS</code></td><td>10 mục</td><td>Cái gì đáng giữ lại khi GC. Đổi tên category cho khớp domain của bạn — ví dụ game studio có thể thêm <code>art-direction</code>, <code>balance</code>.</td></tr><tr><td><code>AUTO_TAG_PATTERNS</code></td><td>13 domain</td><td>Regex → tag. Thêm domain của bạn; bỏ cái không dùng (ví dụ bỏ <code>game</code> nếu làm fintech).</td></tr><tr><td><code>REDACT_PATTERNS</code></td><td>10 mẫu</td><td>Bổ sung định dạng secret riêng của tổ chức (mã nhân viên, khoá nội bộ, số hợp đồng).</td></tr><tr><td><code>RRF_K</code> = 60</td><td>hằng số</td><td>Hằng số làm mượt của RRF. Giảm → thứ hạng đầu bảng có trọng số cao hơn. Không có lý do đo được thì đừng đổi.</td></tr></tbody></table>
-<p class="muted small">Tag domain mặc định: <code>auth</code>, <code>architecture</code>, <code>database</code>, <code>performance</code>, <code>api</code>, <code>security</code>, <code>testing</code>, <code>devops</code>, <code>memory</code>, <code>process</code>, <code>frontend</code>, <code>game</code>, <code>ai</code>.</p>
+<table><thead><tr><th>Điểm</th><th>Hiện tại</th><th>Đổi khi nào</th></tr></thead><tbody><tr><td><code>DB_PATH</code></td><td>hằng số đầu file</td><td>Nơi đặt file .db. Đổi sang <code>.myagent/memory.db</code> hoặc bất kỳ đường dẫn nào hợp với cấu trúc của bạn.</td></tr><tr><td><code>DAINEXUS_MAX_OBS</code> · <code>DAINEXUS_NO_REDACT</code> · <code>DAINEXUS_PROJECT_ID</code></td><td>biến môi trường</td><td>Namespace project · ngưỡng GC · tắt redaction (không khuyến nghị).</td></tr><tr><td><code>CATEGORY_WEIGHTS</code></td><td>10 mục</td><td>Cái gì đáng giữ lại khi GC. Đổi tên category cho khớp domain của bạn — ví dụ game studio có thể thêm <code>art-direction</code>, <code>balance</code>.</td></tr><tr><td><code>AUTO_TAG_PATTERNS</code></td><td>3 domain</td><td>Regex → tag. Thêm domain của bạn; bỏ cái không dùng (ví dụ bỏ <code>game</code> nếu làm fintech).</td></tr><tr><td><code>REDACT_PATTERNS</code></td><td>10 mẫu</td><td>Bổ sung định dạng secret riêng của tổ chức (mã nhân viên, khoá nội bộ, số hợp đồng).</td></tr><tr><td><code>RRF_K</code> = 60</td><td>hằng số</td><td>Hằng số làm mượt của RRF. Giảm → thứ hạng đầu bảng có trọng số cao hơn. Không có lý do đo được thì đừng đổi.</td></tr></tbody></table>
+<p class="muted small">Tag domain mặc định: <code>process</code>, <code>game</code>, <code>ai</code>.</p>
 
 <h3>GC — cái gì sống sót khi kho đầy</h3>
 <p>Điểm = trọng số category (50%) + độ mới (50%). Bản ghi <code>pinned</code> không bao giờ bị dọn,
 và &quot;dọn&quot; nghĩa là <em>đánh dấu archived</em>, không phải DELETE:</p>
-<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:399</span></div><pre><code>def gc(self, max_obs: int | None = None) -&gt; int:
+<div class="code-block"><div class="code-head"><span class="file">scripts/lite/memory.py:452</span></div><pre><code>def gc(self, max_obs: int | None = None) -&gt; int:
     """Archive lowest-value observations: category weight 50% + recency 50%. Pinned survive."""
     max_o = max_obs or int(os.environ.get("DAINEXUS_MAX_OBS", MAX_OBS_DEFAULT))
     total = self.count()
@@ -570,7 +570,7 @@ print("memory OK")</code></pre></div>
 </main>
 <footer>
   <div><strong>Memory — module bóc tách được</strong> · trang độc lập, không cần file nào khác đi kèm</div>
-  <div>bản 0.9.2 · commit <code>4f44a64</code> · build 2026-08-14</div>
+  <div>bản 0.9.4 · commit <code>d897e0c</code> · build 2026-08-14</div>
 </footer>
 </body>
 </html>

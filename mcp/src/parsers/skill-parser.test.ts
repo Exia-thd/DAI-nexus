@@ -6,6 +6,23 @@ import { getAllSkills, getSharedProtocols, _setRootOverride } from './skill-pars
 
 const fixtureRoots: string[] = [];
 
+// Creating symlinks on Windows needs SeCreateSymbolicLinkPrivilege (Developer
+// Mode or an elevated shell). Without it these assertions cannot be exercised
+// at all, so they are skipped with a reason rather than reported as failures —
+// they still run wherever the privilege exists.
+const CAN_SYMLINK = (() => {
+  const probe = fs.mkdtempSync(join(os.tmpdir(), 'symlink-probe-'));
+  try {
+    fs.symlinkSync(join(probe, 'target'), join(probe, 'link'), 'dir');
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(probe, { recursive: true, force: true });
+  }
+})();
+const itSymlink = CAN_SYMLINK ? it : it.skip;
+
 function createFixture(): { root: string; skillsDir: string; outsideDir: string } {
   const root = fs.mkdtempSync(join(os.tmpdir(), 'dai-nexus-skill-parser-'));
   const skillsDir = join(root, 'project', 'skills');
@@ -38,7 +55,7 @@ describe('Skill Parser', () => {
       expect(skills).toEqual([]);
     });
 
-    it('rejects a symlinked skills root without reading external skills', () => {
+    itSymlink('rejects a symlinked skills root without reading external skills', () => {
       const { root, skillsDir, outsideDir } = createFixture();
       const externalSkillsDir = join(outsideDir, 'skills');
       fs.mkdirSync(externalSkillsDir);
@@ -54,7 +71,7 @@ describe('Skill Parser', () => {
       ).toBe(false);
     });
 
-    it('skips a broken skills root symlink safely', () => {
+    itSymlink('skips a broken skills root symlink safely', () => {
       const { root, skillsDir, outsideDir } = createFixture();
       fs.rmSync(skillsDir, { recursive: true, force: true });
       fs.symlinkSync(join(outsideDir, 'missing-skills'), skillsDir, 'dir');
@@ -64,7 +81,7 @@ describe('Skill Parser', () => {
       expect(getAllSkills()).toEqual([]);
     });
 
-    it('does not read shared protocols through a symlinked skills root', () => {
+    itSymlink('does not read shared protocols through a symlinked skills root', () => {
       const { root, skillsDir, outsideDir } = createFixture();
       const externalSkillsDir = join(outsideDir, 'skills-root');
       const externalProtocolsDir = join(externalSkillsDir, '_shared', 'protocols');
@@ -82,7 +99,7 @@ describe('Skill Parser', () => {
       ).toBe(false);
     });
 
-    it('does not traverse symlinked skill directories', () => {
+    itSymlink('does not traverse symlinked skill directories', () => {
       const { root, skillsDir, outsideDir } = createFixture();
       const outsideSkillDir = join(outsideDir, 'escaped');
       fs.mkdirSync(outsideSkillDir);
@@ -97,7 +114,7 @@ describe('Skill Parser', () => {
       ).toBe(false);
     });
 
-    it('does not accept symlinked SKILL.md files', () => {
+    itSymlink('does not accept symlinked SKILL.md files', () => {
       const { root, skillsDir, outsideDir } = createFixture();
       const linkedSkillDir = join(skillsDir, 'linked-file');
       const outsideSkill = join(outsideDir, 'SKILL.md');
@@ -113,7 +130,7 @@ describe('Skill Parser', () => {
       ).toBe(false);
     });
 
-    it('skips broken SKILL.md symlinks safely', () => {
+    itSymlink('skips broken SKILL.md symlinks safely', () => {
       const { root, skillsDir, outsideDir } = createFixture();
       const brokenSkillDir = join(skillsDir, 'broken');
       fs.mkdirSync(brokenSkillDir);

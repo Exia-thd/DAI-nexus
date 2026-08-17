@@ -31,7 +31,7 @@ else
   PROJECT_ROOT="$(pwd)"
 fi
 
-MEMORY_CLI="$scripts/lite/memory.py"
+MEMORY_CLI="$SCRIPT_DIR/../../scripts/lite/memory.py"
 
 # Skip if disabled
 if [[ "${MEM0_DISABLED:-}" = "true" ]]; then

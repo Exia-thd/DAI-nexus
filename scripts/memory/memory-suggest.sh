@@ -9,7 +9,7 @@ set -euo pipefail
 # ── Config ────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DAINEXUS_DIR="${DAINEXUS_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-MEM0_SCRIPT="$scripts/lite/memory.py"
+MEM0_SCRIPT="$SCRIPT_DIR/../../scripts/lite/memory.py"
 PROJECT_PROFILE="$DAINEXUS_DIR/.dainexus/project-profile.json"
 CODE_CONVENTIONS="$DAINEXUS_DIR/.dainexus/code-conventions.md"
 SESSION_LOG="$DAINEXUS_DIR/.dainexus/session-log.json"

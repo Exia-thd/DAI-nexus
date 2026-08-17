@@ -8,7 +8,7 @@ set -euo pipefail
 # ── Config ────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DAINEXUS_DIR="${DAINEXUS_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-MEM0_SCRIPT="$scripts/lite/memory.py"
+MEM0_SCRIPT="$SCRIPT_DIR/../../scripts/lite/memory.py"
 CONVERSATION_SUMMARY="$DAINEXUS_DIR/.dainexus/subagent-context/CONVERSATION_SUMMARY.md"
 ACTIVE_CONTEXT="$DAINEXUS_DIR/.dainexus/memory-bank/activeContext.md"
 BA_SCOPE="$DAINEXUS_DIR/.dainexus/business-analyst/handoff/ba-package.md"

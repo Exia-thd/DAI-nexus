@@ -45,6 +45,23 @@ import { doctorProject } from "../src/docs/doctor.js";
 import { resolveCatalogLinks } from "../src/docs/links.js";
 import { executeDocsBuild } from "../src/commands/docs.js";
 
+// Symlink creation on Windows needs SeCreateSymbolicLinkPrivilege (Developer
+// Mode or an elevated shell). Without it these cases cannot exercise their
+// subject at all, so they are gated on a probe rather than reported as
+// failures — they run unchanged wherever the privilege exists.
+const CAN_SYMLINK = (() => {
+  const probe = mkdtempSync(join(tmpdir(), "symlink-probe-"));
+  try {
+    symlinkSync(join(probe, "target"), join(probe, "link"), "dir");
+    return true;
+  } catch {
+    return false;
+  } finally {
+    rmSync(probe, { recursive: true, force: true });
+  }
+})();
+const itSymlink = CAN_SYMLINK ? it : it.skip;
+
 const fixtureRoot = join(
   dirname(fileURLToPath(import.meta.url)),
   "fixtures",
@@ -58,7 +75,7 @@ function tempProject(name: string): string {
   return root;
 }
 
-function copyFixture(name: "dai-nexus" | "pixelworld"): string {
+function copyFixture(name: "dainexus" | "pixelworld"): string {
   const root = tempProject(name);
   cpSync(join(fixtureRoot, name), root, { recursive: true });
   return root;
@@ -78,7 +95,7 @@ afterEach(() => {
 
 describe("docs manifest and registry", () => {
   it("initializes idempotently without overwriting an existing manifest", () => {
-    const root = copyFixture("dai-nexus");
+    const root = copyFixture("dainexus");
     const first = initManifest(root);
     expect(first.status).toBe("created");
     const customized = {
@@ -112,7 +129,7 @@ describe("docs manifest and registry", () => {
   });
 
   it("creates a canonical project state non-destructively", () => {
-    const root = copyFixture("dai-nexus");
+    const root = copyFixture("dainexus");
     const first = initManifest(root);
     expect(first.manifest.project_docs).toEqual({
       schema_version: 1,
@@ -136,7 +153,7 @@ describe("docs manifest and registry", () => {
   });
 
   it("migrates an existing manifest to the mandatory project docs contract", () => {
-    const root = copyFixture("dai-nexus");
+    const root = copyFixture("dainexus");
     const manifestPath = join(root, ".dainexus", "docs-manifest.json");
     writeJson(manifestPath, {
       schema_version: 1,
@@ -161,7 +178,7 @@ describe("docs manifest and registry", () => {
   });
 
   it("validates the complete project-state contract and rejects malformed sections", () => {
-    const root = copyFixture("dai-nexus");
+    const root = copyFixture("dainexus");
     const state = createDefaultProjectState(root);
     expect(validateProjectState(state)).toEqual(state);
     expect(() =>
@@ -263,28 +280,34 @@ describe("docs manifest and registry", () => {
     ).toThrow();
   });
 
-  it("rejects canonical state files reached through file or directory symlinks", () => {
-    const root = copyFixture("dai-nexus");
-    const realDirectory = join(root, "real-state");
-    mkdirSync(realDirectory);
-    writeJson(
-      join(realDirectory, "project-state.json"),
-      createDefaultProjectState(root),
-    );
-    symlinkSync("real-state/project-state.json", join(root, "state-link.json"));
-    symlinkSync("real-state", join(root, "state-dir-link"));
+  itSymlink(
+    "rejects canonical state files reached through file or directory symlinks",
+    () => {
+      const root = copyFixture("dainexus");
+      const realDirectory = join(root, "real-state");
+      mkdirSync(realDirectory);
+      writeJson(
+        join(realDirectory, "project-state.json"),
+        createDefaultProjectState(root),
+      );
+      symlinkSync(
+        "real-state/project-state.json",
+        join(root, "state-link.json"),
+      );
+      symlinkSync("real-state", join(root, "state-dir-link"));
 
-    expect(safeLoadProjectState(root, "state-link.json").error?.code).toBe(
-      "containment",
-    );
-    expect(
-      safeLoadProjectState(root, "state-dir-link/project-state.json").error
-        ?.code,
-    ).toBe("containment");
-  });
+      expect(safeLoadProjectState(root, "state-link.json").error?.code).toBe(
+        "containment",
+      );
+      expect(
+        safeLoadProjectState(root, "state-dir-link/project-state.json").error
+          ?.code,
+      ).toBe("containment");
+    },
+  );
 
   it("adds, canonicalizes, lists, updates and removes registry projects", () => {
-    const root = copyFixture("dai-nexus");
+    const root = copyFixture("dainexus");
     initManifest(root);
     const home = tempProject("home");
     process.env.DAINEXUS_HOME = home;
@@ -302,8 +325,8 @@ describe("docs manifest and registry", () => {
   });
 
   it("rejects duplicate project IDs for different registry roots", () => {
-    const firstRoot = copyFixture("dai-nexus");
-    const secondRoot = copyFixture("dai-nexus");
+    const firstRoot = copyFixture("dainexus");
+    const secondRoot = copyFixture("dainexus");
     initManifest(firstRoot);
     initManifest(secondRoot);
     const home = tempProject("duplicate-id-home");
@@ -322,18 +345,18 @@ describe("docs manifest and registry", () => {
 
 describe("privacy-safe scanning and deterministic normalization", () => {
   it("supports Docs, docs, README-only and empty legacy projects", () => {
-    const dai-nexus = copyFixture("dai-nexus");
+    const daiNexus = copyFixture("dainexus");
     const pixelworld = copyFixture("pixelworld");
     const readmeOnly = tempProject("readme");
     writeFileSync(join(readmeOnly, "README.md"), "# Readme only\n", "utf8");
     const empty = tempProject("empty");
 
-    const dai-nexusCatalog = scanProject(dai-nexus);
-    expect(dai-nexusCatalog.documents.map((doc) => doc.sourcePath)).toEqual(
+    const daiNexusCatalog = scanProject(daiNexus);
+    expect(daiNexusCatalog.documents.map((doc) => doc.sourcePath)).toEqual(
       expect.arrayContaining(["README.md", "docs/architecture.md"]),
     );
     expect(
-      dai-nexusCatalog.diagnostics.some(
+      daiNexusCatalog.diagnostics.some(
         (diagnostic) => diagnostic.code === "BROKEN_LINK",
       ),
     ).toBe(false);
@@ -388,31 +411,34 @@ describe("privacy-safe scanning and deterministic normalization", () => {
     ).toBe(true);
   });
 
-  it("reports a broken contained symlink without treating it as a privacy escape", () => {
-    const root = tempProject("broken-symlink");
-    mkdirSync(join(root, "Docs"), { recursive: true });
-    symlinkSync(
-      join(root, "Docs", "missing.md"),
-      join(root, "Docs", "link.md"),
-    );
-    initManifest(root);
+  itSymlink(
+    "reports a broken contained symlink without treating it as a privacy escape",
+    () => {
+      const root = tempProject("broken-symlink");
+      mkdirSync(join(root, "Docs"), { recursive: true });
+      symlinkSync(
+        join(root, "Docs", "missing.md"),
+        join(root, "Docs", "link.md"),
+      );
+      initManifest(root);
 
-    const catalog = scanProject(root);
-    expect(
-      catalog.diagnostics.some(
-        (diagnostic) =>
-          diagnostic.code === "BROKEN_SYMLINK" &&
-          diagnostic.severity === "warning",
-      ),
-    ).toBe(true);
-    expect(
-      catalog.diagnostics.some(
-        (diagnostic) => diagnostic.code === "PATH_CONTAINMENT_FAILED",
-      ),
-    ).toBe(false);
-  });
+      const catalog = scanProject(root);
+      expect(
+        catalog.diagnostics.some(
+          (diagnostic) =>
+            diagnostic.code === "BROKEN_SYMLINK" &&
+            diagnostic.severity === "warning",
+        ),
+      ).toBe(true);
+      expect(
+        catalog.diagnostics.some(
+          (diagnostic) => diagnostic.code === "PATH_CONTAINMENT_FAILED",
+        ),
+      ).toBe(false);
+    },
+  );
 
-  it("blocks a symlink that resolves outside the project root", () => {
+  itSymlink("blocks a symlink that resolves outside the project root", () => {
     const root = tempProject("symlink-escape");
     const outside = tempProject("outside");
     mkdirSync(join(root, "Docs"), { recursive: true });
@@ -435,7 +461,7 @@ describe("privacy-safe scanning and deterministic normalization", () => {
   });
 
   it("keeps stable IDs and catalog fingerprints across repeated scans", () => {
-    const root = copyFixture("dai-nexus");
+    const root = copyFixture("dainexus");
     initManifest(root);
     const first = scanProject(root);
     const second = scanProject(root);
@@ -448,96 +474,101 @@ describe("privacy-safe scanning and deterministic normalization", () => {
     expect(existsSync(path)).toBe(true);
   });
 
-  it("loads project state, reports contract failures, and fingerprints state content", () => {
-    const root = copyFixture("dai-nexus");
-    initManifest(root);
-    const first = scanProject(root);
-    expect(first.project.state).not.toBeNull();
-    expect(first.project.stateHash).toBeTruthy();
-    const statePath = join(root, "docs", "project-state.json");
-    const changed = createDefaultProjectState(root);
-    changed.project.summary = "Changed canonical state";
-    writeJson(statePath, changed);
-    expect(scanProject(root).sourceFingerprint).not.toBe(
-      first.sourceFingerprint,
-    );
+  itSymlink(
+    "loads project state, reports contract failures, and fingerprints state content",
+    () => {
+      const root = copyFixture("dainexus");
+      initManifest(root);
+      const first = scanProject(root);
+      expect(first.project.state).not.toBeNull();
+      expect(first.project.stateHash).toBeTruthy();
+      const statePath = join(root, "docs", "project-state.json");
+      const changed = createDefaultProjectState(root);
+      changed.project.summary = "Changed canonical state";
+      writeJson(statePath, changed);
+      expect(scanProject(root).sourceFingerprint).not.toBe(
+        first.sourceFingerprint,
+      );
 
-    rmSync(statePath);
-    expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
-      "PROJECT_STATE_MISSING",
-    );
+      rmSync(statePath);
+      expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
+        "PROJECT_STATE_MISSING",
+      );
 
-    writeFileSync(statePath, "{invalid\n", "utf8");
-    expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
-      "PROJECT_STATE_INVALID",
-    );
+      writeFileSync(statePath, "{invalid\n", "utf8");
+      expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
+        "PROJECT_STATE_INVALID",
+      );
 
-    const ownedState = join(root, "docs", "owned-state.json");
-    writeJson(ownedState, createDefaultProjectState(root));
-    rmSync(statePath);
-    symlinkSync("owned-state.json", statePath);
-    expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
-      "PROJECT_STATE_INVALID",
-    );
-    rmSync(statePath);
+      const ownedState = join(root, "docs", "owned-state.json");
+      writeJson(ownedState, createDefaultProjectState(root));
+      rmSync(statePath);
+      symlinkSync("owned-state.json", statePath);
+      expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
+        "PROJECT_STATE_INVALID",
+      );
+      rmSync(statePath);
 
-    const stale = createDefaultProjectState(root);
-    stale.status.updated_at = "2020-01-01T00:00:00Z";
-    writeJson(statePath, stale);
-    expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
-      "PROJECT_STATE_STALE",
-    );
+      const stale = createDefaultProjectState(root);
+      stale.status.updated_at = "2020-01-01T00:00:00Z";
+      writeJson(statePath, stale);
+      expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
+        "PROJECT_STATE_STALE",
+      );
 
-    const inconsistent = createDefaultProjectState(root);
-    inconsistent.status.updated_at = "2999-01-01T00:00:00Z";
-    inconsistent.structure.roots.push({
-      id: "missing-root",
-      path: "missing-root",
-      kind: "directory",
-      purpose: "Must exist",
-      owner: "team",
-    });
-    inconsistent.roadmap.push({
-      id: "referenced-item",
-      title: "Referenced item",
-      status: "planned",
-      priority: "medium",
-      owner: "team",
-      target_date: null,
-      depends_on: [],
-      references: [{ path: "docs/missing.md" }],
-    });
-    writeJson(statePath, inconsistent);
-    const inconsistentCodes = scanProject(root).diagnostics.map(
-      (item) => item.code,
-    );
-    expect(inconsistentCodes).toContain("PROJECT_STATE_FUTURE_TIMESTAMP");
-    expect(inconsistentCodes).toContain("PROJECT_STRUCTURE_ROOT_UNAVAILABLE");
-    expect(inconsistentCodes).toContain("PROJECT_STATE_REFERENCE_UNAVAILABLE");
+      const inconsistent = createDefaultProjectState(root);
+      inconsistent.status.updated_at = "2999-01-01T00:00:00Z";
+      inconsistent.structure.roots.push({
+        id: "missing-root",
+        path: "missing-root",
+        kind: "directory",
+        purpose: "Must exist",
+        owner: "team",
+      });
+      inconsistent.roadmap.push({
+        id: "referenced-item",
+        title: "Referenced item",
+        status: "planned",
+        priority: "medium",
+        owner: "team",
+        target_date: null,
+        depends_on: [],
+        references: [{ path: "docs/missing.md" }],
+      });
+      writeJson(statePath, inconsistent);
+      const inconsistentCodes = scanProject(root).diagnostics.map(
+        (item) => item.code,
+      );
+      expect(inconsistentCodes).toContain("PROJECT_STATE_FUTURE_TIMESTAMP");
+      expect(inconsistentCodes).toContain("PROJECT_STRUCTURE_ROOT_UNAVAILABLE");
+      expect(inconsistentCodes).toContain(
+        "PROJECT_STATE_REFERENCE_UNAVAILABLE",
+      );
 
-    const manifestPath = join(root, ".dainexus", "docs-manifest.json");
-    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<
-      string,
-      unknown
-    >;
-    writeJson(manifestPath, {
-      ...manifest,
-      privacy: { mode: "allowlist", allow: ["README.md"] },
-    });
-    expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
-      "PROJECT_STATE_NOT_ALLOWLISTED",
-    );
+      const manifestPath = join(root, ".dainexus", "docs-manifest.json");
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<
+        string,
+        unknown
+      >;
+      writeJson(manifestPath, {
+        ...manifest,
+        privacy: { mode: "allowlist", allow: ["README.md"] },
+      });
+      expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
+        "PROJECT_STATE_NOT_ALLOWLISTED",
+      );
 
-    writeJson(manifestPath, {
-      schema_version: 1,
-      project: { id: "legacy", title: "Legacy" },
-      sources: [{ path: "README.md", type: "overview" }],
-      privacy: { mode: "allowlist", allow: ["README.md"] },
-    });
-    expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
-      "PROJECT_DOCS_CONTRACT_MISSING",
-    );
-  });
+      writeJson(manifestPath, {
+        schema_version: 1,
+        project: { id: "legacy", title: "Legacy" },
+        sources: [{ path: "README.md", type: "overview" }],
+        privacy: { mode: "allowlist", allow: ["README.md"] },
+      });
+      expect(scanProject(root).diagnostics.map((item) => item.code)).toContain(
+        "PROJECT_DOCS_CONTRACT_MISSING",
+      );
+    },
+  );
 
   it("reports broken links, anchors, diagrams and stale indexes", () => {
     const root = tempProject("doctor");
@@ -689,7 +720,7 @@ describe("privacy-safe scanning and deterministic normalization", () => {
   });
 
   it("preserves successful project output when another batch project fails", () => {
-    const validRoot = copyFixture("dai-nexus");
+    const validRoot = copyFixture("dainexus");
     initManifest(validRoot);
     const invalidRoot = tempProject("invalid-batch-project");
     writeJson(join(invalidRoot, ".dainexus", "docs-manifest.json"), {

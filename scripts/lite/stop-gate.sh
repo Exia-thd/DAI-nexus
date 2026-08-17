@@ -27,6 +27,23 @@ done
 
 PLATFORM="$(printf '%s' "$PLATFORM" | tr '[:lower:]' '[:upper:]')"
 
+# Resolve an interpreter instead of assuming `python3` is on PATH. On Windows a
+# bare `python` is often the Store alias stub, which exits non-zero with
+# "Python was not found" — probe it rather than trust the name.
+PY=()
+if command -v python3 >/dev/null 2>&1 && python3 -c '' >/dev/null 2>&1; then
+  PY=(python3)
+elif command -v python >/dev/null 2>&1 && python -c '' >/dev/null 2>&1; then
+  PY=(python)
+elif command -v py >/dev/null 2>&1 && py -3 -c '' >/dev/null 2>&1; then
+  PY=(py -3)
+else
+  printf '{"continue": true, "systemMessage": "stop-gate: no usable Python interpreter on PATH"}\n'
+  exit 0
+fi
+# Legacy Windows codepages turn non-ASCII validator output into a crash.
+export PYTHONUTF8=1
+
 # A project-local Codex gate is canonical for that repository. Any external
 # installed copy defers so Codex does not run the same validator twice.
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
@@ -54,7 +71,7 @@ trap cleanup EXIT
 trap 'exit 130' HUP INT TERM
 
 if [[ ! -t 0 ]]; then
-  python3 -c 'import sys; path=sys.argv[1]; limit=int(sys.argv[2]); data=sys.stdin.buffer.read(limit + 1); open(path, "wb").write(data)' \
+  "${PY[@]}" -c 'import sys; path=sys.argv[1]; limit=int(sys.argv[2]); data=sys.stdin.buffer.read(limit + 1); open(path, "wb").write(data)' \
     "$PAYLOAD_FILE" "$MAX_PAYLOAD_BYTES" || true
 else
   : > "$PAYLOAD_FILE"
@@ -67,7 +84,7 @@ if [[ "$PAYLOAD_SIZE" -gt "$MAX_PAYLOAD_BYTES" ]]; then
 fi
 
 emit_codex_block() {
-  python3 - "${1:-DAI Nexus stop validator rejected the response payload.}" <<'PYEOF'
+  "${PY[@]}" - "${1:-DAI Nexus stop validator rejected the response payload.}" <<'PYEOF'
 import json
 import sys
 print(json.dumps({
@@ -78,7 +95,7 @@ PYEOF
 }
 
 codex_block_reason() {
-  python3 - "$VERIFY_STDERR_FILE" "$VALIDATOR_RC" "$VERIFY_RC" \
+  "${PY[@]}" - "$VERIFY_STDERR_FILE" "$VALIDATOR_RC" "$VERIFY_RC" \
     "$MAX_VERIFY_STDERR_BYTES" <<'PYEOF'
 import re
 import sys
@@ -170,7 +187,7 @@ fi
 # consume the same response. Codex's platform-native `turn_id` is routing
 # metadata, not necessarily the DAI Nexus evidence filename: retain it as an
 # exact selector only when it identifies a passing schema-v2 final record.
-python3 - "$PAYLOAD_FILE" "$PROJECT_ROOT" "$PLATFORM" "$SCRIPT_DIR" <<'PYEOF'
+"${PY[@]}" - "$PAYLOAD_FILE" "$PROJECT_ROOT" "$PLATFORM" "$SCRIPT_DIR" <<'PYEOF'
 import json
 import sys
 from pathlib import Path
@@ -248,7 +265,7 @@ if changed:
 PYEOF
 
 VALIDATOR_RC=0
-if python3 - "$PAYLOAD_FILE" >/dev/null 2>&1 <<'PYEOF'
+if "${PY[@]}" - "$PAYLOAD_FILE" >/dev/null 2>&1 <<'PYEOF'
 import json
 import re
 import sys
@@ -281,7 +298,7 @@ marker = re.search(
 raise SystemExit(0 if marker else 1)
 PYEOF
 then
-  python3 "${SCRIPT_DIR}/rule-validator.py" --runtime --transcript "$PAYLOAD_FILE" \
+  "${PY[@]}" "${SCRIPT_DIR}/rule-validator.py" --runtime --transcript "$PAYLOAD_FILE" \
     >/dev/null 2>/dev/null
   VALIDATOR_RC=$?
 fi
@@ -291,7 +308,7 @@ if [[ "$PLATFORM" == "CODEX" ]]; then
     --payload-file "$PAYLOAD_FILE" 2>"$VERIFY_STDERR_FILE")"
   VERIFY_RC=$?
   VERIFY_BLOCKED=0
-  if python3 - "$VERIFY_JSON" >/dev/null 2>&1 <<'PYEOF'
+  if "${PY[@]}" - "$VERIFY_JSON" >/dev/null 2>&1 <<'PYEOF'
 import json
 import sys
 
@@ -311,7 +328,7 @@ PYEOF
     exit 0
   fi
 
-  python3 - "$VERIFY_JSON" <<'PYEOF'
+  "${PY[@]}" - "$VERIFY_JSON" <<'PYEOF'
 import json
 import sys
 

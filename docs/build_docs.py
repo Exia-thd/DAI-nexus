@@ -44,6 +44,7 @@ PAGES = [
 
 # ── fact collection (single source of truth: the repo) ────────────────────────
 
+
 def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
 
@@ -52,7 +53,9 @@ def lines_of(rel: str) -> int:
     return len(read(rel).splitlines())
 
 
-def excerpt(rel: str, start_pat: str, count: int, *, dedent: bool = True) -> tuple[str, int]:
+def excerpt(
+    rel: str, start_pat: str, count: int, *, dedent: bool = True
+) -> tuple[str, int]:
     """Pull `count` lines from a file starting at the first line matching a regex.
 
     Returns (text, 1-based start line). Raises if the anchor is gone — a build
@@ -61,13 +64,15 @@ def excerpt(rel: str, start_pat: str, count: int, *, dedent: bool = True) -> tup
     src = read(rel).splitlines()
     for i, line in enumerate(src):
         if re.search(start_pat, line):
-            block = src[i:i + count]
+            block = src[i : i + count]
             if dedent:
                 pads = [len(b) - len(b.lstrip()) for b in block if b.strip()]
                 cut = min(pads) if pads else 0
                 block = [b[cut:] if len(b) > cut else b for b in block]
             return "\n".join(block).rstrip(), i + 1
-    raise SystemExit(f"[docs] anchor {start_pat!r} not found in {rel} — update build_docs.py")
+    raise SystemExit(
+        f"[docs] anchor {start_pat!r} not found in {rel} — update build_docs.py"
+    )
 
 
 def facts() -> dict:
@@ -79,27 +84,46 @@ def facts() -> dict:
     # Execution order is declared in the pipeline overlay; alphabetical sorting
     # would render DEFINE→BUILD→HARDEN→SHIP as BUILD|DEFINE|HARDEN|SHIP and teach
     # the wrong sequence.
-    order_row = re.search(r"\| `FULL_BUILD` \| ([^|]+) \|", read("skills/pipeline/LITE.md"))
+    order_row = re.search(
+        r"\| `FULL_BUILD` \| ([^|]+) \|", read("skills/pipeline/LITE.md")
+    )
     if not order_row:
-        raise SystemExit("[docs] FULL_BUILD phase order not found in skills/pipeline/LITE.md")
+        raise SystemExit(
+            "[docs] FULL_BUILD phase order not found in skills/pipeline/LITE.md"
+        )
     phase_order = [p.strip().lower() for p in order_row.group(1).split("→")]
     if set(phase_order) != phases_on_disk:
-        raise SystemExit(f"[docs] phase mismatch: overlay says {phase_order}, "
-                         f"disk has {sorted(phases_on_disk)}")
+        raise SystemExit(
+            f"[docs] phase mismatch: overlay says {phase_order}, "
+            f"disk has {sorted(phases_on_disk)}"
+        )
     contracts = sorted((ROOT / "skills/_test/skills").glob("*/test.yaml"))
     mcp_tools = re.findall(r'"(dn_\w+)": \(', read("mcp/server.py"))
     smoke = read("tests/smoke.py")
     hard_rules = re.findall(r"^\d+\. (.+)$", read("kernel/ENTRY.md"), re.MULTILINE)
     # Rejection reasons come from the gate's own contract. Hand-listing them here
     # is how the SECRETS reason went missing from the docs once already.
-    reject_block = read("scripts/lite/verify_gate.py").split("Rejection reasons:")[1].split("\n\n")[0]
+    reject_block = (
+        read("scripts/lite/verify_gate.py")
+        .split("Rejection reasons:")[1]
+        .split("\n\n")[0]
+    )
     reject_reasons = re.findall(r"^\s+([A-Z]+)\s+- ", reject_block, re.MULTILINE)
     if not reject_reasons:
         raise SystemExit("[docs] rejection reasons not found in verify_gate.py")
-    policy_patterns = re.findall(r'^\s*- "(.+)"$', read(".dainexus/execution-policy.yaml"), re.MULTILINE)
+    policy_patterns = re.findall(
+        r'^\s*- "(.+)"$', read(".dainexus/execution-policy.yaml"), re.MULTILINE
+    )
     try:
-        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
-                                capture_output=True, text=True).stdout.strip() or "unknown"
+        commit = (
+            subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            or "unknown"
+        )
     except OSError:
         commit = "unknown"
     return {
@@ -130,18 +154,34 @@ def _memory_facts() -> dict:
     """Read the memory module's real surface so the extraction guide cannot lie."""
     src = read("scripts/lite/memory.py")
     cls = src.split("class MemoryDB:")[1]
-    api = [m for m in re.findall(r"^    def (\w+)\(", cls, re.MULTILINE) if not m.startswith("_")]
+    api = [
+        m
+        for m in re.findall(r"^    def (\w+)\(", cls, re.MULTILINE)
+        if not m.startswith("_")
+    ]
     cli = re.findall(r'add_parser\("([a-z_]+)"\)', src)
-    for m in re.findall(r'for name in \(([^)]+)\):', src):        # subcommands added in a loop
-        cli += [x.strip().strip('"\'') for x in m.split(",") if x.strip()]
+    for m in re.findall(
+        r"for name in \(([^)]+)\):", src
+    ):  # subcommands added in a loop
+        cli += [x.strip().strip("\"'") for x in m.split(",") if x.strip()]
     env = sorted(set(re.findall(r'os\.environ\.get\("(\w+)"', src)))
-    tags = re.findall(r',\s*"(\w+)"\),\s*$', src.split("AUTO_TAG_PATTERNS")[1].split("\n]")[0],
-                      re.MULTILINE)
+    tags = re.findall(
+        r',\s*"(\w+)"\),\s*$',
+        src.split("AUTO_TAG_PATTERNS")[1].split("\n]")[0],
+        re.MULTILINE,
+    )
     if not tags:
-        raise SystemExit("[docs] AUTO_TAG_PATTERNS parse returned nothing — fix _memory_facts()")
-    weights = re.findall(r'^\s+"([\w-]+)": (\d+),', src.split("CATEGORY_WEIGHTS")[1].split("}")[0],
-                         re.MULTILINE)
-    redact = re.findall(r'^\s+r"', src.split("REDACT_PATTERNS")[1].split("\n]")[0], re.MULTILINE)
+        raise SystemExit(
+            "[docs] AUTO_TAG_PATTERNS parse returned nothing — fix _memory_facts()"
+        )
+    weights = re.findall(
+        r'^\s+"([\w-]+)": (\d+),',
+        src.split("CATEGORY_WEIGHTS")[1].split("}")[0],
+        re.MULTILINE,
+    )
+    redact = re.findall(
+        r'^\s+r"', src.split("REDACT_PATTERNS")[1].split("\n]")[0], re.MULTILINE
+    )
     triggers = re.findall(r"CREATE TRIGGER IF NOT EXISTS (\w+)", src)
     indexes = re.findall(r"CREATE INDEX IF NOT EXISTS (\w+)", src)
     rrf_k = re.search(r"^RRF_K = (\d+)", src, re.MULTILINE)
@@ -162,14 +202,17 @@ def _memory_facts() -> dict:
 
 # ── html helpers ──────────────────────────────────────────────────────────────
 
+
 def esc(text: str) -> str:
     return html.escape(text, quote=False)
 
 
 def code(rel: str, pattern: str, count: int, caption: str = "") -> str:
     body, line_no = excerpt(rel, pattern, count)
-    head = f'<div class="code-head"><span class="file">{esc(rel)}:{line_no}</span>' \
-           f'{f"<span class=cap>{esc(caption)}</span>" if caption else ""}</div>'
+    head = (
+        f'<div class="code-head"><span class="file">{esc(rel)}:{line_no}</span>'
+        f"{f'<span class=cap>{esc(caption)}</span>' if caption else ''}</div>"
+    )
     return f'<div class="code-block">{head}<pre><code>{esc(body)}</code></pre></div>'
 
 
@@ -178,14 +221,14 @@ def nav(current: str) -> str:
         f'<a href="./{f}"{" class=current" if f == current else ""}>{esc(t)}</a>'
         for f, t in PAGES
     )
-    return f'''<nav class="nav"><div class="nav-inner">
+    return f"""<nav class="nav"><div class="nav-inner">
   <a href="./index.html" class="nav-brand"><span class="dot"></span> DAI Nexus <small>docs</small></a>
   <div class="nav-links">{links}</div>
-</div></nav>'''
+</div></nav>"""
 
 
 def page(filename: str, title: str, body: str, f: dict) -> str:
-    return f'''<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <!-- @generated by docs/build_docs.py — do not edit; run the generator instead. -->
 <html lang="vi">
 <head>
@@ -205,7 +248,7 @@ def page(filename: str, title: str, body: str, f: dict) -> str:
 </footer>
 </body>
 </html>
-'''
+"""
 
 
 def standalone_page(title: str, body: str, f: dict, css: str) -> str:
@@ -216,7 +259,7 @@ def standalone_page(title: str, body: str, f: dict, css: str) -> str:
     file (nav bar, external stylesheet) would break the moment it travels alone,
     so nothing here does.
     """
-    return f'''<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <!-- @generated by docs/build_docs.py — standalone: no navigation, no sibling links, CSS inlined. -->
 <html lang="vi">
 <head>
@@ -238,12 +281,15 @@ main {{ padding-top: 28px; }}
 </footer>
 </body>
 </html>
-'''
+"""
 
 
 def stat_grid(items: list[tuple[str, str]], cols: int = 4) -> str:
-    cells = "".join(f'<div class="stat"><div class="val">{esc(v)}</div>'
-                    f'<div class="lbl">{esc(l)}</div></div>' for v, l in items)
+    cells = "".join(
+        f'<div class="stat"><div class="val">{esc(value)}</div>'
+        f'<div class="lbl">{esc(label)}</div></div>'
+        for value, label in items
+    )
     return f'<div class="grid cols-{cols}">{cells}</div>'
 
 
@@ -254,32 +300,38 @@ def table(headers: list[str], rows: list[list[str]]) -> str:
 
 
 def callout(kind: str, title: str, body: str) -> str:
-    return f'<div class="callout {kind}"><div class="title">{esc(title)}</div>{body}</div>'
+    return (
+        f'<div class="callout {kind}"><div class="title">{esc(title)}</div>{body}</div>'
+    )
 
 
 WIDE = 78
 
 
 REJECT_VI = {
-    "MISSING":  "Không có file evidence nào",
-    "STALE":    "Evidence quá cũ (mặc định &gt;1 giờ, đổi qua <code>DAINEXUS_STALENESS_SECS</code>)",
+    "MISSING": "Không có file evidence nào",
+    "STALE": "Evidence quá cũ (mặc định &gt;1 giờ, đổi qua <code>DAINEXUS_STALENESS_SECS</code>)",
     "MISMATCH": "Workspace hoặc tree-sha đã đổi từ lúc ghi — tức là code bị sửa <em>sau</em> khi test chạy",
-    "FAILED":   "<code>exit_code</code> ≠ 0 — lệnh kiểm chứng thật sự trượt",
-    "FORGED":   "Sai schema, command rỗng, hoặc output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)",
-    "SECRETS":  "Output chứa secret chưa che (API key, token, private key) — chính file evidence đã nhiễm",
-    "STUBS":    "File đã sửa còn TODO/FIXME/NotImplementedError",
+    "FAILED": "<code>exit_code</code> ≠ 0 — lệnh kiểm chứng thật sự trượt",
+    "FORGED": "Sai schema, command rỗng, hoặc output khớp mẫu bịa (<code>placeholder</code>, <code>TODO</code>, <code>&lt;output&gt;</code>)",
+    "SECRETS": "Output chứa secret chưa che (API key, token, private key) — chính file evidence đã nhiễm",
+    "STUBS": "File đã sửa còn TODO/FIXME/NotImplementedError",
     "MISREPORTED": "VERIFY block trong câu trả lời không khớp evidence — claim bị viết lại, "
-                   "command khác, hoặc chỗ đáng lẽ là digest thì dán văn xuôi",
+    "command khác, hoặc chỗ đáng lẽ là digest thì dán văn xuôi",
 }
 
 
 def reject_table(f: dict) -> str:
     missing = [r for r in f["reject_reasons"] if r not in REJECT_VI]
     if missing:
-        raise SystemExit(f"[docs] lý do từ chối mới chưa có giải thích: {missing} "
-                         f"— bổ sung vào REJECT_VI trong build_docs.py")
-    return table(["Lý do từ chối", "Nghĩa là"],
-                 [[f"<code>{r}</code>", REJECT_VI[r]] for r in f["reject_reasons"]])
+        raise SystemExit(
+            f"[docs] lý do từ chối mới chưa có giải thích: {missing} "
+            f"— bổ sung vào REJECT_VI trong build_docs.py"
+        )
+    return table(
+        ["Lý do từ chối", "Nghĩa là"],
+        [[f"<code>{r}</code>", REJECT_VI[r]] for r in f["reject_reasons"]],
+    )
 
 
 def box(width: int, title: str, lines: list[str]) -> str:
@@ -297,23 +349,31 @@ def box(width: int, title: str, lines: list[str]) -> str:
 
 # ── pages ─────────────────────────────────────────────────────────────────────
 
+
 def page_index(f: dict) -> str:
     rules = "".join(f"<li>{esc(r)}</li>" for r in f["hard_rules"])
-    return f'''
+    return f"""
 <section class="hero">
   <span class="tag">TÀI LIỆU SINH TỪ SOURCE · v{f["version"]}</span>
   <h1>DAI Nexus — <span class="accent">hệ điều hành cho AI coding agent</span></h1>
   <p class="lead">
     Không phải một tập prompt. Đây là một <strong>bộ luật + runtime</strong>: kernel bất biến nạp mỗi phiên,
-    thư viện {len(f["overlays"])} skill overlay load theo nhu cầu, và một tầng runtime Python thuần
+    thư viện {
+        len(f["overlays"])
+    } skill overlay load theo nhu cầu, và một tầng runtime Python thuần
     <strong>cưỡng bức bằng chứng</strong> — agent không được phép nói "xong rồi" nếu không có evidence do máy sinh ra.
   </p>
-  {callout("tip", "Vì sao trang này không bao giờ lệch với code",
-   "Toàn bộ số liệu, danh sách file và đoạn code trích dẫn dưới đây được "
-   "<strong>đọc trực tiếp từ working tree lúc build</strong> "
-   "(<code>docs/build_docs.py</code>). Nếu một script bị đổi tên hay một rule bị xoá, "
-   "lần build kế tiếp phản ánh ngay — hoặc fail. Đây chính là bài học rút ra từ bộ "
-   "tài liệu tiền nhiệm: nó phải kèm một mục 'đính chính' vì các con số chép tay đã drift khỏi code.")}
+  {
+        callout(
+            "tip",
+            "Vì sao trang này không bao giờ lệch với code",
+            "Toàn bộ số liệu, danh sách file và đoạn code trích dẫn dưới đây được "
+            "<strong>đọc trực tiếp từ working tree lúc build</strong> "
+            "(<code>docs/build_docs.py</code>). Nếu một script bị đổi tên hay một rule bị xoá, "
+            "lần build kế tiếp phản ánh ngay — hoặc fail. Đây chính là bài học rút ra từ bộ "
+            "tài liệu tiền nhiệm: nó phải kèm một mục 'đính chính' vì các con số chép tay đã drift khỏi code.",
+        )
+    }
   <div class="hero-meta">
     <span>Kernel <strong>{len(f["kernel_files"])} file</strong></span>
     <span>Overlay <strong>{len(f["overlays"])}</strong></span>
@@ -343,22 +403,49 @@ def page_index(f: dict) -> str:
 </div>
 
 <h2><span class="num">02</span> Ba tầng</h2>
-<div class="diagram">{esc(box(WIDE, f'TẦNG 1 — KERNEL ({len(f["kernel_files"])} file, ~{f["kernel_tokens"]} token, luôn nạp)', [
-    "kernel/{" + ", ".join(k.replace(".md", "") for k in f["kernel_files"]) + "}",
-    "→ 6 Hard Rules · SOLVE loop · VERIFY/AUDIT · Execution policy",
-]))}
+<div class="diagram">{
+        esc(
+            box(
+                WIDE,
+                f"TẦNG 1 — KERNEL ({len(f['kernel_files'])} file, ~{f['kernel_tokens']} token, luôn nạp)",
+                [
+                    "kernel/{"
+                    + ", ".join(k.replace(".md", "") for k in f["kernel_files"])
+                    + "}",
+                    "→ 6 Hard Rules · SOLVE loop · VERIFY/AUDIT · Execution policy",
+                ],
+            )
+        )
+    }
                         ⇓ overlay khi cần
-{esc(box(WIDE, f'TẦNG 2 — SKILLS ({len(f["overlays"])} overlay + {len(f["protocols"])} protocol, load on-demand)', [
-    "skills/pipeline/          → orchestrator: " + " | ".join(p.upper() for p in f["phases"]),
-    "skills/<role>/LITE.md     → GROUND/DECOMPOSE slot theo domain",
-    "skills/_shared/protocols/ → guardrail, parallel-dispatch, …",
-]))}
+{
+        esc(
+            box(
+                WIDE,
+                f"TẦNG 2 — SKILLS ({len(f['overlays'])} overlay + {len(f['protocols'])} protocol, load on-demand)",
+                [
+                    "skills/pipeline/          → orchestrator: "
+                    + " | ".join(p.upper() for p in f["phases"]),
+                    "skills/<role>/LITE.md     → GROUND/DECOMPOSE slot theo domain",
+                    "skills/_shared/protocols/ → guardrail, parallel-dispatch, …",
+                ],
+            )
+        )
+    }
                         ⇓ được cưỡng bức bởi
-{esc(box(WIDE, f'TẦNG 3 — RUNTIME ({len(f["scripts"])} script, {f["script_loc"]} dòng Python thuần)', [
-    "run_check · verify_gate · policy_check · runtime_lease",
-    "memory · escalate · worktree_manager · validate_overlays",
-    f'mcp/server.py → {len(f["mcp_tools"])} tool cho IDE',
-]))}</div>
+{
+        esc(
+            box(
+                WIDE,
+                f"TẦNG 3 — RUNTIME ({len(f['scripts'])} script, {f['script_loc']} dòng Python thuần)",
+                [
+                    "run_check · verify_gate · policy_check · runtime_lease",
+                    "memory · escalate · worktree_manager · validate_overlays",
+                    f"mcp/server.py → {len(f['mcp_tools'])} tool cho IDE",
+                ],
+            )
+        )
+    }</div>
 
 <h2><span class="num">03</span> 6 Hard Rules</h2>
 <p class="muted small">Đọc thẳng từ <code>kernel/ENTRY.md</code> lúc build:</p>
@@ -369,11 +456,15 @@ def page_index(f: dict) -> str:
   <a href="./kernel.html" class="nav-card"><div class="idx">01 · kernel/</div>
     <h3>Kernel</h3><p>Bộ luật bất biến: boot sequence, SOLVE loop, VERIFY/AUDIT contract, execution policy.</p></a>
   <a href="./skills.html" class="nav-card"><div class="idx">02 · skills/</div>
-    <h3>Skills &amp; Pipeline</h3><p>Orchestrator 6 mode, {len(f["phases"])} phase với gate, {len(f["overlays"])} overlay chuyên gia.</p></a>
+    <h3>Skills &amp; Pipeline</h3><p>Orchestrator 6 mode, {
+        len(f["phases"])
+    } phase với gate, {len(f["overlays"])} overlay chuyên gia.</p></a>
   <a href="./evidence.html" class="nav-card"><div class="idx">03 · chống ảo giác</div>
     <h3>Chuỗi bằng chứng</h3><p>4 lớp: evidence writer → stop gate → policy fail-closed → runtime ledger.</p></a>
   <a href="./runtime.html" class="nav-card"><div class="idx">04 · scripts/ + mcp/</div>
-    <h3>Runtime</h3><p>{len(f["scripts"])} công cụ Python zero-dependency + MCP server {len(f["mcp_tools"])} tool.</p></a>
+    <h3>Runtime</h3><p>{len(f["scripts"])} công cụ Python zero-dependency + MCP server {
+        len(f["mcp_tools"])
+    } tool.</p></a>
   <a href="./memory.html" class="nav-card"><div class="idx">05 · memory.py</div>
     <h3>Memory</h3><p>SQLite+FTS5, BM25 fuse RRF, auto-tag, redaction, GC theo giá trị.</p></a>
   <a href="./patterns.html" class="nav-card"><div class="idx">06 · TINH TÚY</div>
@@ -403,34 +494,61 @@ Turn-close: VERIFY block · AUDIT coverage matrix · lưu memory · runtime ledg
 Stop hook: verify_gate.py — thiếu/giả/hết hạn evidence ⇒ CHẶN</div>
 
 <h2><span class="num">06</span> Số liệu (đọc từ repo)</h2>
-{stat_grid([
-    (str(len(f["kernel_files"])), "kernel file"),
-    (f'{f["kernel_tokens"]}', "token boot"),
-    (str(len(f["overlays"])), "skill overlay"),
-    (str(len(f["protocols"])), "protocol"),
-    (str(len(f["scripts"])), "runtime script"),
-    (str(f["script_loc"]), "dòng runtime"),
-    (str(len(f["mcp_tools"])), "MCP tool"),
-    (str(f["smoke_checks"]), "self-test"),
-])}
-'''
+{
+        stat_grid(
+            [
+                (str(len(f["kernel_files"])), "kernel file"),
+                (f"{f['kernel_tokens']}", "token boot"),
+                (str(len(f["overlays"])), "skill overlay"),
+                (str(len(f["protocols"])), "protocol"),
+                (str(len(f["scripts"])), "runtime script"),
+                (str(f["script_loc"]), "dòng runtime"),
+                (str(len(f["mcp_tools"])), "MCP tool"),
+                (str(f["smoke_checks"]), "self-test"),
+            ]
+        )
+    }
+"""
 
 
 def page_kernel(f: dict) -> str:
-    files = table(["File", "Vai trò"], [
-        ["<code>ENTRY.md</code>", "6 Hard Rules · boot sequence · bảng routing · nạp memory bắt buộc"],
-        ["<code>SOLVE.md</code>", "Vòng lặp suy luận 9 bước: UNDERSTAND → GROUND → DECOMPOSE → PoT → EXECUTE/VERIFY → AUDIT → STUCK → TURN-CLOSE"],
-        ["<code>VERIFY.md</code>", "4 template bằng chứng + luật: claim không có output dán vào là FALSE"],
-        ["<code>AUDIT.md</code>", "Ma trận phủ yêu cầu, quét mâu thuẫn, đọc lại file đã sửa"],
-        ["<code>ESCALATE.md</code>", "Phân loại EASY/HARD theo tín hiệu runtime khách quan, giao thức leo thang"],
-        ["<code>CLARIFY.md</code>", "Bảng trigger + MCQ cho yêu cầu mơ hồ"],
-        ["<code>POLICY.md</code>", "Cấu hình execution policy, hợp đồng fail-closed"],
-    ])
-    return f'''
+    files = table(
+        ["File", "Vai trò"],
+        [
+            [
+                "<code>ENTRY.md</code>",
+                "6 Hard Rules · boot sequence · bảng routing · nạp memory bắt buộc",
+            ],
+            [
+                "<code>SOLVE.md</code>",
+                "Vòng lặp suy luận 9 bước: UNDERSTAND → GROUND → DECOMPOSE → PoT → EXECUTE/VERIFY → AUDIT → STUCK → TURN-CLOSE",
+            ],
+            [
+                "<code>VERIFY.md</code>",
+                "4 template bằng chứng + luật: claim không có output dán vào là FALSE",
+            ],
+            [
+                "<code>AUDIT.md</code>",
+                "Ma trận phủ yêu cầu, quét mâu thuẫn, đọc lại file đã sửa",
+            ],
+            [
+                "<code>ESCALATE.md</code>",
+                "Phân loại EASY/HARD theo tín hiệu runtime khách quan, giao thức leo thang",
+            ],
+            ["<code>CLARIFY.md</code>", "Bảng trigger + MCQ cho yêu cầu mơ hồ"],
+            [
+                "<code>POLICY.md</code>",
+                "Cấu hình execution policy, hợp đồng fail-closed",
+            ],
+        ],
+    )
+    return f"""
 <section class="hero compact">
   <span class="tag">TẦNG 1</span>
   <h1>Kernel — <span class="accent">bộ luật bất biến</span></h1>
-  <p class="lead">{len(f["kernel_files"])} file markdown, tổng ~{f["kernel_tokens"]} token, được
+  <p class="lead">{len(f["kernel_files"])} file markdown, tổng ~{
+        f["kernel_tokens"]
+    } token, được
   <code>sync-kernel.py</code> gộp thành <code>CLAUDE.md</code> / <code>AGENTS.md</code> / <code>GEMINI.md</code>
   và nạp tự động ở mọi phiên. Budget cứng 7k token — vượt là build fail.</p>
 </section>
@@ -438,9 +556,14 @@ def page_kernel(f: dict) -> str:
 <h2><span class="num">01</span> Bảy file</h2>
 {files}
 
-{callout("warn", "Đừng sửa CLAUDE.md",
- "Ba file boot ở root là <strong>sinh tự động</strong>. Nguồn sự thật nằm ở <code>kernel/</code>; "
- "sửa tay file sinh ra sẽ mất khi chạy lại <code>sync-kernel.py</code>.")}
+{
+        callout(
+            "warn",
+            "Đừng sửa CLAUDE.md",
+            "Ba file boot ở root là <strong>sinh tự động</strong>. Nguồn sự thật nằm ở <code>kernel/</code>; "
+            "sửa tay file sinh ra sẽ mất khi chạy lại <code>sync-kernel.py</code>.",
+        )
+    }
 
 <h2><span class="num">02</span> Boot sequence</h2>
 <p>Mỗi phiên bắt đầu bằng đúng 5 bước, không hơn — giữ payload boot trong ngân sách token:</p>
@@ -452,9 +575,9 @@ có trần token cho từng nguồn, và quy tắc cắt bớt rõ ràng thay v�
 <h2><span class="num">03</span> Vòng lặp SOLVE</h2>
 <p>Xương sống suy luận. Điểm mấu chốt nằm ở bước GROUND: <em>không được tự xác nhận</em> —
 mọi giả định phải có bằng chứng do script sinh ra:</p>
-{code("kernel/SOLVE.md", r"^## 2\. GROUND", 12)}
+{code("kernel/SOLVE.md", r"^## 2\. GROUND", 9)}
 <p>Và bước DECOMPOSE ép mỗi việc phải có một lệnh CHECK chứng minh nó xong:</p>
-{code("kernel/SOLVE.md", r"^\*\*A\. EDIT PATH", 4)}
+{code("kernel/SOLVE.md", r"^## 3\. DECOMPOSE", 8)}
 
 <h2><span class="num">04</span> Quy tắc kẹt</h2>
 <p>Sau 2 lần thất bại cùng một chỗ, agent bị cấm thử lại biến thể của cách cũ:</p>
@@ -463,40 +586,60 @@ mọi giả định phải có bằng chứng do script sinh ra:</p>
 <h2><span class="num">05</span> Turn-close</h2>
 <p>Cuối mỗi lượt, bối cảnh được ghi lại để phiên sau không phải suy diễn lại từ đầu,
 và mọi process dài hạn phải được thu hồi:</p>
-{code("kernel/SOLVE.md", r"^## 9\. TURN-CLOSE", 8)}
+{code("kernel/SOLVE.md", r"^## 9\. CONTINUITY", 6)}
 
 <h2><span class="num">06</span> Ngân sách token</h2>
 <p><code>sync-kernel.py</code> ước lượng tất định (4 ký tự ≈ 1 token) và <strong>thoát với mã lỗi</strong>
 nếu file sinh ra vượt 7k — kernel không thể phình dần trong im lặng:</p>
 {code("scripts/lite/sync-kernel.py", r"status = .OK. if target_tokens", 8)}
-{callout("tip", "Hiện tại", f"Boot file ~{f['kernel_tokens']} token / 7000 — còn khoảng "
-         f"{7000 - f['kernel_tokens']} token dư cho luật mới.")}
-'''
+{
+        callout(
+            "tip",
+            "Hiện tại",
+            f"Boot file ~{f['kernel_tokens']} token / 7000 — còn khoảng "
+            f"{7000 - f['kernel_tokens']} token dư cho luật mới.",
+        )
+    }
+"""
 
 
 def page_skills(f: dict) -> str:
     overlays_list = ", ".join(f"<code>{esc(o)}</code>" for o in f["overlays"][:18])
     phases_rows = [
-        ["<code>define.md</code>", "product-manager → BRD; solution-architect → ADR + API contract",
-         "Gate 1, Gate 2"],
-        ["<code>build.md</code>", "backend (TDD bắt buộc) · frontend (design contract) · containerization",
-         "quality gate mỗi task"],
-        ["<code>harden.md</code>", "qa-engineer → security-engineer → code-reviewer (fresh context)",
-         "VERIFY + findings"],
-        ["<code>ship.md</code>", "staging + smoke có evidence → production, kèm đường rollback",
-         "Gate 3"],
+        [
+            "<code>define.md</code>",
+            "product-manager → BRD; solution-architect → ADR + API contract",
+            "Gate 1, Gate 2",
+        ],
+        [
+            "<code>build.md</code>",
+            "backend (TDD bắt buộc) · frontend (design contract) · containerization",
+            "quality gate mỗi task",
+        ],
+        [
+            "<code>harden.md</code>",
+            "qa-engineer → security-engineer → code-reviewer (fresh context)",
+            "VERIFY + findings",
+        ],
+        [
+            "<code>ship.md</code>",
+            "staging + smoke có evidence → production, kèm đường rollback",
+            "Gate 3",
+        ],
     ]
-    return f'''
+    return f"""
 <section class="hero compact">
   <span class="tag">TẦNG 2</span>
-  <h1>Skills — <span class="accent">một orchestrator, {len(f["overlays"])} chuyên gia</span></h1>
+  <h1>Skills — <span class="accent">một orchestrator, {
+        len(f["overlays"])
+    } chuyên gia</span></h1>
   <p class="lead">Kernel chọn <em>mode</em>; pipeline chọn <em>phase</em>; overlay cung cấp
   kiến thức domain dưới dạng slot GROUND/DECOMPOSE. Không có gì được nạp trước khi cần.</p>
 </section>
 
 <h2><span class="num">01</span> Routing lúc boot</h2>
 <p>Bảng nén trong <code>kernel/ENTRY.md</code> — không phải đọc index lớn nào:</p>
-{code("kernel/ENTRY.md", r"^## Compact Routing", 12)}
+{code("kernel/ENTRY.md", r"^## Compact Skill Routing", 12)}
 
 <h2><span class="num">02</span> Mode → phase</h2>
 <p>Yêu cầu nhỏ không phải trả giá cho nghi thức lớn. Chỉ <code>FULL_BUILD</code> chạy đủ 4 phase và 3 gate:</p>
@@ -505,21 +648,31 @@ def page_skills(f: dict) -> str:
 <h2><span class="num">03</span> Bốn phase</h2>
 {table(["Phase", "Việc", "Chốt chặn"], phases_rows)}
 
-{callout("tip", "Gate là chỗ dừng thật",
- "Tại mỗi gate: trình bày tóm tắt ≤10 dòng + vị trí artifact, rồi <strong>ĐỢI</strong> người dùng quyết. "
- "Agent không bao giờ tự duyệt gate của chính mình. Quyết định được ghi vào "
- "<code>decisions-log.md</code>, lưu vào memory, và mirror qua MCP để dashboard theo dõi.")}
+{
+        callout(
+            "tip",
+            "Gate là chỗ dừng thật",
+            "Tại mỗi gate: trình bày tóm tắt ≤10 dòng + vị trí artifact, rồi <strong>ĐỢI</strong> người dùng quyết. "
+            "Agent không bao giờ tự duyệt gate của chính mình. Quyết định được ghi vào "
+            "<code>decisions-log.md</code>, lưu vào memory, và mirror qua MCP để dashboard theo dõi.",
+        )
+    }
 
 <h2><span class="num">04</span> Giải phẫu một overlay</h2>
 <p>Mỗi overlay là một file LITE.md nhỏ: frontmatter + slot GROUND + slot DECOMPOSE + checklist lỗi hay gặp.
 Ví dụ overlay debugger:</p>
 {code("skills/debugger/LITE.md", r"^## SOLVE Step 2", 8)}
 
-{callout("warn", "Overlay không được chứa bằng chứng giả",
- "Bản đầu của các overlay này có kèm 'worked example' kết thúc bằng "
- "<code>EXIT CODE: 0 / VERDICT: PASS</code> cứng. Overlay là thứ agent bắt chước — nhúng sẵn một kết quả PASS "
- "chính là dạy nó <em>viết ra</em> VERIFY thay vì <em>chạy</em> check, phá thẳng Hard Rule 1. "
- "Toàn bộ đã bị cắt và <code>validate_overlays.py</code> nay chặn chúng quay lại.")}
+{
+        callout(
+            "warn",
+            "Overlay không được chứa bằng chứng giả",
+            "Bản đầu của các overlay này có kèm 'worked example' kết thúc bằng "
+            "<code>EXIT CODE: 0 / VERDICT: PASS</code> cứng. Overlay là thứ agent bắt chước — nhúng sẵn một kết quả PASS "
+            "chính là dạy nó <em>viết ra</em> VERIFY thay vì <em>chạy</em> check, phá thẳng Hard Rule 1. "
+            "Toàn bộ đã bị cắt và <code>validate_overlays.py</code> nay chặn chúng quay lại.",
+        )
+    }
 
 <h2><span class="num">05</span> Thư viện overlay</h2>
 <p class="muted small">{len(f["overlays"])} overlay, gồm: {overlays_list} …</p>
@@ -529,19 +682,32 @@ security-engineer, frontend-engineer) · <strong>domain</strong> (game engine, d
 per-language, growth…).</p>
 
 <h2><span class="num">06</span> Protocol dùng chung</h2>
-<p>{len(f["protocols"])} protocol trong <code>skills/_shared/protocols/</code>. Hai cái quan trọng nhất:</p>
-{table(["Protocol", "Vai trò"], [
-  ["<code>guardrail.md</code>", "Kill switch: 13 nhóm luật (destructive, secrets, RCE, publishing, path traversal, "
-   "resource exhaustion…) + cổng cơ học <code>policy_check.py</code>"],
-  ["<code>parallel-dispatch.md</code>", "Worker chạy song song trên git worktree, mỗi worker bị ràng bởi task contract; "
-   "merge arbiter từ chối mọi thay đổi ngoài phạm vi"],
-])}
-'''
+<p>{
+        len(f["protocols"])
+    } protocol trong <code>skills/_shared/protocols/</code>. Hai cái quan trọng nhất:</p>
+{
+        table(
+            ["Protocol", "Vai trò"],
+            [
+                [
+                    "<code>guardrail.md</code>",
+                    "Kill switch: 13 nhóm luật (destructive, secrets, RCE, publishing, path traversal, "
+                    "resource exhaustion…) + cổng cơ học <code>policy_check.py</code>",
+                ],
+                [
+                    "<code>parallel-dispatch.md</code>",
+                    "Worker chạy song song trên git worktree, mỗi worker bị ràng bởi task contract; "
+                    "merge arbiter từ chối mọi thay đổi ngoài phạm vi",
+                ],
+            ],
+        )
+    }
+"""
 
 
 def page_evidence(f: dict) -> str:
     patterns = "".join(f"<li><code>{esc(p)}</code></li>" for p in f["policy_patterns"])
-    return f'''
+    return f"""
 <section class="hero compact">
   <span class="tag">CƠ CHẾ LÕI</span>
   <h1>Chuỗi bằng chứng — <span class="accent">chống ảo giác bằng máy</span></h1>
@@ -553,23 +719,45 @@ def page_evidence(f: dict) -> str:
 <p>Bằng chứng luôn bắt buộc <em>về bản chất</em>; nghi thức thì không. Một lần sửa lỗi chính tả và một thay đổi
 hệ thống thanh toán không phải cùng một loại việc — bắt chúng theo cùng một quy trình là cách nhanh nhất
 khiến người ta bỏ qua đúng những chỗ quan trọng.</p>
-{table(["Tier", "Khi nào", "Ngân sách", "Bằng chứng"], [
-  ["<code>QUICK</code>", "rõ ràng, cục bộ, đảo ngược được, không có tín hiệu HARD", "1–3 action",
-   "một dòng gọn: <code>CHECK | EXIT | RESULT</code>"],
-  ["<code>STANDARD</code>", "feature/debug/refactor bình thường có giới hạn", "≤7 action",
-   "từng behavior trọng yếu + regression có mục tiêu"],
-  ["<code>DEEP</code>", "bảo mật · public contract/schema · concurrency · migration · release không đảo ngược · lỗi lặp lại",
-   "≤10 action", "kiểm tra biên chặt hơn, bằng chứng rollback, review độc lập"],
-])}
-{callout("warn", "Luật thanh toán (bắt buộc)",
- "Bất kỳ việc gì đụng tới payment, billing, in-app purchase, receipt validation, entitlements, "
- "subscription hay checkout đều là <code>HARD</code> + <code>DEEP</code> <strong>bất kể số file</strong>. "
- "Một diff một dòng không hạ cấp được nó.")}
+{
+        table(
+            ["Tier", "Khi nào", "Ngân sách", "Bằng chứng"],
+            [
+                [
+                    "<code>QUICK</code>",
+                    "rõ ràng, cục bộ, đảo ngược được, không có tín hiệu HARD",
+                    "1–3 action",
+                    "một dòng gọn: <code>CHECK | EXIT | RESULT</code>",
+                ],
+                [
+                    "<code>STANDARD</code>",
+                    "feature/debug/refactor bình thường có giới hạn",
+                    "≤7 action",
+                    "từng behavior trọng yếu + regression có mục tiêu",
+                ],
+                [
+                    "<code>DEEP</code>",
+                    "bảo mật · public contract/schema · concurrency · migration · release không đảo ngược · lỗi lặp lại",
+                    "≤10 action",
+                    "kiểm tra biên chặt hơn, bằng chứng rollback, review độc lập",
+                ],
+            ],
+        )
+    }
+{
+        callout(
+            "warn",
+            "Luật thanh toán (bắt buộc)",
+            "Bất kỳ việc gì đụng tới payment, billing, in-app purchase, receipt validation, entitlements, "
+            "subscription hay checkout đều là <code>HARD</code> + <code>DEEP</code> <strong>bất kể số file</strong>. "
+            "Một diff một dòng không hạ cấp được nó.",
+        )
+    }
 
 <h2><span class="num">01</span> Lớp 1 — Evidence do máy ghi</h2>
 <p>Agent không tự viết bằng chứng. Nó chạy lệnh kiểm chứng qua <code>run_check.py</code>,
 script này thực thi, thu output, <strong>redact secret trong bộ nhớ</strong>, rồi ghi JSON nguyên tử:</p>
-{code("scripts/lite/run_check.py", r'^\s+ev = \{', 12, "schema bằng chứng")}
+{code("scripts/lite/run_check.py", r"^\s+ev = \{", 12, "schema bằng chứng")}
 <p>Bốn trường quyết định tính không-thể-giả: <code>tree_sha</code> (trạng thái cây làm việc lúc chạy),
 <code>timestamp_utc</code>, <code>exit_code</code> thật của tiến trình con, và <code>output_sha256</code> —
 digest của chính output đã thu. Sửa tay trường <code>output</code> là digest lệch ngay, gate bắt được.</p>
@@ -582,9 +770,14 @@ không phải giả định). Gate vẫn nhận evidence v1 cũ.</p>
 một evidence hợp lệ. {len(f["reject_reasons"])} phép kiểm tra độc lập:</p>
 {reject_table(f)}
 {code("scripts/lite/verify_gate.py", r"^def _validate_tree", 18, "so khớp tree-sha")}
-{callout("tip", "Cổng này từng chặn chính tác giả",
- "Trong lúc dựng v0.6.0, gate trả về BLOCKED vì README và VERSION được sửa <em>sau</em> khi test chạy — "
- "tree-sha lệch. Phải chạy lại test rồi mới commit được. Đó là dấu hiệu cổng hoạt động, không phải phiền toái.")}
+{
+        callout(
+            "tip",
+            "Cổng này từng chặn chính tác giả",
+            "Trong lúc dựng v0.6.0, gate trả về BLOCKED vì README và VERSION được sửa <em>sau</em> khi test chạy — "
+            "tree-sha lệch. Phải chạy lại test rồi mới commit được. Đó là dấu hiệu cổng hoạt động, không phải phiền toái.",
+        )
+    }
 
 <h2><span class="num">03</span> Lớp 3 — Execution policy fail-closed</h2>
 <p>Guardrail dạng văn bản là phán đoán; <code>policy_check.py</code> là thực thi.
@@ -617,22 +810,40 @@ Nếu không dựng được RED, phải nói thẳng và nêu rõ điều đó 
 
 <h2><span class="num">05</span> Lớp bổ sung — linter overlay &amp; contract test</h2>
 <p>Hai nguồn bằng chứng giả tinh vi hơn, đều đã bị bịt:</p>
-{table(["Nguồn", "Vấn đề", "Cách chặn"], [
-  ["Overlay có worked example", "Nhúng sẵn <code>VERDICT: PASS</code> → dạy agent bịa VERIFY",
-   "<code>validate_overlays.py</code> chặn verdict cứng, transcript giả, path chết"],
-  ["Test harness sinh output giả", "Hàm mock tự sinh output rồi tự assert → luôn xanh",
-   "Thay bằng contract validator; adapter im lặng là FAIL, kỳ vọng không kiểm chứng được cũng FAIL"],
-])}
-{callout("warn", "Nguyên tắc",
- "Một kỳ vọng <em>không kiểm chứng được</em> phải là FAIL, không phải pass im lặng. "
- "Mọi cơ chế trong trang này đều theo hướng đó.")}
+{
+        table(
+            ["Nguồn", "Vấn đề", "Cách chặn"],
+            [
+                [
+                    "Overlay có worked example",
+                    "Nhúng sẵn <code>VERDICT: PASS</code> → dạy agent bịa VERIFY",
+                    "<code>validate_overlays.py</code> chặn verdict cứng, transcript giả, path chết",
+                ],
+                [
+                    "Test harness sinh output giả",
+                    "Hàm mock tự sinh output rồi tự assert → luôn xanh",
+                    "Thay bằng contract validator; adapter im lặng là FAIL, kỳ vọng không kiểm chứng được cũng FAIL",
+                ],
+            ],
+        )
+    }
+{
+        callout(
+            "warn",
+            "Nguyên tắc",
+            "Một kỳ vọng <em>không kiểm chứng được</em> phải là FAIL, không phải pass im lặng. "
+            "Mọi cơ chế trong trang này đều theo hướng đó.",
+        )
+    }
 
 <h2><span class="num">06</span> Tự kiểm tra</h2>
-<p><code>tests/smoke.py</code> — {f["smoke_checks"]} phép kiểm tra, {f["smoke_loc"]} dòng, không gọi model,
+<p><code>tests/smoke.py</code> — {f["smoke_checks"]} phép kiểm tra, {
+        f["smoke_loc"]
+    } dòng, không gọi model,
 không cần dịch vụ ngoài. Trong đó có cả các test <em>meta</em>: gate có thật sự chặn evidence giả không,
 adapter im lặng có fail không, mọi đường dẫn skill trong routing có tồn tại không.</p>
 <div class="code-block"><div class="code-head"><span class="file">chạy</span></div><pre><code>python scripts/lite/run_check.py -- python tests/smoke.py</code></pre></div>
-'''
+"""
 
 
 def page_runtime(f: dict) -> str:
@@ -650,21 +861,34 @@ def page_runtime(f: dict) -> str:
         "sync-kernel.py": "Sinh CLAUDE/AGENTS/GEMINI.md từ kernel, ép ngân sách 7k token",
     }
     for name, loc in f["scripts"]:
-        rows.append([f"<code>{esc(name)}</code>", esc(desc.get(name, "—")), f"{loc} dòng"])
-    tools = table(["Tool", "Việc"], [
-        ["<code>dn_start_pipeline</code>", "Bắt đầu một lượt chạy, reset state"],
-        ["<code>dn_get_state</code>", "Đọc toàn bộ state: phase, gate, status"],
-        ["<code>dn_advance_phase</code>", "Sang phase kế — <strong>bị chặn nếu gate của phase hiện tại chưa được duyệt</strong>"],
-        ["<code>dn_request_gate_approval</code>", "Đăng ký yêu cầu duyệt gate"],
-        ["<code>dn_approve_gate</code>", "Ghi quyết định của người dùng (chỉ gọi SAU khi họ đã quyết)"],
-        ["<code>dn_fail_pipeline</code>", "Đánh dấu thất bại kèm lý do"],
-        ["<code>dn_memory_add</code>", "Ghi quan sát vào memory dự án"],
-        ["<code>dn_memory_search</code>", "Tìm trong memory (BM25 + RRF)"],
-    ])
-    return f'''
+        rows.append(
+            [f"<code>{esc(name)}</code>", esc(desc.get(name, "—")), f"{loc} dòng"]
+        )
+    tools = table(
+        ["Tool", "Việc"],
+        [
+            ["<code>dn_start_pipeline</code>", "Bắt đầu một lượt chạy, reset state"],
+            ["<code>dn_get_state</code>", "Đọc toàn bộ state: phase, gate, status"],
+            [
+                "<code>dn_advance_phase</code>",
+                "Sang phase kế — <strong>bị chặn nếu gate của phase hiện tại chưa được duyệt</strong>",
+            ],
+            ["<code>dn_request_gate_approval</code>", "Đăng ký yêu cầu duyệt gate"],
+            [
+                "<code>dn_approve_gate</code>",
+                "Ghi quyết định của người dùng (chỉ gọi SAU khi họ đã quyết)",
+            ],
+            ["<code>dn_fail_pipeline</code>", "Đánh dấu thất bại kèm lý do"],
+            ["<code>dn_memory_add</code>", "Ghi quan sát vào memory dự án"],
+            ["<code>dn_memory_search</code>", "Tìm trong memory (BM25 + RRF)"],
+        ],
+    )
+    return f"""
 <section class="hero compact">
   <span class="tag">TẦNG 3</span>
-  <h1>Runtime — <span class="accent">{len(f["scripts"])} công cụ, {f["script_loc"]} dòng</span></h1>
+  <h1>Runtime — <span class="accent">{len(f["scripts"])} công cụ, {
+        f["script_loc"]
+    } dòng</span></h1>
   <p class="lead">Python thuần, <strong>zero-dependency</strong>, chạy trên Windows/macOS/Linux.
   Không cần npm install, không cần venv, không có gói ngoài nào.</p>
 </section>
@@ -672,10 +896,15 @@ def page_runtime(f: dict) -> str:
 <h2><span class="num">01</span> Bộ công cụ</h2>
 {table(["Script", "Vai trò", "Kích thước"], rows)}
 
-{callout("tip", "Vì sao zero-dependency",
- "Một agent OS mà cài đặt phức tạp thì sẽ không được dùng. Toàn bộ tầng runtime chỉ cần "
- "Python trong stdlib — kể cả MCP server (tự viết JSON-RPC) và bộ đọc YAML (parser giới hạn "
- "cho đúng schema policy/contract).")}
+{
+        callout(
+            "tip",
+            "Vì sao zero-dependency",
+            "Một agent OS mà cài đặt phức tạp thì sẽ không được dùng. Toàn bộ tầng runtime chỉ cần "
+            "Python trong stdlib — kể cả MCP server (tự viết JSON-RPC) và bộ đọc YAML (parser giới hạn "
+            "cho đúng schema policy/contract).",
+        )
+    }
 
 <h2><span class="num">02</span> Escalation có kỷ luật</h2>
 <p>Bước HARD được giao cho một expert CLI trong ngữ cảnh sạch, kèm packet đã redact
@@ -686,9 +915,14 @@ def page_runtime(f: dict) -> str:
   <li><strong>Lease</strong> — provider chạy dưới lease; treo thì bị giết, trả 124, và gỡ lease.</li>
 </ul>
 {code("scripts/lite/escalate.py", r"^def provider_timeout_seconds", 9)}
-{callout("warn", "Bẫy Windows đã gặp",
- "Prompt nhiều dòng truyền qua argv bị cmd.exe nghiền nát khi CLI là shim <code>.CMD</code> của npm — "
- "lần gọi đầu tiên expert nhận được prompt rỗng và trả lời lạc đề. Nay prompt đi qua stdin.")}
+{
+        callout(
+            "warn",
+            "Bẫy Windows đã gặp",
+            "Prompt nhiều dòng truyền qua argv bị cmd.exe nghiền nát khi CLI là shim <code>.CMD</code> của npm — "
+            "lần gọi đầu tiên expert nhận được prompt rỗng và trả lời lạc đề. Nay prompt đi qua stdin.",
+        )
+    }
 
 <h2><span class="num">03</span> Parallel dispatch</h2>
 <p>Worker chạy trên git worktree riêng, mỗi worker bị ràng bởi một task contract khai báo
@@ -696,19 +930,23 @@ glob được phép sửa và glob cấm. Merge arbiter từ chối mọi thứ 
 {code("scripts/lite/worktree_manager.py", r"^def _validate", 16, "merge arbiter")}
 
 <h2><span class="num">04</span> MCP server</h2>
-<p>{f["mcp_loc"]} dòng, stdio JSON-RPC tự viết, không dùng SDK. Đăng ký sẵn trong <code>.mcp.json</code>.</p>
+<p>{
+        f["mcp_loc"]
+    } dòng, stdio JSON-RPC tự viết, không dùng SDK. Đăng ký sẵn trong <code>.mcp.json</code>.</p>
 {tools}
 <p>Kỷ luật gate được cưỡng bức ngay trong state machine — không phải bằng lời nhắc:</p>
 {code("mcp/server.py", r"^def tool_advance_phase", 16)}
-'''
+"""
 
 
 def page_memory(f: dict) -> str:
-    return f'''
+    return f"""
 <section class="hero compact">
   <span class="tag">PERSISTENCE</span>
   <h1>Memory — <span class="accent">SQLite + FTS5 + RRF</span></h1>
-  <p class="lead">{f["memory_loc"]} dòng, chạy hoàn toàn local. Không dịch vụ ngoài, không API key,
+  <p class="lead">{
+        f["memory_loc"]
+    } dòng, chạy hoàn toàn local. Không dịch vụ ngoài, không API key,
   không lock-in — và vì thế không rò rỉ nội dung dự án ra đâu cả.</p>
 </section>
 
@@ -718,11 +956,20 @@ embedding model hay dịch vụ. Nhánh embedding vẫn để ngỏ trong roadma
 đã viết sẵn để nhận thêm nguồn xếp hạng thứ hai bất cứ lúc nào.</p>
 
 <h2><span class="num">02</span> Ba lớp truy xuất</h2>
-{table(["Lớp", "Trả về", "Chi phí"], [
-  ["<code>index</code>", "Chỉ tiêu đề + điểm", "~15 token/kết quả"],
-  ["<code>search</code>", "Tóm tắt 200 ký tự, đã fuse xếp hạng", "~60 token/kết quả"],
-  ["<code>get</code>", "Toàn bộ quan sát", "~200 token/kết quả"],
-])}
+{
+        table(
+            ["Lớp", "Trả về", "Chi phí"],
+            [
+                ["<code>index</code>", "Chỉ tiêu đề + điểm", "~15 token/kết quả"],
+                [
+                    "<code>search</code>",
+                    "Tóm tắt 200 ký tự, đã fuse xếp hạng",
+                    "~60 token/kết quả",
+                ],
+                ["<code>get</code>", "Toàn bộ quan sát", "~200 token/kết quả"],
+            ],
+        )
+    }
 <p>Nguyên tắc: nạp lớp rẻ trước, chỉ xuống lớp đắt khi thật cần — đây là cách giữ
 ngân sách boot 500 token mà vẫn có bối cảnh.</p>
 
@@ -746,67 +993,93 @@ connection string có mật khẩu), và được gắn tag domain tự động 
 Một quyết định kiến trúc (weight 10) sống lâu hơn nhiều so với một ghi chú vặt (weight 2);
 mục <code>pinned</code> không bao giờ bị dọn.</p>
 {code("scripts/lite/memory.py", r"^    def gc", 12)}
-'''
+"""
 
 
 def page_patterns(f: dict) -> str:
     items = [
-        ("Evidence do máy ghi, không phải do agent kể",
-         "Tách <em>chạy kiểm chứng</em> khỏi <em>báo cáo kết quả</em>. Script chạy lệnh và ghi JSON "
-         "kèm exit code + tree-sha + timestamp; agent chỉ được trích dẫn. Bằng chứng gõ tay bị coi là giả theo định nghĩa.",
-         "Mọi hệ có AI tự báo cáo kết quả."),
-        ("Cổng hoàn thành lượt (stop hook)",
-         "Một hook chạy lúc agent định kết thúc, kiểm tra evidence tương ứng với thay đổi thực tế trong cây làm việc. "
-         "Đây là chỗ duy nhất không thể nói vòng qua bằng ngôn từ.",
-         "Claude Code / Codex / bất kỳ harness nào có hook."),
-        ("Fail-closed cho luật bảo mật",
-         "Config thiếu, hỏng, hoặc giá trị lạ ⇒ <em>chặn</em>. Chỉ luật không-bảo-mật mới được fail-open. "
-         "Ngược lại với thói quen 'lỗi config thì bỏ qua cho chạy'.",
-         "Bất kỳ policy engine nào."),
-        ("Runtime lease cho process dài hạn",
-         "Dev server, watcher, emulator phải đăng ký lease; cuối lượt bắt buộc CLEAN hoặc giải thích "
-         "<code>policy=keep</code>. Process không lease = leak, không phải ngoại lệ.",
-         "Agent được phép chạy server."),
-        ("Ngân sách token cứng cho prompt hệ thống",
-         "Sinh prompt boot từ nguồn duy nhất và <strong>fail build</strong> khi vượt ngưỡng. "
-         "Không có bước này, prompt hệ thống phình dần cho tới khi nuốt hết context window.",
-         "Mọi agent có system prompt dài."),
-        ("Overlay không được chứa kết quả mẫu",
-         "Tài liệu mà agent bắt chước tuyệt đối không được nhúng output thành công dựng sẵn — "
-         "nó dạy agent <em>viết ra</em> kết quả thay vì <em>tạo ra</em> kết quả. Có linter chặn.",
-         "Thư viện prompt/skill bất kỳ."),
-        ("Kỳ vọng không kiểm chứng được ⇒ FAIL",
-         "Khi harness không có cách xác minh một khẳng định, nó phải báo lỗi chứ không im lặng cho qua. "
-         "Test luôn xanh còn tệ hơn không có test.",
-         "Test harness, eval, CI."),
-        ("Task contract + merge arbiter",
-         "Worker song song khai báo trước glob được sửa và glob cấm; trọng tài từ chối merge mọi thay đổi "
-         "ngoài phạm vi. Ngăn worker giẫm chân nhau mà không cần khoá.",
-         "Multi-agent chạy song song."),
-        ("Fresh-context review",
-         "Người review chỉ thấy diff + yêu cầu gốc, không thấy chuỗi suy luận đã tạo ra diff. "
-         "Bối cảnh xây dựng chính là thứ làm mù người review.",
-         "Code review, self-critique."),
-        ("Progressive disclosure cho memory",
-         "Ba lớp truy xuất (tiêu đề → tóm tắt → đầy đủ) với trần token rõ ràng, thay vì nạp hết vào context.",
-         "Bất kỳ hệ RAG/memory nào."),
-        ("Sổ vi phạm rule",
-         "Ghi lại mỗi lần agent tự nhận (hoặc bị nhắc) là quên rule. Rule bị quên ≥3 lần là ứng viên "
-         "cần siết bằng cơ chế máy, không phải bằng câu chữ mạnh hơn.",
-         "Cải tiến prompt dựa trên dữ liệu."),
-        ("Tài liệu sinh từ source",
-         "Chính trang bạn đang đọc: mọi số liệu và code excerpt đọc từ working tree lúc build, "
-         "và build fail nếu anchor biến mất. Tài liệu chép tay luôn drift.",
-         "Mọi tài liệu kiến trúc."),
+        (
+            "Evidence do máy ghi, không phải do agent kể",
+            "Tách <em>chạy kiểm chứng</em> khỏi <em>báo cáo kết quả</em>. Script chạy lệnh và ghi JSON "
+            "kèm exit code + tree-sha + timestamp; agent chỉ được trích dẫn. Bằng chứng gõ tay bị coi là giả theo định nghĩa.",
+            "Mọi hệ có AI tự báo cáo kết quả.",
+        ),
+        (
+            "Cổng hoàn thành lượt (stop hook)",
+            "Một hook chạy lúc agent định kết thúc, kiểm tra evidence tương ứng với thay đổi thực tế trong cây làm việc. "
+            "Đây là chỗ duy nhất không thể nói vòng qua bằng ngôn từ.",
+            "Claude Code / Codex / bất kỳ harness nào có hook.",
+        ),
+        (
+            "Fail-closed cho luật bảo mật",
+            "Config thiếu, hỏng, hoặc giá trị lạ ⇒ <em>chặn</em>. Chỉ luật không-bảo-mật mới được fail-open. "
+            "Ngược lại với thói quen 'lỗi config thì bỏ qua cho chạy'.",
+            "Bất kỳ policy engine nào.",
+        ),
+        (
+            "Runtime lease cho process dài hạn",
+            "Dev server, watcher, emulator phải đăng ký lease; cuối lượt bắt buộc CLEAN hoặc giải thích "
+            "<code>policy=keep</code>. Process không lease = leak, không phải ngoại lệ.",
+            "Agent được phép chạy server.",
+        ),
+        (
+            "Ngân sách token cứng cho prompt hệ thống",
+            "Sinh prompt boot từ nguồn duy nhất và <strong>fail build</strong> khi vượt ngưỡng. "
+            "Không có bước này, prompt hệ thống phình dần cho tới khi nuốt hết context window.",
+            "Mọi agent có system prompt dài.",
+        ),
+        (
+            "Overlay không được chứa kết quả mẫu",
+            "Tài liệu mà agent bắt chước tuyệt đối không được nhúng output thành công dựng sẵn — "
+            "nó dạy agent <em>viết ra</em> kết quả thay vì <em>tạo ra</em> kết quả. Có linter chặn.",
+            "Thư viện prompt/skill bất kỳ.",
+        ),
+        (
+            "Kỳ vọng không kiểm chứng được ⇒ FAIL",
+            "Khi harness không có cách xác minh một khẳng định, nó phải báo lỗi chứ không im lặng cho qua. "
+            "Test luôn xanh còn tệ hơn không có test.",
+            "Test harness, eval, CI.",
+        ),
+        (
+            "Task contract + merge arbiter",
+            "Worker song song khai báo trước glob được sửa và glob cấm; trọng tài từ chối merge mọi thay đổi "
+            "ngoài phạm vi. Ngăn worker giẫm chân nhau mà không cần khoá.",
+            "Multi-agent chạy song song.",
+        ),
+        (
+            "Fresh-context review",
+            "Người review chỉ thấy diff + yêu cầu gốc, không thấy chuỗi suy luận đã tạo ra diff. "
+            "Bối cảnh xây dựng chính là thứ làm mù người review.",
+            "Code review, self-critique.",
+        ),
+        (
+            "Progressive disclosure cho memory",
+            "Ba lớp truy xuất (tiêu đề → tóm tắt → đầy đủ) với trần token rõ ràng, thay vì nạp hết vào context.",
+            "Bất kỳ hệ RAG/memory nào.",
+        ),
+        (
+            "Sổ vi phạm rule",
+            "Ghi lại mỗi lần agent tự nhận (hoặc bị nhắc) là quên rule. Rule bị quên ≥3 lần là ứng viên "
+            "cần siết bằng cơ chế máy, không phải bằng câu chữ mạnh hơn.",
+            "Cải tiến prompt dựa trên dữ liệu.",
+        ),
+        (
+            "Tài liệu sinh từ source",
+            "Chính trang bạn đang đọc: mọi số liệu và code excerpt đọc từ working tree lúc build, "
+            "và build fail nếu anchor biến mất. Tài liệu chép tay luôn drift.",
+            "Mọi tài liệu kiến trúc.",
+        ),
     ]
     cards = "".join(
-        f'''<div class="card pattern">
+        f"""<div class="card pattern">
   <div class="pattern-num">{i:02d}</div>
   <h4 class="mt-0">{esc(t)}</h4>
   <p class="small">{d}</p>
   <div class="tags"><span class="tag-sm">Dùng được cho: {esc(w)}</span></div>
-</div>''' for i, (t, d, w) in enumerate(items, 1))
-    return f'''
+</div>"""
+        for i, (t, d, w) in enumerate(items, 1)
+    )
+    return f"""
 <section class="hero compact">
   <span class="tag">TINH TÚY</span>
   <h1>{len(items)} pattern <span class="accent">đáng mang sang project khác</span></h1>
@@ -817,16 +1090,23 @@ def page_patterns(f: dict) -> str:
 <div class="grid cols-2">{cards}</div>
 
 <h2><span class="num">01</span> Bộ tối thiểu nếu chỉ lấy 3 thứ</h2>
-{callout("tip", "Thứ tự ưu tiên",
- "1. <strong>Evidence writer + stop gate</strong> — không có nó, mọi luật khác chỉ là lời khuyên.<br>"
- "2. <strong>Ngân sách token cho kernel</strong> — giữ bộ luật đủ nhỏ để luôn được nạp.<br>"
- "3. <strong>Runtime lease</strong> — rẻ nhất để làm, và cứu máy bạn khỏi chết dần vì process mồ côi.")}
+{
+        callout(
+            "tip",
+            "Thứ tự ưu tiên",
+            "1. <strong>Evidence writer + stop gate</strong> — không có nó, mọi luật khác chỉ là lời khuyên.<br>"
+            "2. <strong>Ngân sách token cho kernel</strong> — giữ bộ luật đủ nhỏ để luôn được nạp.<br>"
+            "3. <strong>Runtime lease</strong> — rẻ nhất để làm, và cứu máy bạn khỏi chết dần vì process mồ côi.",
+        )
+    }
 
 <h2><span class="num">02</span> Cái không nên copy</h2>
-<p>Số lượng. Repo này có {len(f["overlays"])} overlay và {len(f["protocols"])} protocol vì được chưng cất
+<p>Số lượng. Repo này có {len(f["overlays"])} overlay và {
+        len(f["protocols"])
+    } protocol vì được chưng cất
 từ một hệ lớn hơn — nhưng chi phí bảo trì tăng theo số file, còn giá trị thì không.
 Bắt đầu từ kernel + một orchestrator, thêm overlay khi thật sự đụng domain đó.</p>
-'''
+"""
 
 
 EXTRA_CSS = """
@@ -871,8 +1151,12 @@ def build(css: str = "") -> dict[str, str]:
         "evidence.html": page("evidence.html", "Chuỗi bằng chứng", page_evidence(f), f),
         "runtime.html": page("runtime.html", "Runtime", page_runtime(f), f),
         "memory.html": page("memory.html", "Memory", page_memory(f), f),
-        "memory-guide.html": page("memory-guide.html", "Bóc tách Memory",
-                                  _page_memory_guide.render(f, code, table, callout, esc, stat_grid), f),
+        "memory-guide.html": page(
+            "memory-guide.html",
+            "Bóc tách Memory",
+            _page_memory_guide.render(f, code, table, callout, esc, stat_grid),
+            f,
+        ),
         "patterns.html": page("patterns.html", "Tinh túy", page_patterns(f), f),
     }
 
@@ -885,6 +1169,11 @@ def _utf8_io() -> None:
             stream.reconfigure(encoding="utf-8", errors="replace")
 
 
+def _ignore_build_date(text: str | None) -> str:
+    """Compare pages without the footer date, which changes every day."""
+    return re.sub(r"build \d{4}-\d{2}-\d{2}", "", text or "")
+
+
 def main() -> None:
     _utf8_io()
     check_only = "--check" in sys.argv
@@ -892,8 +1181,11 @@ def main() -> None:
     css = DOCS / "style.css"
     base = css.read_text(encoding="utf-8")
     marker = "/* ── docs additions"
-    desired_css = (base.split(marker)[0].rstrip() + "\n" + EXTRA_CSS) if marker in base \
+    desired_css = (
+        (base.split(marker)[0].rstrip() + "\n" + EXTRA_CSS)
+        if marker in base
         else (base.rstrip() + "\n" + EXTRA_CSS)
+    )
 
     # The standalone page inlines the stylesheet, so it must be built from the
     # CSS this run will write — not the copy already on disk.
@@ -904,8 +1196,8 @@ def main() -> None:
         path = DOCS / name
         old = path.read_text(encoding="utf-8") if path.is_file() else None
         # Ignore the build-date line when comparing, it changes every day.
-        norm = lambda s: re.sub(r"build \d{4}-\d{2}-\d{2}", "", s or "")
-        if norm(old) != norm(content):
+
+        if _ignore_build_date(old) != _ignore_build_date(content):
             stale.append(name)
             if not check_only:
                 path.write_text(content, encoding="utf-8")
@@ -916,13 +1208,18 @@ def main() -> None:
 
     if check_only:
         if stale:
-            print(f"[docs] STALE: {', '.join(stale)} — run: python docs/build_docs.py",
-                  file=sys.stderr)
+            print(
+                f"[docs] STALE: {', '.join(stale)} — run: python docs/build_docs.py",
+                file=sys.stderr,
+            )
             sys.exit(1)
         print(f"[docs] OK — {len(pages)} page(s) up to date")
         sys.exit(0)
 
-    print(f"[docs] wrote {len(pages)} page(s)" + (f" (updated: {', '.join(stale)})" if stale else " (no change)"))
+    print(
+        f"[docs] wrote {len(pages)} page(s)"
+        + (f" (updated: {', '.join(stale)})" if stale else " (no change)")
+    )
 
 
 if __name__ == "__main__":

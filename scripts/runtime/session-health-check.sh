@@ -158,7 +158,7 @@ check_mcp_manifest() {
 run_mem0_check() {
     log_info "Checking memory stats..."
     
-    MEM0_SCRIPT="$scripts/lite/memory.py"
+    MEM0_SCRIPT="$SCRIPT_DIR/../../scripts/lite/memory.py"
     
     if [ -f "$MEM0_SCRIPT" ]; then
         python3 "$MEM0_SCRIPT" stats 2>/dev/null || log_warn "Could not get memory stats"

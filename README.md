@@ -97,6 +97,20 @@ smoke suite kiểm tra điều này mỗi lần chạy.
 
 `dn_start_pipeline` · `dn_get_state` · `dn_advance_phase` (bị chặn nếu gate chưa approve) · `dn_request_gate_approval` · `dn_approve_gate` · `dn_fail_pipeline` · `dn_memory_add` · `dn_memory_search`
 
+## Giới hạn đã biết
+
+Đây là ranh giới thật của sản phẩm, không phải phần đính kèm cho đẹp:
+
+- **Gate chặn tuyên bố không bằng chứng, không chặn được mọi bug.** Verify gate bắt buộc
+  evidence quan sát được từ workspace hiện tại; nó không bảo đảm không còn lỗi thoát ra production.
+- **Impact analysis không được cưỡng chế toàn diện.** Kernel yêu cầu chạy impact analysis trước
+  khi sửa symbol khi GitNexus khả dụng; các đường tương thích và override của người dùng không
+  được cưỡng chế ở mọi nhánh.
+- **Index có thể cũ hoặc không đầy đủ.** Truy vấn đồ thị bổ sung chứ không thay thế tìm kiếm
+  văn bản; index lỗi thời là một ranh giới bằng chứng được nêu rõ.
+- **Bộ `tests/unit_tests/` có baseline đỏ kế thừa.** 64 test đã đỏ ngay tại thời điểm import;
+  chúng được ghi trong `tests/known_failures.txt` để gate báo *regression mới* thay vì đỏ sẵn.
+
 ## Roadmap
 
 1. **Vector search** — nhánh embedding thứ hai cho RRF fusion (hiện fuse BM25 + importance/recency).

@@ -35,24 +35,24 @@ const MCP_BUILD_DIR = __dirname;
 const MCP_ROOT_DIR = path.dirname(MCP_BUILD_DIR);
 const DAINEXUS_ROOT = path.dirname(MCP_ROOT_DIR);
 
-let _dai-nexusRoot: string | null = null;
+let _DaiNexusRoot: string | null = null;
 let _workspaceRoot: string | null = null;
 
 function _getDaiNexusRoot(): string {
-  if (!_dai-nexusRoot) {
+  if (!_DaiNexusRoot) {
     let dir = __dirname;
     for (let i = 0; i < 10; i++) {
       if (fs.existsSync(path.join(dir, 'package.json'))) {
-        _dai-nexusRoot = path.dirname(dir);
-        return _dai-nexusRoot;
+        _DaiNexusRoot = path.dirname(dir);
+        return _DaiNexusRoot;
       }
       const parent = path.dirname(dir);
       if (parent === dir) break;
       dir = parent;
     }
-    _dai-nexusRoot = path.resolve(DAINEXUS_ROOT);
+    _DaiNexusRoot = path.resolve(DAINEXUS_ROOT);
   }
-  return _dai-nexusRoot;
+  return _DaiNexusRoot;
 }
 
 export function getDaiNexusRoot(): string {

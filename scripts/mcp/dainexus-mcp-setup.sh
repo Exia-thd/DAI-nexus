@@ -55,22 +55,22 @@ detect_dai-nexus() {
     if [[ "$resolved" == */.antigravity/plugins/production-grade/scripts ]]; then
         local plugin_root="$(dirname "$(dirname "$(dirname "$resolved")")")"
         local current="$plugin_root"
-        local found_dai-nexus=""
+        local found_dai_nexus=""
         while [[ "$current" != "/" ]] && [[ "$current" != "$HOME" ]]; do
             if [[ -d "${current}/dai-nexus" ]]; then
-                found_dai-nexus="${current}/dai-nexus"
+                found_dai_nexus="${current}/dai-nexus"
                 break
             fi
             if [[ -f "${current}/AGENTS.md" ]] || [[ -f "${current}/CLAUDE.md" ]]; then
-                found_dai-nexus="$current"
+                found_dai_nexus="$current"
                 break
             fi
             current="$(dirname "$current")"
         done
 
-        if [[ -n "$found_dai-nexus" ]]; then
-            DAINEXUS_DIR="$found_dai-nexus"
-            [[ "$found_dai-nexus" == "$plugin_root" ]] && DAINEXUS_IS_PROJECT="true" || DAINEXUS_IS_PROJECT="false"
+        if [[ -n "$found_dai_nexus" ]]; then
+            DAINEXUS_DIR="$found_dai_nexus"
+            [[ "$found_dai_nexus" == "$plugin_root" ]] && DAINEXUS_IS_PROJECT="true" || DAINEXUS_IS_PROJECT="false"
         else
             DAINEXUS_DIR="$plugin_root"
             DAINEXUS_IS_PROJECT="false"

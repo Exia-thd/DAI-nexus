@@ -137,7 +137,7 @@ async function handleStatus(useJson: boolean): Promise<void> {
     budget: readBudgetFile(projectRoot),
     last7Days: summary,
     sources: {
-      dai-nexusUsageDir: existsSync(getDefaultUsageDir(projectRoot)),
+      daiNexusUsageDir: existsSync(getDefaultUsageDir(projectRoot)),
       claudeTelemetry: existsSync(join(homedir(), ".claude", "telemetry")),
       codexConfig: existsSync(join(homedir(), ".codex")),
     },

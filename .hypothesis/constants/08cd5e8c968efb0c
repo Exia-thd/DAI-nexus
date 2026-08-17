@@ -1,4 +1,0 @@
-# file: C:\Users\thdat\Downloads\forgewright\dai-nexus\evals\routing\evaluate.py
-# hypothesis_version: 6.135.8
-
-[0.0, 0.95, 1.0, 1.959963984540054, '--max-under-routed', '--min-accuracy', '__main__', 'accuracy', 'accuracy_ci95', 'builder', 'categories', 'corpus_sha256', 'corpus_version', 'correct', 'decisions', 'expert', 'expert_share', 'lower', 'non_expert_share', 'scout', 'selected_tier', 'task_id', 'total', 'under_routed', 'upper', 'utf-8']

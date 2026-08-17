@@ -2,36 +2,43 @@
 
 Runtime guardrail configuration for tool execution. The policy lives in
 `.dainexus/execution-policy.yaml` and is enforced by
-`scripts/lite/policy_check.py`, called from the Guardrail protocol
+`scripts/lite/policy_check.py`, called from guard middleware ④
 (`skills/_shared/protocols/guardrail.md`) before a tool call runs.
 
 ## Keys
 
 | Key | Default | Meaning |
 |---|---|---|
-| `mode` | `strict` | `strict` = deny blocks (exit 1) · `permissive` = warn but allow (exit 2) · `audit` = log only (exit 0) |
-| `require_verify` | `true` | Every success claim requires a VERIFY block (VERIFY section) |
-| `max_escalations` | `3` | Max `escalate.py` calls per user turn before pausing for approval |
-| `deny_patterns` | see file | Case-insensitive regex list matched against `"<tool_name> <args>"` |
+| `mode` | `strict` | `strict` = deny blocks (exit 1) · `permissive` = warn but allow (exit 2) · `audit` = log to telemetry only (exit 0) |
+| `require_verify` | `true` | Code-change completion requires exact-turn schema-v2 evidence and strict response correlation ([VERIFY.md](VERIFY.md)) |
+| `max_escalations` | `3` | Max `escalate.sh` calls per user turn before pausing for approval ([ESCALATE.md](ESCALATE.md)) |
+| `deny_patterns` | see file | Case-insensitive POSIX ERE list matched against `"<tool_name> <args>"` |
 | `refresh_interval_ticks` | `10` | Guard re-reads the policy file every N tool calls (hot-reload) |
 
 ## Gate protocol
 
-1. Before executing a risky tool call, run
+1. Before executing a tool, guard runs
    `python scripts/lite/policy_check.py check <tool_name> "<args>"`.
 2. Exit `0` → proceed. Exit `2` → proceed, but tag the step **HARD**
-   (ESCALATE section). Exit `1` → the tool call is blocked;
+   ([ESCALATE.md](ESCALATE.md)). Exit `1` → the tool call is blocked;
    report the matched pattern to the user instead of retrying.
-3. Every match is appended to `.dainexus/policy-log.jsonl` (best-effort).
+3. Every match emits a `policy.deny` / `policy.warn` / `policy.audit`
+   telemetry event via `scripts/lite/telemetry.sh` (best-effort).
 4. If the policy file is missing, unreadable, empty, or malformed, the gate
-   blocks execution (**fail-closed**) and reports a policy configuration
-   error. Unknown `mode` values also fail closed (treated as `strict`).
+   blocks execution (fail-closed) and reports a policy configuration error.
+   Unknown `mode` values also fail closed (treated as `strict`).
+5. Orchestrators read scalars with `policy-check.sh get <key>`
+   (e.g. escalation budget, verify requirement).
+
+## Response correlation
+
+`require_verify` covers more than the evidence file: when a check records `acceptance_criteria`, the response's VERIFY block must quote them verbatim — the acceptance slug, the exact claim, the exact command, and `OUTPUT: sha256:<digest>` instead of pasted text. `scripts/lite/rule_validator.py` enforces this and the Stop hook rejects a mismatch as `MISREPORTED`. Full contract: `skills/_shared/protocols/response-correlation.md`.
 
 ## Editing rules
 
 - Scalars must stay one-per-line with no spaces in the value.
-- Deny patterns must stay in the `  - "pattern"` form: regex, no double
+- Deny patterns must stay in the `  - "pattern"` form: ERE, no double
   quotes inside the pattern, no inline comments on pattern lines.
 - Loosening the policy (`strict` → `permissive`/`audit`, or removing a
   deny pattern) is itself a security-sensitive change: Hard Rule 6 and
-  the HARD checklist in ESCALATE section apply.
+  the HARD checklist in [ESCALATE.md](ESCALATE.md) apply.

@@ -1,4 +1,0 @@
-# file: C:\Users\thdat\Downloads\forgewright\dai-nexus\evals\routing\corpus.py
-# hypothesis_version: 6.135.8
-
-[100, '__main__', 'architecture', 'builder', 'concurrency', 'debug', 'docs', 'expert', 'extraction', 'feature', 'operations', 'public_api', 'refactor', 'repeated_failure', 'review', 'schema', 'scout', 'security', 'utf-8']

@@ -193,9 +193,9 @@ resolve_workspace() {
 
 # ─── Step 2: Find DAI Nexus ────────────────────────────────────────────────
 
-find_dai-nexus() {
+find_dai_nexus() {
     local workspace="$1"
-    local dai-nexus=""
+    local dai_nexus=""
     
     log_debug "Searching for dai-nexus in $workspace..."
     
@@ -203,7 +203,7 @@ find_dai-nexus() {
     if [[ -d "$workspace/.dainexus" ]]; then
         # .dainexus might contain dai-nexus itself, or be project config
         if [[ -f "$workspace/.dainexus/AGENTS.md" ]] || [[ -f "$workspace/.dainexus/CLAUDE.md" ]]; then
-            dai-nexus="$workspace/.dainexus"
+            dai_nexus="$workspace/.dainexus"
             log_debug "  → .dainexus in workspace: $dai_nexus"
         fi
     fi
@@ -211,7 +211,7 @@ find_dai-nexus() {
     # Pattern 2: dai-nexus/ submodule
     if [[ -z "$dai_nexus" ]] && [[ -d "$workspace/dai-nexus" ]]; then
         if [[ -f "$workspace/dai-nexus/AGENTS.md" ]] || [[ -f "$workspace/dai-nexus/CLAUDE.md" ]]; then
-            dai-nexus="$workspace/dai-nexus"
+            dai_nexus="$workspace/dai-nexus"
             log_debug "  → dai-nexus submodule: $dai_nexus"
         fi
     fi
@@ -222,13 +222,13 @@ find_dai-nexus() {
         while [[ "$current" != "/" ]] && [[ "$current" != "$HOME" ]]; do
             # Check for dai-nexus markers
             if [[ -f "$current/AGENTS.md" ]] || [[ -f "$current/CLAUDE.md" ]]; then
-                dai-nexus="$current"
+                dai_nexus="$current"
                 log_debug "  → Found by walking up: $dai_nexus"
                 break
             fi
             # Check for .dainexus containing dai-nexus
             if [[ -d "$current/.dainexus" ]] && [[ -f "$current/.dainexus/AGENTS.md" ]]; then
-                dai-nexus="$current/.dainexus"
+                dai_nexus="$current/.dainexus"
                 log_debug "  → Found .dainexus: $dai_nexus"
                 break
             fi
@@ -254,7 +254,7 @@ try {
 " 2>/dev/null || echo "")
         
         if [[ -n "$registered" ]] && [[ -d "$registered" ]]; then
-            dai-nexus="$registered"
+            dai_nexus="$registered"
             log_debug "  → From registry: $dai_nexus"
         fi
     fi
@@ -264,7 +264,7 @@ try {
         for candidate in "${DAINEXUS_CANDIDATES[@]}"; do
             if [[ -n "$candidate" ]] && [[ -d "$candidate" ]]; then
                 if [[ -f "$candidate/AGENTS.md" ]] || [[ -f "$candidate/CLAUDE.md" ]]; then
-                    dai-nexus="$candidate"
+                    dai_nexus="$candidate"
                     log_debug "  → Known location: $dai_nexus"
                     break
                 fi
@@ -276,10 +276,10 @@ try {
     if [[ -z "$dai_nexus" ]]; then
         local script_path
         script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-        local script_dai-nexus="${script_path%/*}"
+        local script_dai_nexus="${script_path%/*}"
         
-        if [[ -f "${script_dai-nexus}/AGENTS.md" ]] || [[ -f "${script_dai-nexus}/CLAUDE.md" ]]; then
-            dai-nexus="$script_dai-nexus"
+        if [[ -f "${script_dai_nexus}/AGENTS.md" ]] || [[ -f "${script_dai_nexus}/CLAUDE.md" ]]; then
+            dai_nexus="$script_dai_nexus"
             log_debug "  → From script location: $dai_nexus"
         fi
     fi
@@ -297,7 +297,7 @@ try {
 
 find_mcp_server() {
     local workspace="$1"
-    local dai-nexus="$2"
+    local dai_nexus="$2"
     
     log_debug "Finding MCP server..."
     
@@ -312,8 +312,8 @@ find_mcp_server() {
     fi
     
     # Priority 2: DAI Nexus's own MCP server
-    if [[ -z "$server_path" ]] && [[ -f "${dai-nexus}/mcp-server/src/index.ts" ]]; then
-        server_path="${dai-nexus}/mcp-server/src/index.ts"
+    if [[ -z "$server_path" ]] && [[ -f "${dai_nexus}/mcp-server/src/index.ts" ]]; then
+        server_path="${dai_nexus}/mcp-server/src/index.ts"
         log_debug "  → DAI Nexus MCP server: $server_path"
     fi
     
@@ -324,8 +324,8 @@ find_mcp_server() {
     fi
     
     # Priority 4: Legacy dai-nexus MCP server path
-    if [[ -z "$server_path" ]] && [[ -f "${dai-nexus}/mcp/src/index.ts" ]]; then
-        server_path="${dai-nexus}/mcp/src/index.ts"
+    if [[ -z "$server_path" ]] && [[ -f "${dai_nexus}/mcp/src/index.ts" ]]; then
+        server_path="${dai_nexus}/mcp/src/index.ts"
         log_debug "  → Legacy MCP server: $server_path"
     fi
     
@@ -366,7 +366,7 @@ check_gitnexus() {
 
 load_project_settings() {
     local workspace="$1"
-    local dai-nexus="$2"
+    local dai_nexus="$2"
     
     log_debug "Loading project settings..."
     
@@ -400,7 +400,7 @@ load_project_settings() {
 
 register_project() {
     local workspace="$1"
-    local dai-nexus="$2"
+    local dai_nexus="$2"
     
     # Skip if registry doesn't exist
     [[ ! -f "$GLOBAL_REGISTRY" ]] && return 0
@@ -425,7 +425,7 @@ try {
     var reg = JSON.parse(fs.readFileSync('${GLOBAL_REGISTRY}', 'utf8'));
     if (!reg.projects) reg.projects = {};
     reg.projects['${workspace}'] = {
-        dai_nexus_path: '${dai-nexus}',
+        dai_nexus_path: '${dai_nexus}',
         registered_at: new Date().toISOString(),
         last_used: new Date().toISOString()
     };
@@ -438,7 +438,7 @@ try {
 
 build_launch_command() {
     local workspace="$1"
-    local dai-nexus="$2"
+    local dai_nexus="$2"
     local server_path="$3"
     
     # Determine the launch command
@@ -468,7 +468,7 @@ build_launch_command() {
 
 cmd_dry_run() {
     local workspace="$1"
-    local dai-nexus="$2"
+    local dai_nexus="$2"
     local server_path="$3"
     local launch_cmd="$4"
     
@@ -515,7 +515,7 @@ main() {
     
     # Step 2: Find dai-nexus
     local dai-nexus
-    dai-nexus="$(find_dai-nexus "$workspace")" || {
+    dai_nexus="$(find_dai_nexus "$workspace")" || {
         log_error "DAI Nexus not found"
         log_info ""
         log_info "Install DAI Nexus:"
