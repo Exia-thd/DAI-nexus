@@ -41,7 +41,7 @@ set -euo pipefail
 declare DAINEXUS_DIR=""
 declare DAINEXUS_IS_PROJECT="false"
 
-detect_dai-nexus() {
+detect_dai_nexus() {
     local script_path="${BASH_SOURCE[0]}"
     local resolved
 
@@ -3833,7 +3833,7 @@ NODE
 
 # ─── Write Settings ─────────────────────────────────────────────────────────────
 
-write_dai-nexus_settings() {
+write_dai_nexus_settings() {
     log_step "Writing DAI Nexus settings..."
     local settings_dir="${PROJECT_ROOT}/.dainexus" settings target_tmp source_state
     settings="${settings_dir}/settings.env"
@@ -4942,7 +4942,7 @@ main() {
     done
 
     # Detect paths
-    detect_dai-nexus
+    detect_dai_nexus
     PROJECT_ROOT="$(detect_actual_project_root)"
     recover_pending_transaction
 
@@ -5029,7 +5029,7 @@ main() {
                 setup_mcp_server || return 1
                 sync_canonical_server || return 1
                 echo ""
-                write_dai-nexus_settings || return 1
+                write_dai_nexus_settings || return 1
                 echo ""
             else
                 log_ok "MCP server already exists (use --force to re-generate)"

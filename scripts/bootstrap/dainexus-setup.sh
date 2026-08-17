@@ -112,7 +112,7 @@ opencode_config_path() {
     fi
 }
 
-mcp_config_has_dai-nexus() {
+mcp_config_has_dai_nexus() {
     local path="${1:-}" parser_module schema canonical_setup fw_dir
     [[ -n "$path" ]] && [[ -f "$path" ]] || return 1
 
@@ -270,7 +270,7 @@ check_prerequisites() {
 # DAI-NEXUS MANAGEMENT
 # ═══════════════════════════════════════════════════════════════════════════════
 
-install_dai-nexus() {
+install_dai_nexus() {
     info "Installing DAI Nexus to ${DAINEXUS_DEFAULT}..."
     
     if [[ -d "${DAINEXUS_DEFAULT}" ]]; then
@@ -294,7 +294,7 @@ install_dai-nexus() {
     success "DAI Nexus installed"
 }
 
-ensure_dai-nexus() {
+ensure_dai_nexus() {
     local fw_dir="$1"
     
     if [[ -z "$fw_dir" ]] || [[ ! -d "$fw_dir" ]]; then
@@ -305,7 +305,7 @@ ensure_dai-nexus() {
             error "Cannot proceed without DAI Nexus"
             exit 1
         fi
-        install_dai-nexus
+        install_dai_nexus
         fw_dir="${DAINEXUS_DEFAULT}"
     fi
     
@@ -497,7 +497,7 @@ cmd_check() {
             [[ -n "$client" ]] || continue
             config_path="$(get_mcp_config_path "$client")"
             success "AI Client: ${client}"
-            if mcp_config_has_dai-nexus "$config_path"; then
+            if mcp_config_has_dai_nexus "$config_path"; then
                 success "MCP Config: Configured (${config_path})"
             else
                 warn "MCP Config: No enabled DAI Nexus entry (${config_path})"
@@ -552,7 +552,7 @@ cmd_diagnose() {
         while IFS= read -r client; do
             [[ -n "$client" ]] || continue
             config_path="$(get_mcp_config_path "$client")"
-            if mcp_config_has_dai-nexus "$config_path"; then
+            if mcp_config_has_dai_nexus "$config_path"; then
                 echo "  ${client}: enabled (${config_path})"
             else
                 echo "  ${client}: not configured or disabled (${config_path})"
@@ -654,7 +654,7 @@ main() {
     # ── DAI Nexus Installation ────────────────────────────────────────────
     
     if [[ "$install_fw" == "true" ]] || [[ -z "$fw_dir" ]]; then
-        fw_dir=$(ensure_dai-nexus "$fw_dir")
+        fw_dir=$(ensure_dai_nexus "$fw_dir")
     fi
     
     echo ""

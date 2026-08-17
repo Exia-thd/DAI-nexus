@@ -39,7 +39,7 @@ log_error() { echo -e "  ${RED}✗${NC} $1"; }
 log_info()  { echo -e "  $1"; }
 
 # ─── Detect DAI Nexus ────────────────────────────────────────────
-detect_dai-nexus() {
+detect_dai_nexus() {
     local script="${BASH_SOURCE[0]}"
     local resolved
 
@@ -60,7 +60,7 @@ detect_dai-nexus() {
     echo "$(dirname "$resolved")"
 }
 
-DAINEXUS_DIR="$(detect_dai-nexus)"
+DAINEXUS_DIR="$(detect_dai_nexus)"
 PROJECT_ROOT="$(pwd -P)"
 OUTPUT_DIR="${PROJECT_ROOT}/.dainexus/extensions"
 

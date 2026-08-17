@@ -632,7 +632,7 @@ test_settings_and_durability_transactions() {
         DAINEXUS_DIR="$3"
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
-        write_dai-nexus_settings
+        write_dai_nexus_settings
     ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Symlinked settings.env was accepted"
@@ -651,7 +651,7 @@ test_settings_and_durability_transactions() {
         DAINEXUS_DIR="$3"
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
-        write_dai-nexus_settings
+        write_dai_nexus_settings
     ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Hard-linked settings.env was accepted"
@@ -671,7 +671,7 @@ test_settings_and_durability_transactions() {
             DAINEXUS_DIR="$3"
             CANONICAL_LOCK_TOKEN="$(new_owner_token)"
             initialize_runtime_transaction
-            write_dai-nexus_settings
+            write_dai_nexus_settings
         ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Injected fsync boundary failure unexpectedly succeeded"
@@ -689,7 +689,7 @@ test_settings_and_durability_transactions() {
             DAINEXUS_DIR="$3"
             CANONICAL_LOCK_TOKEN="$(new_owner_token)"
             initialize_runtime_transaction
-            write_dai-nexus_settings
+            write_dai_nexus_settings
         ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" "$DAINEXUS_DIR" \
         ; then
         fail "Injected power-loss boundary unexpectedly succeeded"
@@ -1602,7 +1602,7 @@ test_round8_fixes() {
         DAINEXUS_DIR="$3"
         CANONICAL_LOCK_TOKEN="$(new_owner_token)"
         initialize_runtime_transaction
-        write_dai-nexus_settings
+        write_dai_nexus_settings
     ' _ "${SCRIPT_DIR}/dainexus-mcp-setup.sh" "$TEST_PROJECT" 'a;$(echo bad)>sentinel'  || true
     if [[ ! -f "$settings_env" ]]; then
         fail "Settings env was not created"

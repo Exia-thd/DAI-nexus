@@ -163,7 +163,7 @@ detect_tech_stack() {
 
 # ─── Create .dainexus Directory ──────────────────────────────────────
 
-create_dai-nexus_dir() {
+create_dai_nexus_dir() {
     local fw_dir="$TARGET_PROJECT/.dainexus"
     
     if [ -d "$fw_dir" ]; then
@@ -392,7 +392,7 @@ setup_submodule_auto_update() {
 
 main() {
     check_prerequisites
-    create_dai-nexus_dir
+    create_dai_nexus_dir
     ensure_project_policy
     run_mem0_ensure
     update_gitignore

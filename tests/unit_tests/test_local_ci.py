@@ -80,18 +80,38 @@ def test_precommit_runs_mandatory_docs_continuity_gate() -> None:
 
 def test_timeout_terminates_spawned_process_tree(tmp_path: Path) -> None:
     module = _module()
-    runner = module.LocalCI(dry_run=False, keep_going=True, timeout=1, base_ref=None)
+    # The original shape raced: a 1s step timeout against a grandchild that
+    # slept 2s. Interpreter startup alone can exceed 1s on a loaded machine, so
+    # the tree was sometimes killed before the grandchild joined it — and the
+    # grandchild then outlived the kill and wrote its marker. The grandchild now
+    # announces itself, the parent refuses to proceed until it has, and the
+    # margin between the timeout and the marker write is 25s rather than 1s.
+    runner = module.LocalCI(dry_run=False, keep_going=True, timeout=5, base_ref=None)
+    started = tmp_path / "child-started"
     marker = tmp_path / "child-survived"
     child = (
-        "import time,pathlib; time.sleep(2); "
+        "import time,pathlib; "
+        f"pathlib.Path({str(started)!r}).write_text('up'); "
+        "time.sleep(30); "
         f"pathlib.Path({str(marker)!r}).write_text('bad')"
     )
-    parent = (
-        "import subprocess,sys,time; "
-        f"subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(10)"
+    # Multi-line, not a `;`-joined one-liner: `while` is a compound statement
+    # and cannot follow a semicolon.
+    parent = "\n".join(
+        [
+            "import subprocess, sys, time, pathlib",
+            f"subprocess.Popen([sys.executable, '-c', {child!r}])",
+            f"up = pathlib.Path({str(started)!r})",
+            "deadline = time.time() + 20",
+            "while not up.exists() and time.time() < deadline:",
+            "    time.sleep(0.05)",
+            "time.sleep(60)",
+        ]
     )
     code = runner.run("timeout-tree", [sys.executable, "-c", parent], check=False)
     assert code == 124
+    # Without this the test passes vacuously whenever the grandchild never ran.
+    assert started.exists(), "grandchild never started; the kill proved nothing"
     time.sleep(2.5)
     assert not marker.exists()
 
