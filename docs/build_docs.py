@@ -19,9 +19,7 @@ from __future__ import annotations
 
 import html
 import re
-import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -114,22 +112,15 @@ def facts() -> dict:
     policy_patterns = re.findall(
         r'^\s*- "(.+)"$', read(".dainexus/execution-policy.yaml"), re.MULTILINE
     )
-    try:
-        commit = (
-            subprocess.run(
-                ["git", "rev-parse", "--short", "HEAD"],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-            ).stdout.strip()
-            or "unknown"
-        )
-    except OSError:
-        commit = "unknown"
+    # Deliberately no commit hash and no build date. Both made the output a
+    # function of *when* it was built rather than of what it was built from, so
+    # `--check` went stale after every commit and again at every midnight — and
+    # the hash could never be right anyway: docs committed in commit N can only
+    # ever name commit N-1. The guarantee readers actually want is that these
+    # pages match the current sources, and the gate proves that continuously by
+    # regenerating and byte-comparing them.
     return {
         "version": read("VERSION").strip(),
-        "commit": commit,
-        "built": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "kernel_files": kernel,
         "kernel_tokens": len(read("CLAUDE.md")) // 4,
         "scripts": [(p.name, lines_of(f"scripts/lite/{p.name}")) for p in scripts],
@@ -244,7 +235,7 @@ def page(filename: str, title: str, body: str, f: dict) -> str:
 </main>
 <footer>
   <div><strong>DAI Nexus docs</strong> · sinh tự động từ source bằng <code>docs/build_docs.py</code></div>
-  <div>v{f["version"]} · commit <code>{f["commit"]}</code> · build {f["built"]}</div>
+  <div>v{f["version"]} · generated from source</div>
 </footer>
 </body>
 </html>
@@ -277,7 +268,7 @@ main {{ padding-top: 28px; }}
 </main>
 <footer>
   <div><strong>{esc(title)}</strong> · trang độc lập, không cần file nào khác đi kèm</div>
-  <div>bản {f["version"]} · commit <code>{f["commit"]}</code> · build {f["built"]}</div>
+  <div>bản {f["version"]} · sinh tự động từ mã nguồn</div>
 </footer>
 </body>
 </html>

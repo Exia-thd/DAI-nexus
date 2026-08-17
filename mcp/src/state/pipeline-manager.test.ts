@@ -13,6 +13,14 @@ for (const key of ['DAINEXUS_WORKSPACE', 'CLASSD_WORKSPACE_ROOT', 'AGENTS_WORKSP
 }
 process.env.CURSOR_WORKSPACE_ROOT = tmpDir;
 
+// setWorkspaceRoot() calls process.chdir(), so resolving the fixture leaves the
+// whole worker sitting inside tmpDir. Windows refuses to remove a directory that
+// is a live process's cwd, which is why cleanup failed with EPERM, leaked a
+// fixture per run, and left the worker pointed at a half-deleted directory —
+// where later file reads stalled until vitest's 10s timeout fired. Remember
+// where we started so afterAll can step out before deleting.
+const ORIGINAL_CWD = process.cwd();
+
 const STATE_FILE = path.join(tmpDir, '.dainexus', 'pipeline-state.json');
 
 function cleanState() {
@@ -29,6 +37,11 @@ describe('Pipeline Manager', () => {
   });
 
   afterAll(() => {
+    try {
+      process.chdir(ORIGINAL_CWD);
+    } catch {
+      // Nothing else to try; the rmSync below will report what it hits.
+    }
     try {
       if (fs.existsSync(tmpDir)) {
         fs.rmSync(tmpDir, { recursive: true, force: true });
