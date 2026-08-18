@@ -568,7 +568,9 @@ def get_store():
 
 def cmd_search(args):
     if len(args) < 1:
-        print("Usage: scripts/lite/memory.py search <query> [--limit N] [--format compact|full]")
+        print(
+            "Usage: scripts/lite/memory.py search <query> [--limit N] [--format compact|full]"
+        )
         return
     query = args[0]
     limit = 5
@@ -967,7 +969,9 @@ def cmd_setup(args):
         Path(MEMORY_LOG).touch()
         print(f"  ✅ {MEMORY_LOG} initialized")
 
-    print("\n✅ Setup complete! Run 'scripts/lite/memory.py refresh' to ingest project state.")
+    print(
+        "\n✅ Setup complete! Run 'scripts/lite/memory.py refresh' to ingest project state."
+    )
     print(
         f"   Search: TF-IDF (cosine similarity) | GC: value-weighted | Max: {MAX_MEMORIES_DEFAULT}"
     )

@@ -369,6 +369,16 @@ def test_skill_overlays_clean() -> None:
         for bad in bad_tokens:
             if bad.lower() in lower:
                 stale.append(f"{p.relative_to(ROOT)}: {bad}")
+    # Names count too. Scanning only contents let files whose *filename* carried
+    # the token sit in the repo indefinitely — their bodies had been cleaned, so
+    # a content scan reported the tree clean while `git ls-files` did not.
+    for path in ROOT.rglob("*"):
+        if any(part in skip_parts for part in path.parts):
+            continue
+        lower_name = path.name.lower()
+        for bad in bad_tokens:
+            if bad.lower() in lower_name:
+                stale.append(f"{path.relative_to(ROOT)}: {bad} (in filename)")
     check("repo free of upstream-origin references", not stale, str(stale[:10]))
 
 

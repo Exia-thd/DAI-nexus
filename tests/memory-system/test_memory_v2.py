@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-test_mem0_v2.py — Tests for scripts/lite/memory.py core functionality
+test_memory_v2.py — Tests for scripts/lite/memory.py core functionality
 Specifically: search fix (multi-word), auto-tagging, adaptive ranking
 """
 
@@ -15,18 +15,23 @@ import importlib.util
 from pathlib import Path
 
 # Load scripts/lite/memory.py by path (filename has hyphen, can't be imported directly)
-SCRIPTS_DIR = Path(__file__).parent.parent.parent / "scripts"
-_spec = importlib.util.spec_from_file_location("mem0_v2", SCRIPTS_DIR / "scripts/lite/memory.py")
-_mem0_module = importlib.util.module_from_spec(_spec)
-sys.modules["mem0_v2"] = _mem0_module
-_spec.loader.exec_module(_mem0_module)
+# Repo root. The previous name said `scripts` *and* the joins below added
+# "scripts/..." again, producing scripts/scripts/lite/memory.py — a path that
+# has never existed, so this file failed at import and never ran.
+ROOT = Path(__file__).parent.parent.parent
+_spec = importlib.util.spec_from_file_location(
+    "memory_v2", ROOT / "scripts/lite/memory.py"
+)
+_memory_module = importlib.util.module_from_spec(_spec)
+sys.modules["memory_v2"] = _memory_module
+_spec.loader.exec_module(_memory_module)
 
 
 class TestAutoTagging(unittest.TestCase):
     """Tests for AUTO_TAG_PATTERNS auto-tagging."""
 
     def test_auth_tag(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "JWT authentication middleware with token validation"
         tags = auto_extract_tags(text)
@@ -34,61 +39,61 @@ class TestAutoTagging(unittest.TestCase):
         self.assertIn("testing", tags)
 
     def test_architecture_tag(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "Architecture redesign using microservices pattern"
         tags = auto_extract_tags(text)
         self.assertIn("architecture", tags)
 
     def test_database_tag(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "PostgreSQL database migration with query optimization"
         tags = auto_extract_tags(text)
         self.assertIn("database", tags)
 
     def test_performance_tag(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "Performance optimization with Redis caching"
         tags = auto_extract_tags(text)
         self.assertIn("performance", tags)
 
     def test_api_tag(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "REST API endpoint with GraphQL wrapper"
         tags = auto_extract_tags(text)
         self.assertIn("api", tags)
 
     def test_security_tag(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "SQL injection vulnerability fixed"
         tags = auto_extract_tags(text)
         self.assertIn("security", tags)
 
     def test_multiple_tags(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "JWT auth with PostgreSQL database and Redis cache"
         tags = auto_extract_tags(text)
         self.assertGreaterEqual(len(tags), 3)
 
     def test_empty_text(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         tags = auto_extract_tags("")
         self.assertEqual(tags, [])
 
     def test_no_match(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         tags = auto_extract_tags("This is a random sentence with no keywords")
         self.assertEqual(tags, [])
 
     def test_case_insensitive(self):
-        from mem0_v2 import auto_extract_tags
+        from memory_v2 import auto_extract_tags
 
         text = "JWT AUTHENTICATION with DATABASE"
         tags = auto_extract_tags(text)
@@ -104,9 +109,11 @@ class TestSearchMultiWord(unittest.TestCase):
 
         tmpdir = tempfile.mkdtemp()
         os.environ["MEM0_DB_PATH"] = os.path.join(tmpdir, "memory.db")
-        _spec = importlib.util.spec_from_file_location("m", SCRIPTS_DIR / "scripts/lite/memory.py")
+        _spec = importlib.util.spec_from_file_location(
+            "m", ROOT / "scripts/lite/memory.py"
+        )
         _m = importlib.util.module_from_spec(_spec)
-        sys.modules["mem0_v2"] = _m
+        sys.modules["memory_v2"] = _m
         _spec.loader.exec_module(_m)
         self.db = _m.MemoryDB(os.path.join(tmpdir, "memory.db"))
 
@@ -172,7 +179,7 @@ class TestVietnameseMemoryOutput(unittest.TestCase):
     def setUp(self):
         tmpdir = tempfile.mkdtemp()
         spec = importlib.util.spec_from_file_location(
-            "m_vietnamese", SCRIPTS_DIR / "scripts/lite/memory.py"
+            "m_vietnamese", ROOT / "scripts/lite/memory.py"
         )
         self.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.module)
@@ -219,9 +226,11 @@ class TestAddWithImportance(unittest.TestCase):
         import tempfile
 
         tmpdir = tempfile.mkdtemp()
-        _spec = importlib.util.spec_from_file_location("m", SCRIPTS_DIR / "scripts/lite/memory.py")
+        _spec = importlib.util.spec_from_file_location(
+            "m", ROOT / "scripts/lite/memory.py"
+        )
         _m = importlib.util.module_from_spec(_spec)
-        sys.modules["mem0_v2"] = _m
+        sys.modules["memory_v2"] = _m
         _spec.loader.exec_module(_m)
         self.db = _m.MemoryDB(os.path.join(tmpdir, "memory.db"))
 
@@ -251,7 +260,7 @@ class TestRedaction(unittest.TestCase):
     """Tests for secret redaction."""
 
     def test_redacts_api_key(self):
-        from mem0_v2 import redact_secrets
+        from memory_v2 import redact_secrets
 
         text = "API key: sk-1234567890abcdefghijklmn"
         redacted = redact_secrets(text)
@@ -259,7 +268,7 @@ class TestRedaction(unittest.TestCase):
         self.assertIn("[REDACTED]", redacted)
 
     def test_redacts_bearer_token(self):
-        from mem0_v2 import redact_secrets
+        from memory_v2 import redact_secrets
 
         text = "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9"
         redacted = redact_secrets(text)
@@ -267,14 +276,14 @@ class TestRedaction(unittest.TestCase):
         self.assertIn("[REDACTED]", redacted)
 
     def test_redacts_password(self):
-        from mem0_v2 import redact_secrets
+        from memory_v2 import redact_secrets
 
         text = "password=supersecret123"
         redacted = redact_secrets(text)
         self.assertNotIn("supersecret123", redacted)
 
     def test_redacts_postgres_connection(self):
-        from mem0_v2 import redact_secrets
+        from memory_v2 import redact_secrets
 
         text = "postgres://user:password123@localhost/db"
         redacted = redact_secrets(text)
@@ -282,7 +291,7 @@ class TestRedaction(unittest.TestCase):
         self.assertIn("[REDACTED]", redacted)
 
     def test_preserves_normal_text(self):
-        from mem0_v2 import redact_secrets
+        from memory_v2 import redact_secrets
 
         text = "This is a normal sentence about authentication"
         redacted = redact_secrets(text)
@@ -296,9 +305,11 @@ class TestGC(unittest.TestCase):
         import tempfile
 
         tmpdir = tempfile.mkdtemp()
-        _spec = importlib.util.spec_from_file_location("m", SCRIPTS_DIR / "scripts/lite/memory.py")
+        _spec = importlib.util.spec_from_file_location(
+            "m", ROOT / "scripts/lite/memory.py"
+        )
         _m = importlib.util.module_from_spec(_spec)
-        sys.modules["mem0_v2"] = _m
+        sys.modules["memory_v2"] = _m
         _spec.loader.exec_module(_m)
         self.db = _m.MemoryDB(os.path.join(tmpdir, "gc_test.db"))
 
@@ -322,9 +333,11 @@ class TestProceduralCircuits(unittest.TestCase):
         import tempfile
 
         tmpdir = tempfile.mkdtemp()
-        _spec = importlib.util.spec_from_file_location("m", SCRIPTS_DIR / "scripts/lite/memory.py")
+        _spec = importlib.util.spec_from_file_location(
+            "m", ROOT / "scripts/lite/memory.py"
+        )
         _m = importlib.util.module_from_spec(_spec)
-        sys.modules["mem0_v2"] = _m
+        sys.modules["memory_v2"] = _m
         _spec.loader.exec_module(_m)
         self.db = _m.MemoryDB(os.path.join(tmpdir, "graph_test.db"))
 

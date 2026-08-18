@@ -1187,7 +1187,9 @@ def get_db() -> MemoryDB:
 
 def cmd_search(args):
     if len(args) < 1:
-        print("Usage: scripts/lite/memory.py search <query> [--limit N] [--format compact|full]")
+        print(
+            "Usage: scripts/lite/memory.py search <query> [--limit N] [--format compact|full]"
+        )
         return
     query = args[0]
     limit = 5

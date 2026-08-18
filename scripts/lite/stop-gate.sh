@@ -38,8 +38,19 @@ elif command -v python >/dev/null 2>&1 && python -c '' >/dev/null 2>&1; then
 elif command -v py >/dev/null 2>&1 && py -3 -c '' >/dev/null 2>&1; then
   PY=(py -3)
 else
-  printf '{"continue": true, "systemMessage": "stop-gate: no usable Python interpreter on PATH"}\n'
-  exit 0
+  # Fail closed. This gate exists to stop unverified claims, so "I could not
+  # run the validators" must never reach the caller as "validated". Every gate
+  # in this project is Python; a missing interpreter is a broken install, not a
+  # mode of operation.
+  echo "[STOP-GATE] No usable Python interpreter on PATH - cannot validate." >&2
+  if [[ "$PLATFORM" == "CODEX" ]]; then
+    printf '{"decision": "block", "reason": "stop-gate: no usable Python interpreter on PATH"}\n'
+    exit 0
+  fi
+  if [[ "$PLATFORM" == "CLAUDE" || "$PLATFORM" == "GEMINI" ]]; then
+    exit 2
+  fi
+  exit 1
 fi
 # Legacy Windows codepages turn non-ASCII validator output into a crash.
 export PYTHONUTF8=1

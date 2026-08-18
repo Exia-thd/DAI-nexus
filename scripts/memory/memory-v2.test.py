@@ -15,7 +15,9 @@ scripts_dir = Path(__file__).parent
 sys.path.insert(0, str(scripts_dir))
 import importlib.util  # noqa: E402
 
-spec = importlib.util.spec_from_file_location("mem0_v2", scripts_dir / "scripts/lite/memory.py")
+spec = importlib.util.spec_from_file_location(
+    "mem0_v2", scripts_dir / "scripts/lite/memory.py"
+)
 mem0_v2 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mem0_v2)
 

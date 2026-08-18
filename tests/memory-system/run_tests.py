@@ -18,7 +18,7 @@ tests = [
         "bash",
         ["tests/memory-system/test-export-memory-diagnostic.sh"],
     ),
-    ("memory-v2 (Python)", "python3", ["tests/memory-system/test_mem0_v2.py"]),
+    ("memory-v2 (Python)", "python3", ["tests/memory-system/test_memory_v2.py"]),
 ]
 
 total = 0
