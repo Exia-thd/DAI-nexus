@@ -8496,9 +8496,7 @@ function runDocsGate(projectRootInput, options = {}) {
       diagnostics: [...doctorReport.diagnostics]
     };
     if (doctorReport.status === "fail") return result;
-    const temporaryParent = mkdtempSync(
-      join(tmpdir(), "dai-nexus-docs-gate-")
-    );
+    const temporaryParent = mkdtempSync(join(tmpdir(), "dai-nexus-docs-gate-"));
     try {
       const outputDir = join(temporaryParent, "site");
       buildDocsHub([catalog], outputDir);
