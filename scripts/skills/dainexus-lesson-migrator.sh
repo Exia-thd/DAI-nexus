@@ -304,17 +304,11 @@ migrate_entry() {
         clean_research="${clean_research//\"/\\\"}"
         clean_lesson="${clean_lesson//\"/\\\"}"
         
-        # 1. Ensure procedural skill node exists
-        python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "$skill_id" "procedural" "Skill: $(basename "$(dirname "$target_skill")")" "Procedural skill guidelines and SOPs for $(basename "$(dirname "$target_skill")")" &>/dev/null || true
-        
-        # 2. Add lesson node
-        python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "lesson_$entry_id" "semantic" "Lesson ($type): $(basename "$(dirname "$target_skill")")" "Problem: $clean_problem | Research: $clean_research | Lesson: $clean_lesson" &>/dev/null || true
-        
-        # 3. Link lesson -> skill node with weight 1.5 and edge_type improves
-        python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-link "lesson_$entry_id" "$skill_id" --weight 1.5 --type "improves" &>/dev/null || true
-        
-        # 4. Link current-session -> lesson node
-        python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-link "current-session" "lesson_$entry_id" --weight 1.0 --type "learned" &>/dev/null || true
+        # This block wrote four graph nodes/edges (skill node, lesson node,
+        # lesson->skill, session->lesson). scripts/lite/memory.py is the
+        # distilled FTS5 store with no graph-* subcommands, so all four were
+        # swallowed by `|| true` and never wrote anything.
+        :
     fi
 
     # Cross-feedback (v8.3): execution lessons generate planning stubs

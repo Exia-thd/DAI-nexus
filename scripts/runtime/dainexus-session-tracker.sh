@@ -177,23 +177,11 @@ with open('$TRACK_FILE', 'w') as f:
     if [ "$passed" = "true" ]; then
         pass "Plan score: $score (PASSED)"
         
-        # [Graph Layer] Ensure nodes exist in SQLite Graph (TSK-06)
-        if command -v python3 &>/dev/null; then
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the DAI Nexus plan quality metrics" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-reinforce "current-session" "plan-quality" --factor 1.2 2>/dev/null || true
-        fi
+        # Graph-layer writes removed: scripts/lite/memory.py is the distilled FTS5 store and has no graph-* subcommands.
     else
         warn "Plan score: $score (FAILED - below $threshold)"
         
-        # [Graph Layer] Ensure nodes exist in SQLite Graph (TSK-06)
-        if command -v python3 &>/dev/null; then
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the DAI Nexus plan quality metrics" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/../../scripts/lite/memory.py" graph-decay "current-session" "plan-quality" --factor 0.5 2>/dev/null || true
-        fi
+        # Graph-layer writes removed: scripts/lite/memory.py is the distilled FTS5 store and has no graph-* subcommands.
         
         # A failed plan score is telemetry, not permission to mutate shared skills.
         warn "Plan needs improvement. Research only if a material knowledge/evidence gap blocks the next decision."
@@ -243,51 +231,11 @@ if '$status' == 'completed':
             pes_score = max(0.0, min(1.0, pes_score))
             
             # Consolidated threshold adjusted for session scopes: PES >= 0.20
-            if pes_score >= 0.20:
-                current_session = data.get('current_session') or {}
-                session_id = current_session.get('id', 'session_unknown')
-                mode = current_session.get('mode', 'unknown')
-                summary = '$summary'
-                
-                # Insert dynamic nodes via CLI or subprocess
-                subprocess.run([
-                    'python3', '$SCRIPT_DIR/../../scripts/lite/memory.py', 'graph-add-node',
-                    f'proc-{session_id}', 'procedural', f'Optimized procedural circuit for {mode}',
-                    f'Successful trajectory consolidated with PES={pes_score}. Summary: {summary}',
-                    '--pes', str(pes_score)
-                ], stderr=subprocess.DEVNULL)
-                
-                # Link procedural node to semantic targets
-                subprocess.run([
-                    'python3', '$SCRIPT_DIR/../../scripts/lite/memory.py', 'graph-link',
-                    f'proc-{session_id}', 'plan-quality', '--weight', '3.0', '--type', 'solves'
-                ], stderr=subprocess.DEVNULL)
-
-                # Consolidate procedural steps (tasks) into procedural_circuits
-                steps = []
-                try:
-                    from pathlib import Path
-                    session_log_path = Path('$PROJECT_DIR/.dainexus/session-log.json')
-                    if session_log_path.exists():
-                        log_data = json.loads(session_log_path.read_text())
-                        for s in log_data.get('sessions', []):
-                            if s.get('status') == 'in_progress' or s.get('session_id') == session_id:
-                                for tid, t in s.get('tasks', {}).items():
-                                    if t.get('status') == 'completed':
-                                        steps.append({
-                                            'id': tid,
-                                            'summary': t.get('summary', ''),
-                                            'updated_at': t.get('updated_at', '')
-                                        })
-                except Exception:
-                    pass
-                
-                steps_json = json.dumps(steps)
-                subprocess.run([
-                    'python3', '$SCRIPT_DIR/../../scripts/lite/memory.py', 'graph-save-circuit',
-                    f'proc-{session_id}', f'Optimized procedural circuit for {mode}',
-                    steps_json, str(pes_score)
-                ], stderr=subprocess.DEVNULL)
+            # The PES score fed a memory graph (nodes, edges, procedural
+            # circuits). This build ships the distilled FTS5 store in
+            # scripts/lite/memory.py, which has no graph subcommands, so every
+            # write here was swallowed by stderr=DEVNULL and did nothing.
+            pass
     except Exception as e:
         pass
 

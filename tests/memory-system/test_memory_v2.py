@@ -6,11 +6,10 @@ Specifically: search fix (multi-word), auto-tagging, adaptive ranking
 
 import sys
 import os
-import io
-import json
+import re
+import subprocess
 import tempfile
 import unittest
-import contextlib
 import importlib.util
 from pathlib import Path
 
@@ -19,6 +18,7 @@ from pathlib import Path
 # "scripts/..." again, producing scripts/scripts/lite/memory.py — a path that
 # has never existed, so this file failed at import and never ran.
 ROOT = Path(__file__).parent.parent.parent
+MEMORY_CLI = ROOT / "scripts" / "lite" / "memory.py"
 _spec = importlib.util.spec_from_file_location(
     "memory_v2", ROOT / "scripts/lite/memory.py"
 )
@@ -119,40 +119,40 @@ class TestSearchMultiWord(unittest.TestCase):
 
     def test_single_word_search(self):
         self.db.add("Testing the memory system", category="general")
-        results = self.db.search("memory", limit=5)
+        results = self.db.memory_search("memory", limit=5)
         self.assertGreater(len(results), 0)
 
     def test_multi_word_search_finds_partial(self):
         self.db.add("JWT authentication system", category="security")
-        results = self.db.search("JWT authentication", limit=5)
+        results = self.db.memory_search("JWT authentication", limit=5)
         self.assertGreater(len(results), 0)
 
     def test_multi_word_search_matches_any_term(self):
         self.db.add("Memory checkpoint system", category="session")
         self.db.add("Cache optimization", category="performance")
-        results = self.db.search("memory optimization", limit=5)
+        results = self.db.memory_search("memory optimization", limit=5)
         self.assertGreaterEqual(len(results), 1)
 
     def test_search_with_numbers(self):
         self.db.add("Memory v2 system", category="general")
-        results = self.db.search("memory v2", limit=5)
+        results = self.db.memory_search("memory v2", limit=5)
         self.assertGreaterEqual(len(results), 1)
 
     def test_empty_query_returns_empty(self):
-        results = self.db.search("", limit=5)
+        results = self.db.memory_search("", limit=5)
         self.assertEqual(results, [])
 
     def test_search_limit_respected(self):
         for i in range(10):
             self.db.add(f"Test observation {i}", category="general")
-        results = self.db.search("test observation", limit=3)
+        results = self.db.memory_search("test observation", limit=3)
         self.assertLessEqual(len(results), 3)
 
     def test_archived_excluded(self):
         self.db.add("This should be found", category="general")
         obs_id = self.db.add("This should be excluded", category="general")["id"]
         self.db.delete(obs_id)
-        results = self.db.search("should", limit=5)
+        results = self.db.memory_search("should", limit=5)
         ids = [r["id"] for r in results]
         self.assertNotIn(obs_id, ids)
 
@@ -161,62 +161,58 @@ class TestSearchMultiWord(unittest.TestCase):
             "Memory system architecture decision", category="decisions", importance=10
         )
         self.db.add("Memory system simple note", category="general", importance=3)
-        results = self.db.search("memory system", limit=5)
+        results = self.db.memory_search("memory system", limit=5)
         if len(results) >= 2:
             high_imp = next((r for r in results if r["id"] == 1), None)
             self.assertIsNotNone(high_imp)
 
     def test_multi_word_search_checks_each_term_against_title_and_content(self):
         self.db.add("Unrelated content", category="general", title="khách hàng")
-        results = self.db.search("tiếng khách", limit=5)
+        results = self.db.memory_search("tiếng khách", limit=5)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["title"], "khách hàng")
 
 
 class TestVietnameseMemoryOutput(unittest.TestCase):
-    """Tests for Vietnamese text persistence and CLI JSON output."""
+    """CLI output must keep Vietnamese text readable, not backslash-u escapes.
 
-    def setUp(self):
-        tmpdir = tempfile.mkdtemp()
-        spec = importlib.util.spec_from_file_location(
-            "m_vietnamese", ROOT / "scripts/lite/memory.py"
+    The upstream version reached into module-level cmd_search/cmd_get helpers.
+    This build dispatches through argparse and has no such functions, so the
+    property is checked where it actually matters: by running the CLI. That also
+    survives any future refactor of the internals.
+    """
+
+    def _run(self, tmp, *args):
+        return subprocess.run(
+            [sys.executable, str(MEMORY_CLI), *args],
+            cwd=tmp,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env={**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"},
         )
-        self.module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(self.module)
-        self.db = self.module.MemoryDB(os.path.join(tmpdir, "memory.db"))
 
-    def test_full_search_json_preserves_vietnamese_characters(self):
-        self.db.add(
-            "Cần lưu bộ nhớ tiếng Việt: khách hàng muốn hiển thị tiếng Việt có dấu",
-            category="conversation",
-            tags=["tiếng-việt", "khách-hàng"],
-        )
-        self.module.get_db = lambda: self.db
+    def test_search_output_preserves_vietnamese_characters(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".dainexus").mkdir()
+            added = self._run(tmp, "add", "ghi chú bằng tiếng Việt có dấu")
+            self.assertEqual(added.returncode, 0, added.stderr)
+            found = self._run(tmp, "search", "tiếng Việt", "--format", "json")
+            self.assertEqual(found.returncode, 0, found.stderr)
+            self.assertIn("tiếng Việt", found.stdout)
+            self.assertNotIn("\\u", found.stdout)
 
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            self.module.cmd_search(["tiếng Việt", "--format", "full"])
-
-        rendered = output.getvalue()
-        self.assertIn("tiếng Việt", rendered)
-        self.assertNotIn("\\u", rendered)
-
-    def test_get_json_preserves_vietnamese_characters(self):
-        obs_id = self.db.add(
-            "Bộ nhớ tiếng Việt phải giữ nguyên dấu khi xuất JSON",
-            category="conversation",
-            tags=["tiếng-việt"],
-        )["id"]
-        self.module.get_db = lambda: self.db
-
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            self.module.cmd_get([str(obs_id)])
-
-        rendered = output.getvalue()
-        self.assertIn("tiếng Việt", rendered)
-        self.assertIn("tiếng-việt", rendered)
-        self.assertNotIn("\\u", rendered)
+    def test_get_output_preserves_vietnamese_characters(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".dainexus").mkdir()
+            added = self._run(tmp, "add", "quyết định lưu bằng tiếng Việt")
+            self.assertEqual(added.returncode, 0, added.stderr)
+            # `add` prints a human line, not JSON: `+ added [id=1] (...)`.
+            obs_id = re.search(r"id=(\d+)", added.stdout).group(1)
+            got = self._run(tmp, "get", str(obs_id))
+            self.assertEqual(got.returncode, 0, got.stderr)
+            self.assertIn("tiếng Việt", got.stdout)
+            self.assertNotIn("\\u", got.stdout)
 
 
 class TestAddWithImportance(unittest.TestCase):
@@ -326,88 +322,10 @@ class TestGC(unittest.TestCase):
         self.assertEqual(removed, 10)
 
 
-class TestProceduralCircuits(unittest.TestCase):
-    """Tests for Layer 2 Graph and Procedural Circuits."""
-
-    def setUp(self):
-        import tempfile
-
-        tmpdir = tempfile.mkdtemp()
-        _spec = importlib.util.spec_from_file_location(
-            "m", ROOT / "scripts/lite/memory.py"
-        )
-        _m = importlib.util.module_from_spec(_spec)
-        sys.modules["memory_v2"] = _m
-        _spec.loader.exec_module(_m)
-        self.db = _m.MemoryDB(os.path.join(tmpdir, "graph_test.db"))
-
-    def test_add_graph_node(self):
-        success = self.db.add_node(
-            "node-1", "semantic", "Test Node", "Some content", 8.5
-        )
-        self.assertTrue(success)
-
-        # Test fetching/neighbors or queries
-        conn = self.db.get_connection()
-        row = conn.execute("SELECT * FROM flux_nodes WHERE id = 'node-1'").fetchone()
-        self.assertIsNotNone(row)
-        self.assertEqual(row["layer"], "semantic")
-        self.assertEqual(row["title"], "Test Node")
-        self.assertEqual(row["pes_score"], 8.5)
-        conn.close()
-
-    def test_link_decay_reinforce_edges(self):
-        self.db.add_node("n-1", "semantic", "N1", "Content 1")
-        self.db.add_node("n-2", "procedural", "N2", "Content 2")
-
-        # Link edge
-        success = self.db.add_edge("n-1", "n-2", weight=1.0, edge_type="relates_to")
-        self.assertTrue(success)
-
-        # Check neighbors
-        neighbors = self.db.get_neighbors("n-1")
-        self.assertEqual(len(neighbors), 1)
-        self.assertEqual(neighbors[0]["id"], "n-2")
-        self.assertEqual(neighbors[0]["weight"], 1.0)
-
-        # Decay
-        self.db.decay_edge("n-1", "n-2", edge_type="relates_to", factor=0.5)
-        neighbors = self.db.get_neighbors("n-1")
-        self.assertEqual(neighbors[0]["weight"], 0.5)
-
-        # Reinforce
-        self.db.reinforce_edge("n-1", "n-2", edge_type="relates_to", factor=1.5)
-        neighbors = self.db.get_neighbors("n-1")
-        self.assertEqual(neighbors[0]["weight"], 0.75)  # 0.5 * 1.5 = 0.75
-
-    def test_procedural_circuits(self):
-        steps = json.dumps(
-            [{"step": 1, "action": "test"}, {"step": 2, "action": "deploy"}]
-        )
-        success = self.db.save_procedural_circuit(
-            "circuit-100", "Deploy Circuit", steps, 9.2
-        )
-        self.assertTrue(success)
-
-        # Retrieve
-        circuit = self.db.get_procedural_circuit("circuit-100")
-        self.assertIsNotNone(circuit)
-        self.assertEqual(circuit["name"], "Deploy Circuit")
-        self.assertEqual(circuit["pems_score"], 9.2)
-        self.assertEqual(circuit["runs_count"], 1)
-        self.assertEqual(circuit["success_count"], 0)
-
-        # Increment runs
-        self.db.save_procedural_circuit("circuit-100", "Deploy Circuit", steps, 9.5)
-        circuit = self.db.get_procedural_circuit("circuit-100")
-        self.assertEqual(circuit["runs_count"], 2)
-        self.assertEqual(circuit["pems_score"], 9.5)
-
-        # Increment success
-        self.db.increment_circuit_success("circuit-100")
-        circuit = self.db.get_procedural_circuit("circuit-100")
-        self.assertEqual(circuit["success_count"], 1)
-
+# The graph layer (nodes, edges, procedural circuits) is not part of this
+# build: scripts/lite/memory.py is the distilled FTS5+RRF store. The
+# upstream TestProceduralCircuits class was removed here rather than left
+# asserting against methods MemoryDB does not define.
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

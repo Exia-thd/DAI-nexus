@@ -18,7 +18,10 @@ tests = [
         "bash",
         ["tests/memory-system/test-export-memory-diagnostic.sh"],
     ),
-    ("memory-v2 (Python)", "python3", ["tests/memory-system/test_memory_v2.py"]),
+    # sys.executable, not the literal "python3": on Windows that name is often
+    # the Store alias stub, which produced no output and reported this suite as
+    # 0/0 even while the file itself ran its full set.
+    ("memory-v2 (Python)", sys.executable, ["tests/memory-system/test_memory_v2.py"]),
 ]
 
 total = 0
@@ -36,7 +39,7 @@ for name, cmd, args in tests:
     )
     out = r.stdout + r.stderr
 
-    if cmd == "python3":
+    if cmd == sys.executable:
         m = re.search(r"Ran (\d+) tests", out)
         a = int(m.group(1)) if m else 0
         b = a
