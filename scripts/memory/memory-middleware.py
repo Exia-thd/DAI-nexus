@@ -985,7 +985,9 @@ def save_to_mem0(summary: str, checkpoint_id: str) -> bool:
         script_dir = Path(__file__).parent
         mem0_script = script_dir / "scripts/lite/memory.py"
         if not mem0_script.exists():
-            warn(f"scripts/lite/memory.py not found at {mem0_script}, skipping memory save")
+            warn(
+                f"scripts/lite/memory.py not found at {mem0_script}, skipping memory save"
+            )
             return False
         cmd = [
             "python3",
@@ -1370,7 +1372,7 @@ def cmd_status(args=None):
         mem0_script = script_dir / "scripts/lite/memory.py"
         if mem0_script.exists():
             result = subprocess.run(
-                ["python3", str(mem0_script), "stats"],
+                [sys.executable, str(mem0_script), "stats"],
                 capture_output=True,
                 text=True,
                 timeout=10,

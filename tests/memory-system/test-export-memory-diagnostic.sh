@@ -68,7 +68,7 @@ EOF
 # ── T1: Script creates archive with expected safe contents ───────────────
 echo ""
 echo "T1: Export creates archive with metadata and excludes raw refs by default"
-((TESTS++))
+TESTS=$((TESTS+1))
 archive=$(DAINEXUS_WORKSPACE="$tmp_workspace" bash "$EXPORT_SCRIPT" "$tmp_out")
 if [[ -f "$archive" ]]; then
     python3 - "$archive" <<'PY'
@@ -105,7 +105,7 @@ fi
 # ── T2: Export redacts sensitive values ──────────────────────────────────
 echo ""
 echo "T2: Export redacts sensitive values"
-((TESTS++))
+TESTS=$((TESTS+1))
 if python3 - "$archive" <<'PY'
 import sys, tarfile
 archive = sys.argv[1]
@@ -138,7 +138,7 @@ fi
 # ── T3: --include-raw includes raw refs only after redaction ─────────────
 echo ""
 echo "T3: --include-raw includes raw refs after redaction"
-((TESTS++))
+TESTS=$((TESTS+1))
 archive_raw=$(DAINEXUS_WORKSPACE="$tmp_workspace" bash "$EXPORT_SCRIPT" "$tmp_out" --include-raw)
 if python3 - "$archive_raw" <<'PY'
 import sys, tarfile

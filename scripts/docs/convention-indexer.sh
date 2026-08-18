@@ -72,7 +72,7 @@ failed = 0
 for text, cat in unique:
     try:
         result = subprocess.run(
-            ["python3", MEM0_SCRIPT, "add", text, "--category", cat, "--importance", "7"],
+            [sys.executable, MEM0_SCRIPT, "add", text, "--category", cat, "--importance", "7"],
             capture_output=True, text=True, timeout=10
         )
         if result.returncode == 0:

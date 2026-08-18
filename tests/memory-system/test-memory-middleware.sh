@@ -42,7 +42,10 @@ fi
 echo ""
 echo "T2: checkpoint uses rich context (not files_changed)"
 TESTS=$((TESTS+1))
-output=$(bash "$DAINEXUS_DIR/scripts/checkpoint-extract.sh" --reason test 2>&1)
+# Canonical path, not the deprecation shim: the shim writes a migration
+# warning to stderr, and merging that into stdout fed it straight to
+# json.load below. stderr is left on the terminal so failures stay visible.
+output=$(bash "$DAINEXUS_DIR/scripts/runtime/checkpoint-extract.sh" --reason test)
 if echo "$output" | python3 -c "import json,sys; d=json.load(sys.stdin); exit(0 if 'intent' in d else 1)" 2>/dev/null; then
     pass "Rich context in checkpoint"
 else

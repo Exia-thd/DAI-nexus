@@ -49,10 +49,10 @@ fi
 echo ""
 echo "=== Step 2: Duplicate Analysis ==="
 python3 -c "
-import subprocess, json
+import subprocess, json, sys
 from collections import Counter
 
-result = subprocess.run(['python3', '$MEM0_SCRIPT', 'list', '--limit', '500'], capture_output=True, text=True)
+result = subprocess.run([sys.executable, '$MEM0_SCRIPT', 'list', '--limit', '500'], capture_output=True, text=True)
 lines = [l.strip() for l in result.stdout.split('\n') if l.strip() and '[' in l]
 
 titles = []
@@ -87,10 +87,10 @@ echo ""
 echo "=== Step 3: Old Session Cleanup ==="
 if [[ "$DRY_RUN" == "false" ]]; then
     result=$(python3 -c "
-import subprocess, json
+import subprocess, json, sys
 from datetime import datetime, timezone, timedelta
 
-result = subprocess.run(['python3', '$MEM0_SCRIPT', 'list', '--category', 'session', '--limit', '100'], capture_output=True, text=True)
+result = subprocess.run([sys.executable, '$MEM0_SCRIPT', 'list', '--category', 'session', '--limit', '100'], capture_output=True, text=True)
 lines = [l.strip() for l in result.stdout.split('\n') if l.strip() and '[' in l]
 
 # Count old sessions (>30 days)

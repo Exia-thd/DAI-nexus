@@ -49,6 +49,10 @@ for name, cmd, args in tests:
         a = int(m.group(1)) if m else 0
         b = int(m.group(2)) if m else 0
         ok = a == b
+    # A file that reported no results did not pass — it failed to run. Counting
+    # 0/0 as green is how four of these suites sat dead and unnoticed.
+    if b == 0:
+        ok = False
 
     status = "✅" if ok else "⚠️"
     print(f"  {status} {name}: {a}/{b} passed")

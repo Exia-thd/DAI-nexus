@@ -23,7 +23,7 @@ echo "━━━ test-memory-retrieve.sh ━━━"
 # ── T1: Script exists and is executable ─────────────────────────────────
 echo ""
 echo "T1: Script exists and is executable"
-((TESTS++))
+TESTS=$((TESTS+1))
 if [[ -x "$RETRIEVE_SCRIPT" ]]; then
     pass "Script is executable"
 else
@@ -33,7 +33,7 @@ fi
 # ── T2: Help/usage works ───────────────────────────────────────────────
 echo ""
 echo "T2: No-arg invocation shows usage (not error)"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" 2>&1 || true)
 if [[ -n "$output" ]] && [[ "$output" != *"Error"* ]]; then
     pass "No-arg invocation produces output"
@@ -44,7 +44,7 @@ fi
 # ── T3: Keyword extraction ───────────────────────────────────────────────
 echo ""
 echo "T3: Keyword extraction removes stopwords"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" "the quick brown fox jumps over the lazy dog" 2>&1)
 # "quick", "brown", "fox", "jumps" should remain; stopwords filtered
 if echo "$output" | grep -qi "quick\|brown\|fox\|jumps"; then
@@ -56,7 +56,7 @@ fi
 # ── T4: Mem0 search integration ────────────────────────────────────────
 echo ""
 echo "T4: Mem0 search integration (keyword 'memory')"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" "memory system" 2>&1)
 if echo "$output" | grep -qi "memory\|Memory"; then
     pass "Mem0 results returned"
@@ -67,7 +67,7 @@ fi
 # ── T5: MEMORY BLOCK output format ─────────────────────────────────────
 echo ""
 echo "T5: MEMORY BLOCK header present"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" "dai-nexus" 2>&1)
 if echo "$output" | grep -q "MEMORY BLOCK\|MEMORY RETRIEVAL"; then
     pass "MEMORY BLOCK header present"
@@ -78,9 +78,28 @@ fi
 # ── T6: Session summary loaded ──────────────────────────────────────────
 echo ""
 echo "T6: Session info section present"
-((TESTS++))
+TESTS=$((TESTS+1))
+# The retrieve script only emits a session section when a session log exists.
+# That log is runtime state neither repo tracks, so relying on whatever the
+# machine happened to leave behind made this check pass or fail by accident.
+# Build the fixture, and restore whatever was there before.
+SESSION_LOG_FIXTURE="$DAINEXUS_DIR/.dainexus/session-log.json"
+SESSION_LOG_BACKUP=""
+if [[ -f "$SESSION_LOG_FIXTURE" ]]; then
+    SESSION_LOG_BACKUP="$(mktemp)"
+    cp "$SESSION_LOG_FIXTURE" "$SESSION_LOG_BACKUP"
+fi
+mkdir -p "$(dirname "$SESSION_LOG_FIXTURE")"
+cat > "$SESSION_LOG_FIXTURE" <<'FIXTURE'
+{"sessions": [{"session_id": "t6-fixture", "mode": "FULL_BUILD", "status": "completed", "summary": "fixture session"}]}
+FIXTURE
 output=$(bash "$RETRIEVE_SCRIPT" "dai-nexus checkpoint" 2>&1)
-if echo "$output" | grep -qi "Session\|session"; then
+if [[ -n "$SESSION_LOG_BACKUP" ]]; then
+    mv "$SESSION_LOG_BACKUP" "$SESSION_LOG_FIXTURE"
+else
+    rm -f "$SESSION_LOG_FIXTURE"
+fi
+if echo "$output" | grep -qi "Session"; then
     pass "Session info loaded"
 else
     fail "Session info missing"
@@ -89,7 +108,7 @@ fi
 # ── T7: Relevant memories count ─────────────────────────────────────────
 echo ""
 echo "T7: Memory retrieval count logged"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" "OmO intentgate" 2>&1)
 if echo "$output" | grep -qi "memories loaded\|N memories"; then
     pass "Memory count logged"
@@ -100,7 +119,7 @@ fi
 # ── T8: Non-zero exit on missing deps ─────────────────────────────────
 echo ""
 echo "T8: Handles missing memory gracefully"
-((TESTS++))
+TESTS=$((TESTS+1))
 # Rename memory temporarily
 mv "$MEM0" "$MEM0.bak" 2>/dev/null || true
 output=$(bash "$RETRIEVE_SCRIPT" "test query" 2>&1 || echo "EXIT:$?")
@@ -114,7 +133,7 @@ fi
 # ── T9: Multi-word request ─────────────────────────────────────────────
 echo ""
 echo "T9: Multi-word keyword extraction"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" "JWT authentication token security" 2>&1)
 if echo "$output" | grep -qi "jwt\|authentication\|token\|security"; then
     pass "Multi-word keywords extracted"
@@ -125,7 +144,7 @@ fi
 # ── T10: Output format is markdown ─────────────────────────────────────
 echo ""
 echo "T10: Output includes markdown headers"
-((TESTS++))
+TESTS=$((TESTS+1))
 output=$(bash "$RETRIEVE_SCRIPT" "memory retrieval" 2>&1)
 if echo "$output" | grep -q "^##\|^###\|^---"; then
     pass "Markdown format present"
@@ -136,7 +155,7 @@ fi
 # ── T11: Persona/scenario layers load before memory atoms and respect caps ──
 echo ""
 echo "T11: Persona/scenario layers load before memory atoms with token caps"
-((TESTS++))
+TESTS=$((TESTS+1))
 tmp_workspace="$(mktemp -d)"
 mkdir -p "$tmp_workspace/.dainexus/memory-bank/scenarios"
 cat > "$tmp_workspace/.dainexus/memory-bank/persona.md" <<'EOF'

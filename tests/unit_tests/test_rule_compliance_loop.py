@@ -56,7 +56,7 @@ def write_v2_evidence(tmp_path: Path, *, turn: str = "turn-1") -> tuple[dict, Pa
     output = "pytest-ref passed\n"
     check_path = tmp_path / "evidence_contract_check.py"
     check_path.write_text("print('pytest-ref passed')\n", encoding="utf-8")
-    command = ["python3", "evidence_contract_check.py"]
+    command = [sys.executable, "evidence_contract_check.py"]
     refs = ["evidence_contract_check.py"]
     execution, errors = execution_manifest(tmp_path, command, refs)
     assert not errors and execution is not None
@@ -195,7 +195,7 @@ def test_validator_requires_one_complete_adjacent_passing_verify_block(
         "DAINEXUS_TURN": evidence["turn"],
     }
     valid = strict_response(evidence)
-    result = run("python3", str(script), "--runtime", env=env, stdin=valid)
+    result = run(sys.executable, str(script), "--runtime", env=env, stdin=valid)
     assert result.returncode == 0, result.stderr
 
     valid_multiline_output = valid.replace(
@@ -203,7 +203,7 @@ def test_validator_requires_one_complete_adjacent_passing_verify_block(
         f"OUTPUT: sha256:{evidence['output_sha256']}",
     )
     result = run(
-        "python3", str(script), "--runtime", env=env, stdin=valid_multiline_output
+        sys.executable, str(script), "--runtime", env=env, stdin=valid_multiline_output
     )
     assert result.returncode == 0, result.stderr
 
@@ -216,7 +216,7 @@ def test_validator_requires_one_complete_adjacent_passing_verify_block(
         "",
     ]
     for payload in invalid_payloads:
-        result = run("python3", str(script), "--runtime", env=env, stdin=payload)
+        result = run(sys.executable, str(script), "--runtime", env=env, stdin=payload)
         assert result.returncode != 0, (payload, result.stdout, result.stderr)
 
 
@@ -228,7 +228,7 @@ def test_validator_accepts_json_hook_payload_and_propagates_ledger_failure(
     response = strict_response(evidence)
     payload = json.dumps({"response_content": response, "turn": evidence["turn"]})
     ok = run(
-        "python3",
+        sys.executable,
         str(script),
         "--runtime",
         env={
@@ -242,7 +242,7 @@ def test_validator_accepts_json_hook_payload_and_propagates_ledger_failure(
     blocked_parent = tmp_path / "not-a-directory"
     blocked_parent.write_text("x", encoding="utf-8")
     failed = run(
-        "python3",
+        sys.executable,
         str(script),
         "--runtime",
         env={"DAINEXUS_RULE_LEDGER": str(blocked_parent / "ledger.jsonl")},
@@ -349,7 +349,7 @@ def test_context_manager_uses_project_root_tail_keywords_and_global_cap(
     )
 
     result = run(
-        "python3",
+        sys.executable,
         str(copied),
         "load",
         "--keywords",
@@ -415,7 +415,7 @@ def test_canonical_scripts_target_validated_workspace(tmp_path: Path) -> None:
     assert list((fw_dir / "telemetry").glob("events-*.jsonl"))
 
     invalid = run(
-        "python3",
+        sys.executable,
         str(ROOT / "scripts/lite/rule-validator.py"),
         "--runtime",
         env=env,
@@ -425,7 +425,7 @@ def test_canonical_scripts_target_validated_workspace(tmp_path: Path) -> None:
     assert "HR1-verify" in ledger.read_text(encoding="utf-8")
 
     context = run(
-        "python3", str(ROOT / "scripts/lite/context-manager.py"), "load", env=env
+        sys.executable, str(ROOT / "scripts/lite/context-manager.py"), "load", env=env
     )
     assert context.returncode == 0, context.stderr
     assert "FAKE-WORKSPACE-MARKER" in context.stdout
@@ -437,8 +437,8 @@ def test_canonical_scripts_reject_invalid_workspace(tmp_path: Path) -> None:
         ("bash", str(ROOT / "scripts/lite/policy-check.sh"), "show"),
         ("bash", str(ROOT / "scripts/lite/rule-ledger.sh"), "top", "1"),
         ("bash", str(ROOT / "scripts/lite/telemetry.sh"), "emit", "test.event", "{}"),
-        ("python3", str(ROOT / "scripts/lite/rule-validator.py"), "--runtime"),
-        ("python3", str(ROOT / "scripts/lite/context-manager.py"), "load"),
+        (sys.executable, str(ROOT / "scripts/lite/rule-validator.py"), "--runtime"),
+        (sys.executable, str(ROOT / "scripts/lite/context-manager.py"), "load"),
     )
     for command in commands:
         result = run(*command, env=env, stdin="")

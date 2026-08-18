@@ -450,8 +450,7 @@ function isIgnoredGeneratedPath(path: string): boolean {
 function isGeneratedDocsOutputPath(path: string): boolean {
   const lower = path.toLowerCase();
   return (
-    lower === ".dainexus/docs-hub" ||
-    lower.startsWith(".dainexus/docs-hub/")
+    lower === ".dainexus/docs-hub" || lower.startsWith(".dainexus/docs-hub/")
   );
 }
 
@@ -777,15 +776,27 @@ export function runDocsGate(
     };
     if (doctorReport.status === "fail") return result;
 
-    const temporaryParent = mkdtempSync(
-      join(tmpdir(), "dai-nexus-docs-gate-"),
-    );
+    const temporaryParent = mkdtempSync(join(tmpdir(), "dai-nexus-docs-gate-"));
     try {
       const outputDir = join(temporaryParent, "site");
       buildDocsHub([catalog], outputDir);
       result.verifiedOutputPaths = verifyOutput(outputDir, catalog);
     } finally {
-      rmSync(temporaryParent, { recursive: true, force: true });
+      // Housekeeping must not decide the verdict. On Windows this throws
+      // EPERM/EBUSY whenever something still holds a handle under the
+      // directory, and from inside `finally` that turned an already-computed
+      // pass into DOCS_GATE_FAILED — visible only under load, which is why it
+      // showed up in the pre-commit hook and never from a shell.
+      try {
+        rmSync(temporaryParent, {
+          recursive: true,
+          force: true,
+          maxRetries: 5,
+          retryDelay: 100,
+        });
+      } catch {
+        // The OS reclaims its own temp directory; the gate result stands.
+      }
     }
 
     result.status = "pass";

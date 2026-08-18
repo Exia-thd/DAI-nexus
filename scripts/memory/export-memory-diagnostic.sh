@@ -187,7 +187,7 @@ def mem0_stats(workspace: Path) -> str:
     if not memory.exists():
         return "scripts/lite/memory.py not found.\n"
     result = subprocess.run(
-        ["python3", str(memory), "stats"],
+        [sys.executable, str(memory), "stats"],
         cwd=workspace,
         capture_output=True,
         text=True,

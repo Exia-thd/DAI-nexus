@@ -87,7 +87,14 @@ def load_context(
         and used < char_cap
     ):
         result = subprocess.run(
-            ["python3", str(mem0_path), "search", keywords.strip(), "--limit", "3"],
+            [
+                sys.executable,
+                str(mem0_path),
+                "search",
+                keywords.strip(),
+                "--limit",
+                "3",
+            ],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
@@ -114,9 +121,7 @@ def main() -> int:
     parser.add_argument(
         "--char-cap",
         type=int,
-        default=int(
-            os.environ.get("DAINEXUS_CONTEXT_CHAR_CAP", str(DEFAULT_CHAR_CAP))
-        ),
+        default=int(os.environ.get("DAINEXUS_CONTEXT_CHAR_CAP", str(DEFAULT_CHAR_CAP))),
     )
     args = parser.parse_args()
     if WORKSPACE_ERROR:

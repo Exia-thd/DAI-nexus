@@ -8504,7 +8504,15 @@ function runDocsGate(projectRootInput, options = {}) {
       buildDocsHub([catalog], outputDir);
       result.verifiedOutputPaths = verifyOutput(outputDir, catalog);
     } finally {
-      rmSync(temporaryParent, { recursive: true, force: true });
+      try {
+        rmSync(temporaryParent, {
+          recursive: true,
+          force: true,
+          maxRetries: 5,
+          retryDelay: 100
+        });
+      } catch {
+      }
     }
     result.status = "pass";
     return result;

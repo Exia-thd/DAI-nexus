@@ -1,5 +1,6 @@
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -31,7 +32,7 @@ def write_event(session_dir: Path, node_id: str, turn: int = 1) -> None:
 
 def run_trace(data_dir: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["python3", str(SCRIPT), "--data-dir", str(data_dir), *args],
+        [sys.executable, str(SCRIPT), "--data-dir", str(data_dir), *args],
         capture_output=True,
         text=True,
         check=False,
