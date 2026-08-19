@@ -5,17 +5,18 @@
 ## Quick Start
 
 ```bash
-# Run tests with auto-fix
+# Run tests with auto-fix of implementation/infrastructure only.
+# Behavioral assertions/baselines remain requirement-locked.
 dai test autonomous
 
 # Run specific layers
 dai test run --layer unit
 dai test run --layer integration,visual
 
-# Auto-fix failures
+# Auto-fix implementation or test-infrastructure failures without changing behavioral oracles
 dai test fix
 
-# Update visual baselines
+# Update visual baselines ONLY after an explicit current visual requirement/reference change
 dai test update-baseline
 ```
 

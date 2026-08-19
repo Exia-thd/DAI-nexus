@@ -17,7 +17,7 @@
 <section class="hero compact">
   <span class="tag">TẦNG 1</span>
   <h1>Kernel — <span class="accent">bộ luật bất biến</span></h1>
-  <p class="lead">8 file markdown, tổng ~6881 token, được
+  <p class="lead">8 file markdown, tổng ~6807 token, được
   <code>sync-kernel.py</code> gộp thành <code>CLAUDE.md</code> / <code>AGENTS.md</code> / <code>GEMINI.md</code>
   và nạp tự động ở mọi phiên. Budget cứng 7k token — vượt là build fail.</p>
 </section>
@@ -49,7 +49,7 @@ Load persistent memory before processing the request; total injection ≤ 500 to
 **Truncation rule**: if a source exceeds its cap, take the first N characters (cap × 4) and append `...[truncated]`. Never exceed 500 tokens across all sources.
 
 ## Context Continuity (On Demand)
-Persistent memory is **optional context, never project truth**. Load it only when the current request explicitly continues prior work, a durable prior decision materially changes the answer, or the current workspace lacks enough state to resume safely.
+Persistent memory is **optional context, never project truth**. Load it only to continue prior work, honor a material durable decision, or fill state the current workspace lacks.
 
 - Prefer current workspace/runtime evidence over every memory source.</code></pre></div>
 
@@ -105,7 +105,7 @@ if target_tokens &gt;= TOKEN_BUDGET:
         f"Error: {target_name} exceeds the {TOKEN_BUDGET} deterministic token budget limit!",
         file=sys.stderr,
     )</code></pre></div>
-<div class="callout tip"><div class="title">Hiện tại</div>Boot file ~6881 token / 7000 — còn khoảng 119 token dư cho luật mới.</div>
+<div class="callout tip"><div class="title">Hiện tại</div>Boot file ~6807 token / 7000 — còn khoảng 193 token dư cho luật mới.</div>
 
 </main>
 <footer>

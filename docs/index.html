@@ -29,7 +29,7 @@
     <span>Protocol <strong>58</strong></span>
     <span>Runtime <strong>18 script</strong></span>
     <span>MCP tool <strong>8</strong></span>
-    <span>Self-test <strong>65</strong></span>
+    <span>Self-test <strong>68</strong></span>
   </div>
 </section>
 
@@ -53,7 +53,7 @@
 
 <h2><span class="num">02</span> Ba tầng</h2>
 <div class="diagram">┌────────────────────────────────────────────────────────────────────────────┐
-│ TẦNG 1 — KERNEL (8 file, ~6881 token, luôn nạp)                            │
+│ TẦNG 1 — KERNEL (8 file, ~6807 token, luôn nạp)                            │
 │ kernel/{AUDIT, CLARIFY, ENTRY, ESCALATE, INDEX, POLICY, SOLVE, VERIFY}     │
 │ → 6 Hard Rules · SOLVE loop · VERIFY/AUDIT · Execution policy              │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -74,7 +74,7 @@
 
 <h2><span class="num">03</span> 6 Hard Rules</h2>
 <p class="muted small">Đọc thẳng từ <code>kernel/ENTRY.md</code> lúc build:</p>
-<ol class="rules"><li>Never claim verified success without **observed verification evidence** from the current workspace/runtime. `QUICK` work may cite a focused check concisely; `STANDARD`/`DEEP` work uses the verification contract in [VERIFY.md](VERIFY.md).</li><li>Before editing, verify the target and its **material impact proportional to risk**. A local, reversible `QUICK` edit needs only focused target/reference checks; do not manufacture repository-wide impact analysis.</li><li>Never invent paths, APIs, versions, project state, or capabilities — verify the current workspace/runtime or mark `UNVERIFIED`. Examples, templates, memory, and prior sessions are not current-state evidence.</li><li>If the same step fails twice, STOP and follow the Stuck rule in [SOLVE.md](SOLVE.md).</li><li>Stay inside the user's stated scope; list anything extra under "Out of scope".</li><li>Never bypass guardrail rules for destructive or security-sensitive operations — Middleware ④ (`skills/_shared/protocols/guardrail.md`).</li></ol>
+<ol class="rules"><li>Never claim verified success without **observed verification evidence** from the current workspace/runtime. `QUICK` work may cite a focused check concisely; `STANDARD`/`DEEP` work uses the verification contract in [VERIFY.md](VERIFY.md).</li><li>Before editing, verify the target and its **material impact proportional to risk**. A local, reversible `QUICK` edit needs only focused target/reference checks; do not manufacture repository-wide impact analysis.</li><li>Never invent paths, APIs, versions, project state, or capabilities — verify the current workspace/runtime or mark `UNVERIFIED`. Examples, templates, memory, and prior sessions are not current-state evidence.</li><li>If the same step fails twice, STOP and follow the Stuck rule in [SOLVE.md](SOLVE.md).</li><li>Stay inside scope; list extras under "Out of scope". Behavioral test oracles are requirement-locked: never weaken/change/delete them to make tests pass; if expected behavior is unclear, ask the user; change them only after a current requirement change.</li><li>Never bypass guardrail rules for destructive or security-sensitive operations — Middleware ④ (`skills/_shared/protocols/guardrail.md`).</li></ol>
 
 <h2><span class="num">04</span> Đi sâu từng mảng</h2>
 <div class="grid cols-3">
@@ -115,7 +115,7 @@ Turn-close: VERIFY block · AUDIT coverage matrix · lưu memory · runtime ledg
 Stop hook: verify_gate.py — thiếu/giả/hết hạn evidence ⇒ CHẶN</div>
 
 <h2><span class="num">06</span> Số liệu (đọc từ repo)</h2>
-<div class="grid cols-4"><div class="stat"><div class="val">8</div><div class="lbl">kernel file</div></div><div class="stat"><div class="val">6881</div><div class="lbl">token boot</div></div><div class="stat"><div class="val">87</div><div class="lbl">skill overlay</div></div><div class="stat"><div class="val">58</div><div class="lbl">protocol</div></div><div class="stat"><div class="val">18</div><div class="lbl">runtime script</div></div><div class="stat"><div class="val">6004</div><div class="lbl">dòng runtime</div></div><div class="stat"><div class="val">8</div><div class="lbl">MCP tool</div></div><div class="stat"><div class="val">65</div><div class="lbl">self-test</div></div></div>
+<div class="grid cols-4"><div class="stat"><div class="val">8</div><div class="lbl">kernel file</div></div><div class="stat"><div class="val">6807</div><div class="lbl">token boot</div></div><div class="stat"><div class="val">87</div><div class="lbl">skill overlay</div></div><div class="stat"><div class="val">58</div><div class="lbl">protocol</div></div><div class="stat"><div class="val">18</div><div class="lbl">runtime script</div></div><div class="stat"><div class="val">6004</div><div class="lbl">dòng runtime</div></div><div class="stat"><div class="val">8</div><div class="lbl">MCP tool</div></div><div class="stat"><div class="val">68</div><div class="lbl">self-test</div></div></div>
 
 </main>
 <footer>

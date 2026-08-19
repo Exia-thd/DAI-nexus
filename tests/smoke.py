@@ -154,24 +154,61 @@ def test_mcp_gate_discipline() -> None:
         )
         import os
 
-        env = dict(os.environ, DAINEXUS_ROOT=tmp)
+        # The server reconfigures its stdout to UTF-8, so decode as UTF-8 here
+        # too: `text=True` alone decodes with the locale codepage, which on
+        # Windows is cp1252 and mangles any non-ASCII the server reports.
+        env = dict(
+            os.environ,
+            DAINEXUS_ROOT=tmp,
+            PYTHONUTF8="1",
+            PYTHONIOENCODING="utf-8",
+        )
         r = subprocess.run(
             PY + [str(ROOT / "mcp" / "server.py")],
             input=session,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=60,
             env=env,
             cwd=ROOT,
         )
-        lines = [json.loads(line) for line in r.stdout.splitlines() if line.strip()]
+        # Report a short or malformed reply as itself rather than letting it
+        # surface as an opaque payload comparison three lines later. The
+        # behavioural assertions below are unchanged.
+        raw = f"exit={r.returncode} stdout={r.stdout!r} stderr={r.stderr[-400:]!r}"
+        try:
+            lines = [json.loads(line) for line in r.stdout.splitlines() if line.strip()]
+        except json.JSONDecodeError as error:
+            check(
+                "mcp gate discipline blocks unapproved advance",
+                False,
+                f"{error}; {raw}",
+            )
+            return
+        if len(lines) != 3:
+            check(
+                "mcp gate discipline blocks unapproved advance",
+                False,
+                f"expected 3 responses, got {len(lines)}; {raw}",
+            )
+            return
+        missing = [m for m in lines if "result" not in m]
+        if missing:
+            check(
+                "mcp gate discipline blocks unapproved advance",
+                False,
+                f"response without result: {missing}; {raw}",
+            )
+            return
         payloads = [json.loads(m["result"]["content"][0]["text"]) for m in lines]
         ok = (
             payloads[0].get("started") is True
             and payloads[1].get("advanced") is True
             and "gate" in payloads[2].get("error", "")
         )
-        check("mcp gate discipline blocks unapproved advance", ok, str(payloads))
+        check("mcp gate discipline blocks unapproved advance", ok, f"{payloads}; {raw}")
 
 
 def test_sync_kernel_budget() -> None:
