@@ -118,7 +118,15 @@ describe('ProcessPolicyEvaluator', () => {
     vi.stubEnv('DAINEXUS_DIR', '');
     vi.stubEnv('DAINEXUS_POLICY_FILE', '');
 
-    const evaluator = new ProcessPolicyEvaluator({ cwd: mcpDirectory });
+    // This case is about workspace-ancestor discovery, not the policy
+    // deadline. The 2s production default is not enough to spawn bash on a
+    // loaded Windows box, so the evaluator returned config-error and a
+    // discovery test failed for a reason it never meant to measure. The
+    // deadline itself is asserted separately, by the timeoutMs: 20 case below.
+    const evaluator = new ProcessPolicyEvaluator({
+      cwd: mcpDirectory,
+      timeoutMs: 30_000,
+    });
 
     await expect(evaluator.evaluate('Bash', { cmd: 'echo safe' })).resolves.toMatchObject({
       action: 'allow',

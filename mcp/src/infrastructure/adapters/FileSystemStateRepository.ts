@@ -22,6 +22,29 @@ export class StatePersistenceError extends Error {
   }
 }
 
+/**
+ * Rename the freshly written temp file over the state file, tolerating the
+ * window in which Windows still considers the destination busy.
+ *
+ * Windows fails `rename` with EPERM/EBUSY while any process holds the target —
+ * an indexer or a scanner reading the JSON is enough — so a write that is
+ * otherwise complete intermittently reports failure. Retry inside a bounded
+ * window, and still throw if it never lands: state that was not persisted must
+ * never be reported as saved.
+ */
+function renameWithRetry(tempFile: string, stateFile: string): void {
+  const deadline = Date.now() + 2000;
+  for (;;) {
+    try {
+      fs.renameSync(tempFile, stateFile);
+      return;
+    } catch (error) {
+      if (Date.now() >= deadline) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+    }
+  }
+}
+
 export class FileSystemStateRepository<T> implements IStateRepository<T> {
   private static readonly queues = new Map<string, Promise<void>>();
   private readonly stateFile: string;
@@ -120,13 +143,19 @@ export class FileSystemStateRepository<T> implements IStateRepository<T> {
         encoding: 'utf-8',
         mode: 0o600,
       });
-      fs.renameSync(tempFile, this.stateFile);
+      renameWithRetry(tempFile, this.stateFile);
     } catch (error) {
       throw new StatePersistenceError(`Failed to save state to ${this.stateFile}.`, {
         cause: error,
       });
     } finally {
-      if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+      // A cleanup failure must not convert a completed write into a thrown
+      // error: an exception raised here replaces the normal return.
+      try {
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+      } catch {
+        // The temp file is uniquely named; leaving it is harmless.
+      }
     }
   }
 

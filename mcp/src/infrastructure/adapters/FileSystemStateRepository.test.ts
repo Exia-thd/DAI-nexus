@@ -152,13 +152,34 @@ describe('FileSystemStateRepository', () => {
     readFileSync.mockRestore();
   });
 
-  it('preserves the prior state and removes its temporary file when rename fails', async () => {
+  it('retries a transient rename failure instead of failing the save', async () => {
+    // Windows rejects a rename while any process still holds the destination —
+    // an indexer reading the JSON is enough — and that surfaced as a state save
+    // that reported failure even though nothing was wrong with the write.
+    const root = workspace();
+    const repo = repository(root);
+    await repo.save(DEFAULT_STATE);
+    const file = stateFile(root);
+    const rename = vi.spyOn(fs, 'renameSync').mockImplementationOnce(() => {
+      throw new Error('injected transient rename failure');
+    });
+
+    await expect(repo.save({ ...DEFAULT_STATE, currentMode: 'Changed' })).resolves.not.toThrow();
+    rename.mockRestore();
+
+    expect(JSON.parse(fs.readFileSync(file, 'utf-8')).state.currentMode).toBe('Changed');
+    expect(fs.readdirSync(path.dirname(file)).filter((name) => name.includes('.tmp.'))).toEqual([]);
+  });
+
+  it('preserves the prior state and removes its temporary file when rename keeps failing', async () => {
     const root = workspace();
     const repo = repository(root);
     await repo.save(DEFAULT_STATE);
     const file = stateFile(root);
     const original = fs.readFileSync(file, 'utf-8');
-    const rename = vi.spyOn(fs, 'renameSync').mockImplementationOnce(() => {
+    // A rename that never lands must still fail the save: state that was not
+    // persisted may never be reported as saved.
+    const rename = vi.spyOn(fs, 'renameSync').mockImplementation(() => {
       throw new Error('injected rename failure');
     });
 

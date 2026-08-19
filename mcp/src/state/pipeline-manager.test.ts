@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -26,6 +26,15 @@ const STATE_FILE = path.join(tmpDir, '.dainexus', 'pipeline-state.json');
 function cleanState() {
   if (fs.existsSync(STATE_FILE)) fs.unlinkSync(STATE_FILE);
 }
+
+// Every case loads the module through `await import`, and the first one to run
+// pays vitest's transform and collect cost inside its own 10s budget. On a
+// loaded machine that alone exceeded the timeout, so whichever test happened to
+// run first failed while the rest passed. Warm the module once, outside any
+// single test's clock; later imports come from cache.
+beforeAll(async () => {
+  await import('../state/pipeline-manager.js');
+}, 60_000);
 
 describe('Pipeline Manager', () => {
   beforeEach(() => {
