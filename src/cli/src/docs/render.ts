@@ -642,6 +642,28 @@ export function renderStaticSite(
 
 export const buildStaticPortal = renderStaticSite;
 
+/**
+ * Complete the staging swap, tolerating Windows' asynchronous directory release.
+ *
+ * `rmSync` returns before the OS has finished releasing a directory whose
+ * handles are still held — by an indexer or a scanner — so the rename that
+ * follows lands on a path Windows still considers busy and fails with EPERM.
+ * Retry briefly, but never swallow: a swap that does not land must throw,
+ * because the alternative is publishing a half-built site as if it were whole.
+ */
+function swapIntoPlace(stagingOutput: string, finalOutput: string): void {
+  const deadline = Date.now() + 2000;
+  for (;;) {
+    try {
+      renameSync(stagingOutput, finalOutput);
+      return;
+    } catch (error) {
+      if (Date.now() >= deadline) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+    }
+  }
+}
+
 export function buildDocsHub(
   catalogs: DocsCatalog[],
   outputDir: string,
@@ -662,8 +684,13 @@ export function buildDocsHub(
     rmSync(stagingOutput, { recursive: true, force: true });
     throw error;
   }
-  rmSync(finalOutput, { recursive: true, force: true });
-  renameSync(stagingOutput, finalOutput);
+  rmSync(finalOutput, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 50,
+  });
+  swapIntoPlace(stagingOutput, finalOutput);
   return {
     outputDir: finalOutput,
     projects: [...catalogs]

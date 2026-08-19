@@ -137,7 +137,20 @@ def facts() -> dict:
         "policy_patterns": policy_patterns,
         "reject_reasons": reject_reasons,
         "memory_loc": lines_of("scripts/lite/memory.py"),
+        **_baseline_facts(),
         **_memory_facts(),
+    }
+
+
+def _baseline_facts() -> dict:
+    """Read the regression baseline so the page cannot quote a stale count."""
+    raw = read("tests/known_failures.txt").splitlines()
+    entries = [line for line in raw if line.strip() and not line.startswith("#")]
+    files = sorted({line.split("::")[0].split("/")[-1] for line in entries})
+    return {
+        "baseline_count": len(entries),
+        "baseline_files": len(files),
+        "baseline_gate_loc": lines_of("scripts/ci/pytest_gate.py"),
     }
 
 
@@ -798,6 +811,23 @@ không phải <code>policy=keep</code>. Trên Windows, kiểm tra process sống
 <strong>GREEN</strong> — cũng check đó pass sau khi sửa.</p>
 <p>Một test chưa từng được nhìn thấy fail không phải bằng chứng rằng nó sẽ bắt được regression.
 Nếu không dựng được RED, phải nói thẳng và nêu rõ điều đó để lại phần nào chưa được chứng minh.</p>
+
+<h2><span class="num">04c</span> Baseline: gate báo regression, không báo đỏ kế thừa</h2>
+<p>Bộ <code>tests/unit_tests/</code> được nhập vào kèm theo một tập test đã đỏ sẵn từ cây nguồn.
+Nếu gate chỉ nhìn mã thoát của pytest thì nó <strong>không bao giờ xanh được</strong> — và một cổng
+vĩnh viễn đỏ chỉ dạy người ta cách bỏ qua nó.</p>
+<p><code>scripts/ci/pytest_gate.py</code> ({f["baseline_gate_loc"]} dòng) so kết quả với
+<code>tests/known_failures.txt</code>: hiện có <strong>{
+        f["baseline_count"]
+    } test</strong> đỏ kế thừa
+trên {
+        f["baseline_files"]
+    } file. Gate chỉ fail khi xuất hiện một failure <em>không</em> nằm trong danh sách đó.
+Test nào rời khỏi danh sách cũng được báo, để baseline không âm thầm phình ra.</p>
+<p>Baseline phải đo trong môi trường tất định, nếu không nó ghi lại cái shell chứ không ghi lại mã nguồn:
+gate tự ghim <code>PYTHONUTF8</code> cho tiến trình pytest, vì Windows mặc định giải mã fixture bằng
+codepage ANSI — cùng một bộ test xanh khi chạy từ shell UTF-8 và chết vì <code>UnicodeDecodeError</code>
+khi chạy từ git hook.</p>
 
 <h2><span class="num">05</span> Lớp bổ sung — linter overlay &amp; contract test</h2>
 <p>Hai nguồn bằng chứng giả tinh vi hơn, đều đã bị bịt:</p>

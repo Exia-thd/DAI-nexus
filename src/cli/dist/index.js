@@ -7876,6 +7876,18 @@ function renderStaticSite(catalogs, options) {
     searchIndex: join(outputDir, "search-index.json")
   };
 }
+function swapIntoPlace(stagingOutput, finalOutput) {
+  const deadline = Date.now() + 2e3;
+  for (; ; ) {
+    try {
+      renameSync(stagingOutput, finalOutput);
+      return;
+    } catch (error) {
+      if (Date.now() >= deadline) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+    }
+  }
+}
 function buildDocsHub(catalogs, outputDir) {
   const finalOutput = resolve(outputDir);
   const stagingOutput = `${finalOutput}.staging-${process.pid}`;
@@ -7893,8 +7905,13 @@ function buildDocsHub(catalogs, outputDir) {
     rmSync(stagingOutput, { recursive: true, force: true });
     throw error;
   }
-  rmSync(finalOutput, { recursive: true, force: true });
-  renameSync(stagingOutput, finalOutput);
+  rmSync(finalOutput, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 50
+  });
+  swapIntoPlace(stagingOutput, finalOutput);
   return {
     outputDir: finalOutput,
     projects: [...catalogs].sort((left, right) => left.project.id.localeCompare(right.project.id)).map((catalog) => ({
