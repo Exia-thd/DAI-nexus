@@ -1,11 +1,6 @@
 import { spawnSync } from "node:child_process";
-import {
-  lstatSync,
-  mkdtempSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-} from "node:fs";
+import { lstatSync, mkdtempSync, readFileSync, realpathSync } from "node:fs";
+import { removeQuietly } from "../fs-safe.js";
 import { tmpdir } from "node:os";
 import { join, relative, resolve, sep } from "node:path";
 import { doctorCatalog } from "./doctor.js";
@@ -401,7 +396,8 @@ function selectedProjectView(
       temporaryParent,
     };
   } catch (error) {
-    rmSync(temporaryParent, { recursive: true, force: true });
+    // Rethrowing the real cause matters more than cleaning up.
+    removeQuietly(temporaryParent);
     throw error;
   }
 }
@@ -787,16 +783,7 @@ export function runDocsGate(
       // directory, and from inside `finally` that turned an already-computed
       // pass into DOCS_GATE_FAILED — visible only under load, which is why it
       // showed up in the pre-commit hook and never from a shell.
-      try {
-        rmSync(temporaryParent, {
-          recursive: true,
-          force: true,
-          maxRetries: 5,
-          retryDelay: 100,
-        });
-      } catch {
-        // The OS reclaims its own temp directory; the gate result stands.
-      }
+      removeQuietly(temporaryParent);
     }
 
     result.status = "pass";
@@ -819,8 +806,11 @@ export function runDocsGate(
     }
     return result;
   } finally {
+    // An exception raised in `finally` replaces the value being returned, so a
+    // cleanup failure here would turn a computed verdict into a crash. This is
+    // the same defect already fixed in the other temp-directory cleanup below.
     if (selectedView?.temporaryParent) {
-      rmSync(selectedView.temporaryParent, { recursive: true, force: true });
+      removeQuietly(selectedView.temporaryParent);
     }
   }
 }

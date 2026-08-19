@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import pc7 from 'picocolors';
-import { mkdirSync, existsSync, readFileSync, writeFileSync, statSync, mkdtempSync, cpSync, renameSync, realpathSync, rmSync, copyFileSync, readdirSync, appendFileSync, lstatSync } from 'fs';
+import fs, { mkdirSync, existsSync, readFileSync, writeFileSync, statSync, mkdtempSync, cpSync, realpathSync, copyFileSync, readdirSync, appendFileSync, rmSync, lstatSync } from 'fs';
 import { join, resolve, dirname, isAbsolute, relative, basename, sep, posix, extname } from 'path';
 import { homedir, tmpdir } from 'os';
 import { execSync, spawn, spawnSync } from 'child_process';
@@ -2564,8 +2564,8 @@ async function handleBatch(file, options) {
   }
   let input;
   if (file) {
-    const fs = await import('fs');
-    input = fs.readFileSync(file, "utf-8");
+    const fs2 = await import('fs');
+    input = fs2.readFileSync(file, "utf-8");
   } else {
     input = await new Promise((resolve13) => {
       let data = "";
@@ -4423,12 +4423,45 @@ function calculateMetrics(taskResults) {
     categories
   };
 }
+var DEFAULT_DEADLINE_MS = 2e3;
+var RETRY_PAUSE_MS = 25;
+function pause(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+function renameWithRetry(from, to, deadlineMs = DEFAULT_DEADLINE_MS) {
+  const deadline = Date.now() + deadlineMs;
+  for (; ; ) {
+    try {
+      fs.renameSync(from, to);
+      return;
+    } catch (error) {
+      if (Date.now() >= deadline) throw error;
+      pause(RETRY_PAUSE_MS);
+    }
+  }
+}
+function removeQuietly(target) {
+  try {
+    fs.rmSync(target, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 50
+    });
+  } catch {
+  }
+}
 
 // src/bench/runner.ts
 function writeJsonAtomic(filePath, data) {
-  const tmpPath = `${filePath}.tmp`;
-  writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf8");
-  renameSync(tmpPath, filePath);
+  const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}`;
+  try {
+    writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf8");
+    renameWithRetry(tmpPath, filePath);
+  } catch (error) {
+    removeQuietly(tmpPath);
+    throw error;
+  }
 }
 function parseCommandString(cmdStr) {
   const matches = cmdStr.match(/"[^"]*"|'[^']*'|[^\s"']+/g);
@@ -4760,19 +4793,13 @@ async function runBenchmarkSuite(suitePath, options) {
         attemptWorkspace = mkdtempSync(tempBase);
         cpSync(resolvedWorkspace, attemptWorkspace, { recursive: true });
         cleanupFn = () => {
-          try {
-            rmSync(attemptWorkspace, { recursive: true, force: true });
-          } catch (e) {
-          }
+          removeQuietly(attemptWorkspace);
         };
       } else {
         const tempBase = join(projectTmpDir, `dai-bench-empty-${task.id}-`);
         attemptWorkspace = mkdtempSync(tempBase);
         cleanupFn = () => {
-          try {
-            rmSync(attemptWorkspace, { recursive: true, force: true });
-          } catch (e) {
-          }
+          removeQuietly(attemptWorkspace);
         };
       }
       totalAttemptsRun++;
@@ -7876,18 +7903,6 @@ function renderStaticSite(catalogs, options) {
     searchIndex: join(outputDir, "search-index.json")
   };
 }
-function swapIntoPlace(stagingOutput, finalOutput) {
-  const deadline = Date.now() + 2e3;
-  for (; ; ) {
-    try {
-      renameSync(stagingOutput, finalOutput);
-      return;
-    } catch (error) {
-      if (Date.now() >= deadline) throw error;
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
-    }
-  }
-}
 function buildDocsHub(catalogs, outputDir) {
   const finalOutput = resolve(outputDir);
   const stagingOutput = `${finalOutput}.staging-${process.pid}`;
@@ -7902,16 +7917,11 @@ function buildDocsHub(catalogs, outputDir) {
   try {
     staged = renderStaticSite(catalogs, { outputDir: stagingOutput });
   } catch (error) {
-    rmSync(stagingOutput, { recursive: true, force: true });
+    removeQuietly(stagingOutput);
     throw error;
   }
-  rmSync(finalOutput, {
-    recursive: true,
-    force: true,
-    maxRetries: 10,
-    retryDelay: 50
-  });
-  swapIntoPlace(stagingOutput, finalOutput);
+  removeQuietly(finalOutput);
+  renameWithRetry(stagingOutput, finalOutput);
   return {
     outputDir: finalOutput,
     projects: [...catalogs].sort((left, right) => left.project.id.localeCompare(right.project.id)).map((catalog) => ({
@@ -8247,7 +8257,7 @@ function selectedProjectView(projectRoot, mode) {
       temporaryParent
     };
   } catch (error) {
-    rmSync(temporaryParent, { recursive: true, force: true });
+    removeQuietly(temporaryParent);
     throw error;
   }
 }
@@ -8519,15 +8529,7 @@ function runDocsGate(projectRootInput, options = {}) {
       buildDocsHub([catalog], outputDir);
       result.verifiedOutputPaths = verifyOutput(outputDir, catalog);
     } finally {
-      try {
-        rmSync(temporaryParent, {
-          recursive: true,
-          force: true,
-          maxRetries: 5,
-          retryDelay: 100
-        });
-      } catch {
-      }
+      removeQuietly(temporaryParent);
     }
     result.status = "pass";
     return result;
@@ -8550,7 +8552,7 @@ function runDocsGate(projectRootInput, options = {}) {
     return result;
   } finally {
     if (selectedView?.temporaryParent) {
-      rmSync(selectedView.temporaryParent, { recursive: true, force: true });
+      removeQuietly(selectedView.temporaryParent);
     }
   }
 }

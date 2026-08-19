@@ -3,9 +3,7 @@ import {
   existsSync,
   mkdtempSync,
   cpSync,
-  rmSync,
   writeFileSync,
-  renameSync,
   realpathSync,
   statSync,
   mkdirSync,
@@ -21,11 +19,22 @@ import type {
   BenchmarkReport,
 } from "./types.js";
 import { calculateMetrics } from "./metrics.js";
+import { removeQuietly, renameWithRetry } from "../fs-safe.js";
 
 export function writeJsonAtomic(filePath: string, data: unknown): void {
-  const tmpPath = `${filePath}.tmp`;
-  writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf8");
-  renameSync(tmpPath, filePath);
+  // The temp name must be unique. A fixed `.tmp` suffix means two runs writing
+  // the same report clobber each other's staging file and one publishes the
+  // other's bytes.
+  const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}.${Math.random()
+    .toString(16)
+    .slice(2)}`;
+  try {
+    writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf8");
+    renameWithRetry(tmpPath, filePath);
+  } catch (error) {
+    removeQuietly(tmpPath);
+    throw error;
+  }
 }
 
 export function parseCommandString(cmdStr: string): {
@@ -444,21 +453,13 @@ export async function runBenchmarkSuite(
         attemptWorkspace = mkdtempSync(tempBase);
         cpSync(resolvedWorkspace, attemptWorkspace, { recursive: true });
         cleanupFn = () => {
-          try {
-            rmSync(attemptWorkspace, { recursive: true, force: true });
-          } catch (e) {
-            // Ignore cleanup errors
-          }
+          removeQuietly(attemptWorkspace);
         };
       } else {
         const tempBase = join(projectTmpDir, `dai-bench-empty-${task.id}-`);
         attemptWorkspace = mkdtempSync(tempBase);
         cleanupFn = () => {
-          try {
-            rmSync(attemptWorkspace, { recursive: true, force: true });
-          } catch (e) {
-            // Ignore cleanup errors
-          }
+          removeQuietly(attemptWorkspace);
         };
       }
 
