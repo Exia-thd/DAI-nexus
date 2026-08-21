@@ -4,9 +4,9 @@ import os
 import subprocess
 
 print(
-    "WARNING: scripts/lite/memory.py has been moved to scripts/lite/memory.py. This shim will be removed in the next release.",
+    "WARNING: memory-v2.py has been moved to memory/memory-v2.py. This shim will be removed in the next release.",
     file=sys.stderr,
 )
 dir_path = os.path.dirname(os.path.realpath(__file__))
-new_path = os.path.join(dir_path, "scripts/lite/memory.py")
+new_path = os.path.join(dir_path, "memory/memory-v2.py")
 sys.exit(subprocess.call([sys.executable, new_path] + sys.argv[1:]))

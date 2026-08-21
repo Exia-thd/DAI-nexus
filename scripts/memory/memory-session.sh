@@ -100,7 +100,7 @@ do_checkpoint() {
 
     # Save to memory (Legacy Token-Savior / memory)
     if command -v python3 &>/dev/null; then
-        python3 "${SCRIPT_DIR}scripts/lite/memory.py" add \
+        python3 "${SCRIPT_DIR}/../lite/memory.py" add \
             "CHECKPOINT: [${checkpoint_id}] msg:${message_count} | ${summary}" \
             --category session 2>/dev/null || true
             
@@ -244,7 +244,7 @@ cmd_resume() {
     if command -v python3 &>/dev/null; then
         echo ""
         log "Recent memories:"
-        python3 "${SCRIPT_DIR}scripts/lite/memory.py" list --category session --limit 5 2>/dev/null || true
+        python3 "${SCRIPT_DIR}/../lite/memory.py" list --category session --limit 5 2>/dev/null || true
     fi
 }
 

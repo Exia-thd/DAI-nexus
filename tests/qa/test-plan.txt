@@ -33,7 +33,7 @@
 
 ## 2. Unit Test Coverage Matrix
 
-### 2.1 Forgenexus Package
+### 2.1 DAI Nexus Node Package
 
 | Module | Files | Covered | Threshold |
 |--------|-------|---------|-----------|
@@ -68,7 +68,7 @@
 | `error serialization` | DaiNexusError → JSON | ✅ |
 | `isDaiNexusError` | Type detection | ✅ |
 
-### 3.2 Forgenexus Integration Tests
+### 3.2 DAI Nexus Node Integration Tests
 
 | Test Case | Description | Status |
 |-----------|-------------|--------|

@@ -51,8 +51,7 @@ Each project has isolated configuration:
 
 ```
 ~/.cursor/mcp.json (global)
-├── dai-nexus → dainexus-mcp-launcher.sh
-└── dainexus-node → dainexus-node-mcp-launcher.sh
+└── dai-nexus → dainexus-mcp-launcher.sh
 
 Project A/.antigravity/mcp-manifest.json
 Project B/.antigravity/mcp-manifest.json
@@ -72,7 +71,7 @@ project/
 ├── .dainexus/
 │   ├── settings.env            # DAI Nexus settings
 │   └── mcp-server/            # Generated MCP server
-└── .dainexus-node/               # Code graph index
+└── .gitnexus/                    # Code graph index
     └── codebase.db
 ```
 
@@ -82,9 +81,7 @@ project/
 dai-nexus/
 ├── scripts/
 │   ├── dainexus-mcp-setup.sh                    # Unified MCP manager
-│   ├── dainexus-node-setup.sh          # DAI Nexus Node installer
-│   ├── dainexus-mcp-launcher.sh   # FW MCP launcher
-│   ├── dainexus-node-mcp-launcher.sh   # FNX MCP launcher
+│   ├── dainexus-mcp-launcher.sh                 # MCP launcher
 │   └── templates/
 │       ├── mcp.cursor.json          # Cursor config template
 │       ├── mcp.claude.json          # Claude config template
@@ -109,19 +106,13 @@ Main launcher that routes to DAI Nexus MCP server.
 - `DAINEXUS_WORKSPACE` - Override workspace
 - `DAINEXUS_DEBUG=1` - Enable debug output
 
-### dainexus-node-mcp-launcher.sh
+### Code-intelligence launcher — not shipped
 
-Launcher for DAI Nexus Node code intelligence.
-
-**Key Functions:**
-1. Detect DAI Nexus Node installation
-2. Detect workspace
-3. Verify index exists
-4. Execute DAI Nexus Node CLI
-
-**Environment Variables:**
-- `FORGENEXUS_WORKSPACE` - Override workspace
-- `FORGENEXUS_DEBUG=1` - Enable debug output
+Earlier revisions documented a second launcher for a bundled code-intelligence
+server. That module is not part of this repository: code intelligence is
+provided by GitNexus, which installs and launches itself. `.cursor/` still
+carries a dead entry point for the removed module — see the audit notes in
+`.dainexus/plan-lessons.md`.
 
 ---
 
@@ -190,10 +181,6 @@ Launcher for DAI Nexus Node code intelligence.
     "dai-nexus": {
       "command": "bash",
       "args": ["/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"]
-    },
-    "dainexus-node": {
-      "command": "bash",
-      "args": ["/path/to/dai-nexus/scripts/dainexus-node-mcp-launcher.sh"]
     }
   }
 }
@@ -209,10 +196,6 @@ Launcher for DAI Nexus Node code intelligence.
     "dai-nexus": {
       "command": "bash",
       "args": ["/path/to/dai-nexus/scripts/dainexus-mcp-launcher.sh"]
-    },
-    "dainexus-node": {
-      "command": "bash",
-      "args": ["/path/to/dai-nexus/scripts/dainexus-node-mcp-launcher.sh"]
     }
   }
 }
@@ -319,9 +302,7 @@ codex mcp list
 | Variable | Values | Effect |
 |----------|--------|--------|
 | `DAINEXUS_DEBUG` | 0, 1 | Enable debug output in launcher |
-| `FORGENEXUS_DEBUG` | 0, 1 | Enable DAI Nexus Node debug |
 | `FW_MCP_VERBOSE` | 0, 1 | Verbose output for dainexus-mcp-setup.sh |
-| `FNX_VERBOSE` | 0, 1 | Verbose output for dainexus-node-setup.sh |
 
 ---
 
@@ -333,15 +314,6 @@ codex mcp list
 |------|---------|
 | 0 | Success |
 | 1 | General error |
-| 2 | Invalid arguments |
-| 3 | Prerequisites missing |
-
-### dainexus-node-setup.sh
-
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | Installation failed |
 | 2 | Invalid arguments |
 | 3 | Prerequisites missing |
 
@@ -418,9 +390,7 @@ echo "" | bash dainexus-mcp-setup.sh wizard
 ```bash
 # Check scripts
 shellcheck scripts/dainexus-mcp-setup.sh
-shellcheck scripts/dainexus-node-setup.sh
 shellcheck scripts/dainexus-mcp-launcher.sh
-shellcheck scripts/dainexus-node-mcp-launcher.sh
 ```
 
 ### Integration Test
@@ -465,7 +435,6 @@ FW_MCP_VERBOSE=1 bash dainexus-mcp-setup.sh --diagnose
 DAINEXUS_DEBUG=1 bash scripts/dainexus-mcp-launcher.sh
 
 # Debug DAI Nexus Node
-FORGENEXUS_DEBUG=1 bash scripts/dainexus-node-mcp-launcher.sh
 ```
 
 ---
@@ -474,4 +443,4 @@ FORGENEXUS_DEBUG=1 bash scripts/dainexus-node-mcp-launcher.sh
 
 - [Setup Guide](SETUP.md) - User documentation
 - [Quick Start](SETUP-QUICK.md) - Fast setup
-- [DAI Nexus Node](../dainexus-node/README.md) - Code intelligence docs
+- Code intelligence is provided by GitNexus — see `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`

@@ -34,7 +34,7 @@ else
 fi
 
 MEMORY_DB="${PROJECT_ROOT}/.dainexus/memory.db"
-MEMORY_SCRIPT="${DAINEXUS_DIR}scripts/lite/memory.py"
+MEMORY_SCRIPT="${DAINEXUS_DIR}/scripts/lite/memory.py"
 
 # Check if memory DB already exists
 if [ -f "$MEMORY_DB" ]; then

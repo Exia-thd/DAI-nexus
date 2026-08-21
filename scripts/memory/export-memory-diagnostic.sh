@@ -183,7 +183,7 @@ def sqlite_stats(db_path: Path) -> dict[str, Any]:
 
 def mem0_stats(workspace: Path) -> str:
     script_dir = Path(os.environ.get("DAINEXUS_SCRIPT_DIR", "scripts")).resolve()
-    memory = script_dir / "scripts/lite/memory.py"
+    memory = script_dir / "lite" / "memory.py"
     if not memory.exists():
         return "scripts/lite/memory.py not found.\n"
     result = subprocess.run(

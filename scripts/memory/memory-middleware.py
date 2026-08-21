@@ -648,7 +648,7 @@ def auto_ingest_session_decisions(session: dict) -> int:
     ingested = 0
     try:
         script_dir = Path(__file__).parent
-        mem0_script = script_dir / "scripts/lite/memory.py"
+        mem0_script = script_dir.parent / "lite" / "memory.py"
         if not mem0_script.exists():
             return 0
 
@@ -661,7 +661,7 @@ def auto_ingest_session_decisions(session: dict) -> int:
         # Ingest session summary as a session memory
         if summary:
             cmd = [
-                "python3",
+                sys.executable,
                 str(mem0_script),
                 "add",
                 f"SESSION: [{session_id}] | Mode: {mode} | Summary: {summary}",
@@ -680,7 +680,7 @@ def auto_ingest_session_decisions(session: dict) -> int:
         ]
         for tid, task in completed:
             cmd = [
-                "python3",
+                sys.executable,
                 str(mem0_script),
                 "add",
                 f"SESSION_TASK: [{session_id}] T{tid} completed: {task.get('summary', '')}",
@@ -697,7 +697,7 @@ def auto_ingest_session_decisions(session: dict) -> int:
         if next_steps:
             for step in next_steps[:5]:  # Max 5 steps
                 cmd = [
-                    "python3",
+                    sys.executable,
                     str(mem0_script),
                     "add",
                     f"SESSION_NEXT: [{session_id}] {step}",
@@ -722,14 +722,14 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
     """Save episodic/semantic nodes and links in Layer 2 graph memory."""
     try:
         script_dir = Path(__file__).parent
-        mem0_script = script_dir / "scripts/lite/memory.py"
+        mem0_script = script_dir / "memory-v2.py"
         extract_script = script_dir / "checkpoint-extract.sh"
         if not mem0_script.exists():
             return
 
         # 1. Create Episodic Node for this checkpoint
         cmd = [
-            "python3",
+            sys.executable,
             str(mem0_script),
             "graph-add-node",
             checkpoint_id,
@@ -746,7 +746,7 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
             session_title = f"Session {session_id}"
             session_content = f"Request: {session.get('request', '')} | Mode: {session.get('mode', '')}"
             cmd = [
-                "python3",
+                sys.executable,
                 str(mem0_script),
                 "graph-add-node",
                 session_id,
@@ -758,7 +758,7 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
 
             # Link checkpoint -> session
             cmd = [
-                "python3",
+                sys.executable,
                 str(mem0_script),
                 "graph-link",
                 checkpoint_id,
@@ -775,7 +775,7 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
             if request_text:
                 req_node_id = f"req_{session_id}"
                 cmd = [
-                    "python3",
+                    sys.executable,
                     str(mem0_script),
                     "graph-add-node",
                     req_node_id,
@@ -786,7 +786,7 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
                 subprocess.run(cmd, capture_output=True, text=True, timeout=5)
 
                 cmd = [
-                    "python3",
+                    sys.executable,
                     str(mem0_script),
                     "graph-link",
                     session_id,
@@ -852,7 +852,7 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
 
                         # Add node to graph
                         cmd = [
-                            "python3",
+                            sys.executable,
                             str(mem0_script),
                             "graph-add-node",
                             node_id,
@@ -864,7 +864,7 @@ def save_graph_nodes_edges(summary: str, checkpoint_id: str):
 
                         # Link checkpoint -> modified node
                         cmd = [
-                            "python3",
+                            sys.executable,
                             str(mem0_script),
                             "graph-link",
                             checkpoint_id,
@@ -886,7 +886,7 @@ def extract_semantic_facts(summary: str, checkpoint_id: str):
     """Scan summary/intent details and recent git commit messages for semantic facts."""
     try:
         script_dir = Path(__file__).parent
-        mem0_script = script_dir / "scripts/lite/memory.py"
+        mem0_script = script_dir / "memory-v2.py"
         if not mem0_script.exists():
             return
 
@@ -952,7 +952,7 @@ def extract_semantic_facts(summary: str, checkpoint_id: str):
                         fact_id = f"fact_{hashlib.md5(line.encode()).hexdigest()[:12]}"
                         title = f"Extracted {category.capitalize()}"
                         cmd = [
-                            "python3",
+                            sys.executable,
                             str(mem0_script),
                             "graph-add-node",
                             fact_id,
@@ -963,7 +963,7 @@ def extract_semantic_facts(summary: str, checkpoint_id: str):
                         subprocess.run(cmd, capture_output=True, text=True, timeout=5)
 
                         cmd = [
-                            "python3",
+                            sys.executable,
                             str(mem0_script),
                             "graph-link",
                             checkpoint_id,
@@ -983,14 +983,12 @@ def save_to_mem0(summary: str, checkpoint_id: str) -> bool:
     """Save checkpoint to memory-v2. Returns True on success, False on failure."""
     try:
         script_dir = Path(__file__).parent
-        mem0_script = script_dir / "scripts/lite/memory.py"
+        mem0_script = script_dir.parent / "lite" / "memory.py"
         if not mem0_script.exists():
-            warn(
-                f"scripts/lite/memory.py not found at {mem0_script}, skipping memory save"
-            )
+            warn(f"memory engine not found at {mem0_script}, skipping memory save")
             return False
         cmd = [
-            "python3",
+            sys.executable,
             str(mem0_script),
             "add",
             f"CHECKPOINT: [{checkpoint_id}] | {summary}",
@@ -1369,7 +1367,7 @@ def cmd_status(args=None):
     print("\n=== memory Memory Stats ===")
     try:
         script_dir = Path(__file__).parent
-        mem0_script = script_dir / "scripts/lite/memory.py"
+        mem0_script = script_dir.parent / "lite" / "memory.py"
         if mem0_script.exists():
             result = subprocess.run(
                 [sys.executable, str(mem0_script), "stats"],
@@ -1384,7 +1382,7 @@ def cmd_status(args=None):
             else:
                 print("  (could not load memory stats)")
         else:
-            print("  (scripts/lite/memory.py not found)")
+            print("  (memory engine not found)")
     except Exception:
         print("  (memory unavailable)")
 
@@ -1415,11 +1413,11 @@ def cmd_resume(args=None):
     # Search memory for recent
     try:
         script_dir = Path(__file__).parent
-        mem0_script = script_dir / "scripts/lite/memory.py"
+        mem0_script = script_dir.parent / "lite" / "memory.py"
         if mem0_script.exists():
             result = subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(mem0_script),
                     "list",
                     "--category",

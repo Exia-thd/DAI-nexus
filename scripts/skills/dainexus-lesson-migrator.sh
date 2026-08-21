@@ -29,6 +29,14 @@ else
     SKILLS_DIR="$FW_DIR/skills"
 fi
 
+# Git Bash on Windows reports MSYS-style paths (/c/Users/...). Native Windows
+# Python cannot open those, so every embedded `python3 -c` that touched an
+# absolute path here failed silently behind `2>/dev/null`. Normalise once to a
+# mixed path (C:/Users/...), which both bash and Windows Python accept.
+if command -v cygpath >/dev/null 2>&1; then
+    PROJECT_DIR="$(cygpath -m "$PROJECT_DIR")"
+fi
+
 LESSON_PLAN="$PROJECT_DIR/.dainexus/plan-lessons.md"
 LESSON_EXEC="$PROJECT_DIR/.dainexus/execution-lessons.md"
 MIGRATION_STATE="$PROJECT_DIR/.dainexus/lesson-migration-state.json"
@@ -304,11 +312,17 @@ migrate_entry() {
         clean_research="${clean_research//\"/\\\"}"
         clean_lesson="${clean_lesson//\"/\\\"}"
         
-        # This block wrote four graph nodes/edges (skill node, lesson node,
-        # lesson->skill, session->lesson). scripts/lite/memory.py is the
-        # distilled FTS5 store with no graph-* subcommands, so all four were
-        # swallowed by `|| true` and never wrote anything.
-        :
+        # 1. Ensure the procedural skill node exists
+        python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-add-node "$skill_id" "procedural" "Skill: $(basename "$(dirname "$target_skill")")" "Procedural skill guidelines and SOPs for $(basename "$(dirname "$target_skill")")" &>/dev/null || true
+
+        # 2. Add the lesson node
+        python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-add-node "lesson_$entry_id" "semantic" "Lesson ($type): $(basename "$(dirname "$target_skill")")" "Problem: $clean_problem | Research: $clean_research | Lesson: $clean_lesson" &>/dev/null || true
+
+        # 3. Link lesson -> skill node
+        python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-link "lesson_$entry_id" "$skill_id" --weight 1.5 --type "improves" &>/dev/null || true
+
+        # 4. Link current-session -> lesson node
+        python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-link "current-session" "lesson_$entry_id" --weight 1.0 --type "learned" &>/dev/null || true
     fi
 
     # Cross-feedback (v8.3): execution lessons generate planning stubs

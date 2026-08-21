@@ -361,8 +361,19 @@ class MemoryDB:
                 try:
                     conn.execute(stmt)
                 except sqlite3.Error as e:
-                    if "already exists" not in str(e).lower():
-                        print(f"Schema warning: {e}", file=sys.stderr)
+                    msg = str(e).lower()
+                    if "already exists" in msg:
+                        continue
+                    # `observations` and its FTS index are owned by the lite
+                    # engine (scripts/lite/memory.py), which stores a narrower
+                    # column set. This engine owns only the graph tables, so an
+                    # index over a column the lite schema does not define is an
+                    # expected divergence, not a fault.
+                    if "no such column" in msg and stmt.upper().startswith(
+                        "CREATE INDEX"
+                    ):
+                        continue
+                    print(f"Schema warning: {e}", file=sys.stderr)
         conn.commit()
         conn.close()
 

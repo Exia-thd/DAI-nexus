@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -92,7 +93,7 @@ def test_consolidate_writes_persona_and_scenario_with_source_refs(tmp_path):
 
     result = subprocess.run(
         [
-            "python3",
+            sys.executable,
             str(SCRIPT),
             "--workspace",
             str(workspace),

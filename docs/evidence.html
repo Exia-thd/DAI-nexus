@@ -129,8 +129,8 @@ Nếu không dựng được RED, phải nói thẳng và nêu rõ điều đó 
 Nếu gate chỉ nhìn mã thoát của pytest thì nó <strong>không bao giờ xanh được</strong> — và một cổng
 vĩnh viễn đỏ chỉ dạy người ta cách bỏ qua nó.</p>
 <p><code>scripts/ci/pytest_gate.py</code> (192 dòng) so kết quả với
-<code>tests/known_failures.txt</code>: hiện có <strong>59 test</strong> đỏ kế thừa
-trên 16 file. Gate chỉ fail khi xuất hiện một failure <em>không</em> nằm trong danh sách đó.
+<code>tests/known_failures.txt</code>: hiện có <strong>58 test</strong> đỏ kế thừa
+trên 15 file. Gate chỉ fail khi xuất hiện một failure <em>không</em> nằm trong danh sách đó.
 Test nào rời khỏi danh sách cũng được báo, để baseline không âm thầm phình ra.</p>
 <p>Baseline phải đo trong môi trường tất định, nếu không nó ghi lại cái shell chứ không ghi lại mã nguồn:
 gate tự ghim <code>PYTHONUTF8</code> cho tiến trình pytest, vì Windows mặc định giải mã fixture bằng

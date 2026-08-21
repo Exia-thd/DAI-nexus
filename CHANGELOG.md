@@ -19,6 +19,22 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 - **58 Regression Tests** — 19 AI reasoning + 17 guardrail + 13 UI design gate + 9 audit tests (reconstructed from docs).
 - **Client-Server Sequence Flow Generator** — Automated Mermaid sequence diagram generation powered by GitNexus static call-graphs (reconstructed from docs).
 
+### Fixed
+- **Memory graph layer restored** — The relational layer (`flux_nodes`, `flux_edges`,
+  `procedural_circuits`) was reachable only through paths that a rename had corrupted, so all
+  15 graph writes in the session tracker and lesson migrator failed silently. Observation ops
+  now route to `scripts/lite/memory.py` and graph ops to `scripts/memory/memory-v2.py`; both
+  share `.dainexus/memory.db` over disjoint tables.
+- **14 broken engine paths** — A rename rewrote path *basenames* into repo-relative paths,
+  producing doubled prefixes (`scripts/memory/scripts/lite/memory.py`) and a shim pointing at
+  `scripts/scripts/lite/memory.py`. Every one is now resolved and asserted.
+- **Silent `python3` failure on Windows** — `subprocess.run(['python3', ...])` from Windows
+  Python hits the Microsoft Store stub and exits 9009 without raising; with `stderr=DEVNULL`
+  the procedural-circuit consolidation never ran and never reported. Now uses `sys.executable`.
+- **MSYS path handling** — Git Bash exports `/c/...` paths that native Windows Python cannot
+  open, so the session tracker silently failed to persist its own state. Normalised via
+  `cygpath -m`.
+
 ### Changed
 - **Workflow Consolidation** — Archived overlapping GitHub Action workflows into `.github/workflows/archive/` and simplified `ci.yml`.
 - **Game Extraction** — Removed the `game/` directory from the repository structure to decouple game assets from orchestrator CI.
@@ -179,7 +195,7 @@ All notable changes to [DAI Nexus](https://github.com/Exia-thd/DAI-nexus).
 - **Middleware Chain Extraction** (`skills/production-grade/middleware/`) — 10 middleware files extracted from SKILL.md into separate files for maintainability: `01-session-data.md` through `10-graceful-failure.md`. SKILL.md reduced from 1700+ lines to ~400 lines.
 - **Modes Reference** (`skills/production-grade/modes/README.md`) — Quick-reference index for all 19 modes, gate counts, skill counts, and shared behaviors.
 - **Architecture Decision Records** (`docs/adr/`) — 4 ADRs documenting key decisions: orchestrator separation, KuzuDB read-only MCP, parallel pre-commit, skills count oscillation prevention.
-- **Health Monitoring Script** (`scripts/forgeNexus-health.sh`) — Automated index health check, staleness detection, and auto-reindex trigger.
+- **Health Monitoring Script** (`scripts/dainexus-node-health.sh`) — Automated index health check, staleness detection, and auto-reindex trigger.
 - **CLI Integration Tests** (`scripts/test-cli.sh`) — 16-test suite covering CLI commands, skills system, CI/CD, and version consistency.
 
 ### Changed

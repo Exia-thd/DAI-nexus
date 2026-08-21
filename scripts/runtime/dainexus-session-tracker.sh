@@ -7,6 +7,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Git Bash on Windows reports MSYS-style paths (/c/Users/...). Native Windows
+# Python cannot open those, so every embedded `python3 -c` that touched an
+# absolute path here failed silently behind `2>/dev/null`. Normalise once to a
+# mixed path (C:/Users/...), which both bash and Windows Python accept.
+if command -v cygpath >/dev/null 2>&1; then
+    PROJECT_DIR="$(cygpath -m "$PROJECT_DIR")"
+fi
 TRACK_FILE="$PROJECT_DIR/.dainexus/session-tracker-v2.json"
 METRICS_FILE="$PROJECT_DIR/.dainexus/asip-metrics.json"
 
@@ -177,11 +185,23 @@ with open('$TRACK_FILE', 'w') as f:
     if [ "$passed" = "true" ]; then
         pass "Plan score: $score (PASSED)"
         
-        # Graph-layer writes removed: scripts/lite/memory.py is the distilled FTS5 store and has no graph-* subcommands.
+        # [Graph Layer] Reinforce the session -> plan-quality edge on a pass.
+        if command -v python3 &>/dev/null; then
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the plan quality metrics" 2>/dev/null || true
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-reinforce "current-session" "plan-quality" --factor 1.2 2>/dev/null || true
+        fi
     else
         warn "Plan score: $score (FAILED - below $threshold)"
         
-        # Graph-layer writes removed: scripts/lite/memory.py is the distilled FTS5 store and has no graph-* subcommands.
+        # [Graph Layer] Decay the session -> plan-quality edge on a failure.
+        if command -v python3 &>/dev/null; then
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-add-node "current-session" "episodic" "Current Session" "Dynamic episodic node tracking current session" 2>/dev/null || true
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-add-node "plan-quality" "semantic" "Plan Quality Loop" "Static semantic concept of the plan quality metrics" 2>/dev/null || true
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-link "current-session" "plan-quality" --weight 1.0 --type "relates_to" 2>/dev/null || true
+            python3 "$PROJECT_DIR/scripts/memory/memory-v2.py" graph-decay "current-session" "plan-quality" --factor 0.5 2>/dev/null || true
+        fi
         
         # A failed plan score is telemetry, not permission to mutate shared skills.
         warn "Plan needs improvement. Research only if a material knowledge/evidence gap blocks the next decision."
@@ -204,6 +224,7 @@ end_session() {
     python3 -c "
 import json
 import subprocess
+import sys
 
 data = {}
 try:
@@ -231,11 +252,52 @@ if '$status' == 'completed':
             pes_score = max(0.0, min(1.0, pes_score))
             
             # Consolidated threshold adjusted for session scopes: PES >= 0.20
-            # The PES score fed a memory graph (nodes, edges, procedural
-            # circuits). This build ships the distilled FTS5 store in
-            # scripts/lite/memory.py, which has no graph subcommands, so every
-            # write here was swallowed by stderr=DEVNULL and did nothing.
-            pass
+            if pes_score >= 0.20:
+                current_session = data.get('current_session') or {}
+                session_id = current_session.get('id', 'session_unknown')
+                mode = current_session.get('mode', 'unknown')
+                summary = '$summary'
+                engine = '$PROJECT_DIR/scripts/memory/memory-v2.py'
+
+                # Consolidate this trajectory as a procedural node.
+                subprocess.run([
+                    sys.executable, engine, 'graph-add-node',
+                    f'proc-{session_id}', 'procedural', f'Optimized procedural circuit for {mode}',
+                    f'Successful trajectory consolidated with PES={pes_score}. Summary: {summary}',
+                    '--pes', str(pes_score)
+                ], stderr=subprocess.DEVNULL)
+
+                # Link the procedural node to its semantic target.
+                subprocess.run([
+                    sys.executable, engine, 'graph-link',
+                    f'proc-{session_id}', 'plan-quality', '--weight', '3.0', '--type', 'solves'
+                ], stderr=subprocess.DEVNULL)
+
+                # Consolidate completed tasks into procedural_circuits.
+                steps = []
+                try:
+                    from pathlib import Path
+                    session_log_path = Path('$PROJECT_DIR/.dainexus/session-log.json')
+                    if session_log_path.exists():
+                        log_data = json.loads(session_log_path.read_text())
+                        for s in log_data.get('sessions', []):
+                            if s.get('status') == 'in_progress' or s.get('session_id') == session_id:
+                                for tid, t in s.get('tasks', {}).items():
+                                    if t.get('status') == 'completed':
+                                        steps.append({
+                                            'id': tid,
+                                            'summary': t.get('summary', ''),
+                                            'updated_at': t.get('updated_at', '')
+                                        })
+                except Exception:
+                    pass
+
+                steps_json = json.dumps(steps)
+                subprocess.run([
+                    sys.executable, engine, 'graph-save-circuit',
+                    f'proc-{session_id}', f'Optimized procedural circuit for {mode}',
+                    steps_json, str(pes_score)
+                ], stderr=subprocess.DEVNULL)
     except Exception as e:
         pass
 

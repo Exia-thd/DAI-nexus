@@ -9,7 +9,7 @@
 
 ---
 
-## Forgenexus Test Files
+## DAI Nexus Node Test Files
 
 | File | Tests | Status |
 |------|-------|--------|
@@ -41,7 +41,7 @@
 
 ## New Tests Added (v8.2)
 
-### Forgenexus
+### DAI Nexus Node
 - `src/agents/prompts.test.ts` — CITATION_PATTERN, extractCitations, buildVerificationPrompt, buildSynthesisPrompt, applyGuardrails, parseVerificationResponse, extractConfidenceScore
 - `src/agents/llm-client.test.ts` — MockLLMClient, GuardedLLMClient, createGuardedLLMClient, createMockGuardedLLMClient
 - `src/data/graph.test.ts` — detectCommunities, analyzeImpact, computeMRO, findOverrides, traceProcesses

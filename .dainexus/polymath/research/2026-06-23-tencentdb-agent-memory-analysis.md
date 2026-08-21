@@ -19,7 +19,10 @@ Assess whether TencentDB-Agent-Memory has ideas that can upgrade DAI Nexus.
 
 ## Local DAI Nexus Evidence
 
-- DAI Nexus already has persistent long-term memory in `scripts/lite/memory.py`: SQLite + WAL + FTS5, category weighting, auto tags, L1 index / L2 search / L3 get, soft-delete GC, observation links, Flux graph nodes/edges, and procedural circuits.
+- DAI Nexus already has persistent long-term memory across two engines sharing `.dainexus/memory.db`.
+  `scripts/lite/memory.py` (one file, stdlib only) owns observations: SQLite + WAL + FTS5, category
+  weighting, auto tags, L1 index / L2 search / L3 get, and soft-delete GC. `scripts/memory/memory-v2.py`
+  owns the relational layer: Flux graph nodes/edges, observation links, and procedural circuits.
 - `scripts/memory-retrieve.sh` loads conversation summary, active context, BA handoff, session summary, and memory search results with a token budget.
 - `mcp/src/middleware/tool-sandbox.ts` already sanitizes tool outputs, writes audit logs, compresses large outputs, and returns summaries.
 - `mcp/src/middleware/session-deduplication.ts` deduplicates repeated tool calls in-session.
