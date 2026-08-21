@@ -614,15 +614,31 @@ def test_evidence_schema_v2() -> None:
                 "--out",
                 tmp,
                 "--tier",
-                "quick",
-                "--acceptance",
+                "unit",
+                "--change-kind",
+                "fix",
+                "--phase",
+                "green",
+                "--risk",
+                "standard",
+                "--implementer-id",
+                "smoke@local",
+                "--limitations",
+                "",
+                "--reviewer-status",
+                "not_required",
+                "--acceptance-id",
+                "digest-covers-output",
+                "--claim",
                 "digest covers output",
+                "--test-ref",
+                "scripts/lite/verify_gate.py",
                 "--negative-path",
                 "tampered output rejected",
                 "--",
                 sys.executable,
-                "-c",
-                "print('hello v2')",
+                "scripts/lite/verify_gate.py",
+                "--selftest",
             ]
         )
         check("run_check writes v2 evidence", r.returncode == 0, r.stderr[-200:])
@@ -633,10 +649,29 @@ def test_evidence_schema_v2() -> None:
         ev.get("schema_version") == "2",
         str(ev.get("schema_version")),
     )
+    # The schema in kernel/VERIFY.md is the oracle: a v2 record must carry every
+    # field the completion contract names, not just a free-text acceptance line.
+    required_v2 = (
+        "acceptance_criteria",
+        "command",
+        "execution",
+        "implementer_id",
+        "limitations",
+        "negative_path_bindings",
+        "negative_paths",
+        "output_sha256",
+        "reviewer",
+        "schema_version",
+        "tier",
+        "tree_sha",
+    )
+    absent = [field for field in required_v2 if field not in ev]
+    check("v2 carries every contracted field", not absent, f"absent: {absent}")
     check(
-        "v2 carries tier/acceptance/negative_paths",
-        ev.get("tier") == "quick"
-        and ev.get("acceptance")
+        "v2 carries tier/acceptance_criteria/negative_paths",
+        ev.get("tier") == "unit"
+        and ev.get("acceptance_criteria")
+        and ev["acceptance_criteria"][0]["id"] == "digest-covers-output"
         and ev.get("negative_paths") == ["tampered output rejected"],
         str(ev)[:150],
     )

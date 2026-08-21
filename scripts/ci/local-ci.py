@@ -940,6 +940,21 @@ class LocalCI:
             cwd=ROOT / "src" / "cli",
             scrub_git_env=True,
         )
+        # The verification gate guards every turn, but its own suite lived outside
+        # CI and rotted unnoticed. Baselined so inherited red stays pinned and a
+        # new failure is reported.
+        self.run(
+            "python-gate-tests",
+            [
+                self.python,
+                "scripts/ci/pytest_gate.py",
+                "tests/lite/",
+                "--baseline",
+                "tests/lite_known_failures.txt",
+            ],
+            scrub_git_env=True,
+            timeout=1200,
+        )
         self.run(
             "python-unit-tests",
             [

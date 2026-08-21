@@ -1,0 +1,49 @@
+# Known-red tests, recorded so the gate reports regressions instead of
+# inherited failures. Every entry here also fails in the upstream tree
+# this suite was imported from. Target: tests/lite/
+# Regenerate: python scripts/ci/pytest_gate.py <target> --baseline <this file> --write-baseline
+tests/lite/test_gate.py::TestDirtyBaseline::test_unstaged_source_change_after_evidence_mismatches_same_head_and_index
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_echo_v1_and_missing_acceptance_mapping_rejected
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_hard_payment_requires_approved_strong_chain_and_mutation_match
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_link_traversal_and_same_tree_red_mutation_rejected
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_marker_only_and_fenced_markers_rejected[VERIFY:/n]
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_marker_only_and_fenced_markers_rejected[```verify/n```/n]
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_negative_binding_chain_mismatch_is_blocked
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_negative_binding_claim_mismatch_is_blocked
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_negative_binding_missing_is_blocked
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_negative_binding_uninvoked_ref_is_blocked
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_negative_binding_wrong_acceptance_is_blocked
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_red_green_rejects_swapped_acceptance_test_mapping
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_rule_validator_reuses_full_hard_completion_gate
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_signed_review_rejects_mutated_final_evidence
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_signed_review_rejects_replayed_review_for_different_turn
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_signed_review_rejects_untrusted_attacker_key
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_string_mention_does_not_attest_that_a_test_was_invoked
+tests/lite/test_gate.py::TestEvidenceV2BypassRegressions::test_unrelated_claim_command_and_digest_rejected
+tests/lite/test_gate.py::TestEvidenceValidation::test_dirty_tree_sha_accepted_same_head
+tests/lite/test_gate.py::TestEvidenceValidation::test_empty_command_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_empty_output_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_failed_exit_code_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_final_replay_accepts_valid_command
+tests/lite/test_gate.py::TestEvidenceValidation::test_final_replay_fails_closed_for_timeout_and_missing_command
+tests/lite/test_gate.py::TestEvidenceValidation::test_final_replay_rejects_hand_authored_pass_in_both_validators
+tests/lite/test_gate.py::TestEvidenceValidation::test_final_replay_rejects_project_owned_check_mutating_worktree
+tests/lite/test_gate.py::TestEvidenceValidation::test_forged_shape_output_blocked[N/A]
+tests/lite/test_gate.py::TestEvidenceValidation::test_forged_shape_output_blocked[TODO]
+tests/lite/test_gate.py::TestEvidenceValidation::test_forged_shape_output_blocked[[REDACTED]]
+tests/lite/test_gate.py::TestEvidenceValidation::test_forged_shape_output_blocked[placeholder]
+tests/lite/test_gate.py::TestEvidenceValidation::test_future_timestamp_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_missing_evidence_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_no_turn_ignores_newer_review_and_historical_records
+tests/lite/test_gate.py::TestEvidenceValidation::test_nonzero_exit_code_127_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_secrets_in_evidence_output_blocked[AKIAIOSFODNN7EXAMPLE]
+tests/lite/test_gate.py::TestEvidenceValidation::test_secrets_in_evidence_output_blocked[ghp_abc123xyz456def789ghi012jkl3]
+tests/lite/test_gate.py::TestEvidenceValidation::test_secrets_in_evidence_output_blocked[sk-abc123xyz456def789ghi012jkl]
+tests/lite/test_gate.py::TestEvidenceValidation::test_stale_evidence_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_stale_tree_sha_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_workspace_mismatch_blocked
+tests/lite/test_gate.py::TestEvidenceValidation::test_wrong_schema_version_blocked
+tests/lite/test_gate.py::TestVerifyGateSh::test_codex_mapped_symlink_evidence_is_blocked_without_fallback
+tests/lite/test_gate.py::TestVerifyGateSh::test_codex_native_stop_payload_uses_last_assistant_message_and_turn_id
+tests/lite/test_gate.py::TestVerifyGateSh::test_codex_unmapped_platform_turn_id_discovers_correlated_final_evidence
+tests/lite/test_gate.py::test_verify_gate_selftest

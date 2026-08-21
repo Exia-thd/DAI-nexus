@@ -18,7 +18,7 @@ Gate logic:
     v1: schema_version, turn, command, exit_code, output, timestamp_utc,
         workspace, tree_sha
     v2: the above plus output_sha256 (integrity digest of `output`),
-        tier (quick|standard|deep), acceptance, negative_paths
+        tier (see evidence_common.EVIDENCE_TIERS), acceptance, negative_paths
 
   Rejection reasons:
     MISSING   - no evidence file found
@@ -44,6 +44,9 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from evidence_common import EVIDENCE_TIERS  # noqa: E402
 
 # ── configuration ─────────────────────────────────────────────────────────────
 STALENESS_SECS = int(os.environ.get("DAINEXUS_STALENESS_SECS", "3600"))  # 1 hour
@@ -225,9 +228,10 @@ def _validate_schema(ev: dict) -> list[str]:
         )
     if ev.get("schema_version") == "2":
         tier = ev.get("tier")
-        if tier not in ("quick", "standard", "deep"):
+        if tier not in EVIDENCE_TIERS:
             errors.append(
-                f"FORGED: v2 'tier' must be quick|standard|deep, got {tier!r}"
+                f"FORGED: v2 'tier' must be one of "
+                f"{'|'.join(sorted(EVIDENCE_TIERS))}, got {tier!r}"
             )
         if not isinstance(ev.get("negative_paths", []), list):
             errors.append("FORGED: v2 'negative_paths' must be a list")
@@ -436,7 +440,7 @@ def _selftest() -> int:
         v2 = dict(
             ev,
             schema_version="2",
-            tier="quick",
+            tier="unit",
             acceptance="selftest proves the validators accept a well-formed record",
             negative_paths=[],
             output_sha256=hashlib.sha256(ev["output"].encode("utf-8")).hexdigest(),
