@@ -1,22 +1,20 @@
 {
   "version": "2.0",
   "name": "DAI Nexus MCP",
-  "description": "DAI Nexus + DAI Nexus Node MCP Configuration for Claude Desktop",
+  "description": "DAI Nexus MCP Configuration for Claude Desktop",
   "servers": {
     "dai-nexus": {
       "command": "bash",
-      "args": ["DAI-NEXUS/scripts/dainexus-mcp-launcher.sh"],
+      "args": [
+        "DAI-NEXUS/scripts/dainexus-mcp-launcher.sh"
+      ],
       "description": "DAI Nexus project intelligence and skills"
-    },
-    "dainexus-node": {
-      "command": "bash",
-      "args": ["DAI-NEXUS/scripts/dainexus-node-mcp-launcher.sh"],
-      "description": "Code intelligence graph"
     }
   },
   "notes": {
     "installation": "Run 'dainexus-mcp-setup.sh setup' from your project to auto-generate this config",
     "workspace": "Launchers auto-detect workspace from git root or DAINEXUS_WORKSPACE env var",
-    "restart": "Restart Claude Desktop after modifying this file"
+    "restart": "Restart Claude Desktop after modifying this file",
+    "code_intelligence": "Code intelligence is provided by GitNexus, which registers its own MCP server; it is not launched from here."
   }
 }
