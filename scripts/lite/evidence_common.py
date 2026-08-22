@@ -716,7 +716,14 @@ def parse_timestamp(value: str) -> datetime:
 
 def _run_git(workspace: Path, args: list[str], *, check: bool = False) -> bytes:
     result = subprocess.run(
-        ["git", *args], cwd=workspace, capture_output=True, timeout=10, check=False
+        ["git", *args],
+        cwd=workspace,
+        capture_output=True,
+        # Git prompts (credentials, editors) read stdin. Inheriting a pipe that
+        # never closes turns a fast command into a timeout.
+        stdin=subprocess.DEVNULL,
+        timeout=10,
+        check=False,
     )
     if check and result.returncode != 0:
         raise RuntimeError(result.stderr.decode("utf-8", "replace"))
@@ -810,10 +817,27 @@ def worktree_fingerprint(workspace: Path) -> str:
     and same-HEAD changes are not accepted.
     """
 
-    try:
-        inside = _run_git(workspace, ["rev-parse", "--is-inside-work-tree"]).strip()
-    except (OSError, subprocess.SubprocessError, RuntimeError):
-        inside = b""
+    # A failed git call is not the same answer as "this is not a repository".
+    # Treating a timeout as non-git silently produced a NONGIT: digest for a real
+    # repo, so the same tree hashed two ways depending on machine load: evidence
+    # written during contention could never match a later check, and
+    # fingerprint-dependent tests flipped between runs. Retry once — the
+    # timeouts observed here were transient — then refuse to guess.
+    inside = b""
+    for attempt in (1, 2):
+        try:
+            inside = _run_git(workspace, ["rev-parse", "--is-inside-work-tree"]).strip()
+            break
+        except FileNotFoundError:
+            # No git on this machine: the non-git walk below is the answer.
+            break
+        except (OSError, subprocess.SubprocessError, RuntimeError) as error:
+            if attempt == 2:
+                raise RuntimeError(
+                    "git did not answer while fingerprinting the worktree; "
+                    "refusing to emit a fingerprint that may not be comparable"
+                ) from error
+
     if inside != b"true":
         digest = hashlib.sha256()
         for root, dirs, files in os.walk(workspace):
@@ -963,6 +987,38 @@ def read_evidence_bytes(
         or any(part in {"", ".", ".."} for part in relative.parts)
     ):
         raise ValueError("evidence path must be a safe relative path")
+
+    if not os.supports_dir_fd:
+        # Windows implements neither dir_fd nor O_NOFOLLOW, so the hardened walk
+        # below cannot run at all and this function rejected every file — which
+        # made the strict validator inoperable rather than safe. Verify the same
+        # properties with lstat instead: no component may be a symlink and the
+        # target must be a bounded regular file. This gives up the POSIX walk's
+        # TOCTOU guarantee, which is not available on this platform in any form.
+        current = root
+        for part in (".dainexus", "verify", *relative.parts):
+            current = current / part
+            try:
+                info = os.lstat(current)
+            except OSError as error:
+                raise ValueError(
+                    "evidence must be a readable regular non-symlink file"
+                ) from error
+            if stat.S_ISLNK(info.st_mode):
+                raise ValueError("evidence path must not traverse a symlink")
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError("evidence must be a regular non-symlink file")
+        if info.st_size > max_bytes:
+            raise ValueError("evidence exceeds the bounded size limit")
+        try:
+            payload = current.read_bytes()
+        except OSError as error:
+            raise ValueError(
+                "evidence must be a readable regular non-symlink file"
+            ) from error
+        if len(payload) > max_bytes:
+            raise ValueError("evidence exceeds the bounded size limit")
+        return payload
 
     directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
     nofollow = getattr(os, "O_NOFOLLOW", 0)

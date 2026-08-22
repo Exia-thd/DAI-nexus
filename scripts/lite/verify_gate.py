@@ -47,8 +47,12 @@ from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from evidence_common import (  # noqa: E402
+    changed_files,
     execution_manifest,
+    hard_signal,
+    phase_errors,
     schema_errors,
+    worktree_fingerprint,
 )
 
 # ── configuration ─────────────────────────────────────────────────────────────
@@ -125,54 +129,16 @@ def _workspace() -> Path:
 
 
 def _current_tree_sha(workspace: Path) -> str:
-    try:
-        in_git = subprocess.run(
-            ["git", "rev-parse", "--is-inside-work-tree"],
-            cwd=workspace,
-            capture_output=True,
-            timeout=5,
-        )
-        if in_git.returncode != 0:
-            return "NONGIT"
+    """Delegate to the same fingerprint the evidence writer uses.
 
-        head = (
-            subprocess.run(
-                ["git", "rev-parse", "HEAD"],
-                cwd=workspace,
-                capture_output=True,
-                text=True,
-                timeout=5,
-            ).stdout.strip()
-            or "NOHEAD"
-        )
-
-        status = subprocess.run(
-            ["git", "status", "--porcelain", "--untracked-files=all"],
-            cwd=workspace,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        ).stdout.splitlines()
-
-        dirty = [
-            line for line in status if not line[3:].startswith(".dainexus/verify/")
-        ]
-
-        if dirty:
-            idx = (
-                subprocess.run(
-                    ["git", "write-tree"],
-                    cwd=workspace,
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                ).stdout.strip()
-                or "NOIDX"
-            )
-            return f"DIRTY:{head[:12]}:{idx[:12]}"
-        return head
-    except Exception:
-        return "GITERR"
+    run_check.py records tree_sha via evidence_common.worktree_fingerprint,
+    which hashes content and yields TREE:<sha256>. This module computed its own
+    DIRTY:<head>:<index> instead, so on any dirty worktree the reader and the
+    writer produced incomparable strings and the tree check could never agree.
+    kernel/VERIFY.md describes the content-based fingerprint, not the head/index
+    pair, so the shared implementation is the correct one.
+    """
+    return worktree_fingerprint(workspace)
 
 
 def _declared_files() -> list[str]:
@@ -420,6 +386,49 @@ def _check_stubs(workspace: Path, files: list[str]) -> list[str]:
 
 
 # ── selftest ──────────────────────────────────────────────────────────────────
+
+
+def completion_checks(
+    evidence: dict,
+    project_root: Path,
+    evidence_path: Path,
+    files_to_check: list[str] | None = None,
+) -> tuple[bool, tuple[tuple[str, list[str]], ...]]:
+    """The one completion decision shared by this gate and rule-validator.py.
+
+    rule-validator.py imports this symbol; without it the strict response
+    correlation step died at module load and every turn carrying a VERIFY block
+    was rejected for a reason unrelated to its evidence.
+
+    The HARD family the reference also aggregates here — signed review-2 chain
+    validation, controlled mutation backcheck, final-command replay — is not
+    implemented in this tree. It is reported as an explicit UNVERIFIED check
+    rather than silently omitted, so a hard-risk turn cannot read as complete.
+    """
+    current_tree = _current_tree_sha(project_root)
+    files_for_signal = files_to_check or changed_files(project_root)
+    hard = evidence.get("risk") == "hard" or hard_signal(project_root, files_for_signal)
+    checks: list[tuple[str, list[str]]] = [
+        ("schema", _validate_schema(evidence)),
+        ("output", _validate_output(evidence)),
+        ("staleness", _validate_staleness(evidence)),
+        ("workspace", _validate_workspace(evidence, project_root)),
+        ("tree", _validate_tree(evidence, current_tree)),
+        ("phase", phase_errors(evidence, final=True)),
+        ("exit_code", _validate_exit_code(evidence)),
+    ]
+    if hard:
+        checks.append(
+            (
+                "hard",
+                [
+                    "UNVERIFIED: HARD completion (signed review-2, RED->GREEN "
+                    "chain, mutation backcheck, replay) is not implemented in "
+                    "this tree; see tests/lite_known_failures.txt"
+                ],
+            )
+        )
+    return hard, tuple(checks)
 
 
 def _selftest() -> int:

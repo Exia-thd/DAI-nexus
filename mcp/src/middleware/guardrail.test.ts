@@ -131,7 +131,11 @@ describe('ProcessPolicyEvaluator', () => {
     await expect(evaluator.evaluate('Bash', { cmd: 'echo safe' })).resolves.toMatchObject({
       action: 'allow',
     });
-  });
+    // The test's own budget must exceed the evaluator's deadline above, or the
+    // 30s deadline is unreachable and vitest's 10s default fails the case
+    // before the evaluator can answer — reporting a timeout instead of the
+    // discovery result this case exists to assert.
+  }, 60_000);
 
   itJq(
     'uses the canonical policy script when generated MCP config has no DAINEXUS_DIR',
