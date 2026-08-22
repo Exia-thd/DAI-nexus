@@ -90,7 +90,12 @@ def _generate_review_keypair(tmp: Path, prefix: str) -> dict[str, Path | list[Pa
         check=True,
     )
     private_key.chmod(0o600)
-    assert stat.S_IMODE(private_key.stat().st_mode) == 0o600
+    if os.name != "nt":
+        # POSIX mode bits govern access here, so the key must really be 0600.
+        # On Windows chmod only toggles the read-only flag and stat always
+        # reports 0o666; access is governed by ACLs instead. Asserting the mode
+        # there tests nothing and blocked every review-fixture test in this file.
+        assert stat.S_IMODE(private_key.stat().st_mode) == 0o600
     return {"dir": key_dir, "private_key": private_key, "public_key": public_key}
 
 
@@ -105,7 +110,9 @@ def _make_review_fixture(tmp: Path) -> dict[str, object]:
         f"human-42 {public_fields[0]} {public_fields[1]}\n", encoding="utf-8"
     )
     allowed_signers.chmod(0o644)
-    assert stat.S_IMODE(allowed_signers.stat().st_mode) == 0o644
+    if os.name != "nt":
+        # See _generate_review_keypair: Windows does not implement POSIX modes.
+        assert stat.S_IMODE(allowed_signers.stat().st_mode) == 0o644
     fixture: dict[str, object] = {
         **keypair,
         "allowed_signers": allowed_signers,
@@ -1605,10 +1612,7 @@ class TestEvidenceV2BypassRegressions:
 
         green_payload = json.loads(green.read_text(encoding="utf-8"))
         pre_path = (
-            self.tmp
-            / ".dainexus"
-            / "verify"
-            / green_payload["links"]["pre_mutation"]
+            self.tmp / ".dainexus" / "verify" / green_payload["links"]["pre_mutation"]
         )
         pre_payload = json.loads(pre_path.read_text(encoding="utf-8"))
         original_pre_tree = pre_payload["tree_sha"]

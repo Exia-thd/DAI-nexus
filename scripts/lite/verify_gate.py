@@ -46,7 +46,10 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from evidence_common import EVIDENCE_TIERS  # noqa: E402
+from evidence_common import (  # noqa: E402
+    execution_manifest,
+    schema_errors,
+)
 
 # ── configuration ─────────────────────────────────────────────────────────────
 STALENESS_SECS = int(os.environ.get("DAINEXUS_STALENESS_SECS", "3600"))  # 1 hour
@@ -172,6 +175,29 @@ def _current_tree_sha(workspace: Path) -> str:
         return "GITERR"
 
 
+def _declared_files() -> list[str]:
+    """Changed paths the caller declared, via the documented hook interface.
+
+    verify-gate.sh exports FILES_TO_CHECK_STR (NUL-separated when
+    FILES_TO_CHECK_NUL is set). Deriving the set from `git status` alone is not
+    enough: in a non-git workspace, or when the turn's edits were already
+    committed, git reports nothing and the gate opens on unverified work.
+    """
+    raw = os.environ.get("FILES_TO_CHECK_STR", "")
+    if not raw:
+        return []
+    parts = (
+        raw.split(chr(0)) if os.environ.get("FILES_TO_CHECK_NUL") else raw.splitlines()
+    )
+    out: list[str] = []
+    for part in parts:
+        path = part.strip().strip('"').replace("\\", "/")
+        if not path or any(path.startswith(prefix) for prefix in _SKIP_PREFIXES):
+            continue
+        out.append(path)
+    return out
+
+
 def _changed_files(workspace: Path) -> list[str]:
     """Repo-relative changed paths from git status, excluding gate internals."""
     try:
@@ -216,33 +242,19 @@ def _find_evidence(project_root: Path, turn_env: str) -> Path | None:
     return None
 
 
-SUPPORTED_SCHEMAS = {"1", "2"}
+SUPPORTED_SCHEMAS = {"2"}
 
 
 def _validate_schema(ev: dict) -> list[str]:
-    errors: list[str] = []
-    if ev.get("schema_version") not in SUPPORTED_SCHEMAS:
-        errors.append(
-            f"FORGED: schema_version must be one of "
-            f"{sorted(SUPPORTED_SCHEMAS)}, got {ev.get('schema_version')!r}"
-        )
-    if ev.get("schema_version") == "2":
-        tier = ev.get("tier")
-        if tier not in EVIDENCE_TIERS:
-            errors.append(
-                f"FORGED: v2 'tier' must be one of "
-                f"{'|'.join(sorted(EVIDENCE_TIERS))}, got {tier!r}"
-            )
-        if not isinstance(ev.get("negative_paths", []), list):
-            errors.append("FORGED: v2 'negative_paths' must be a list")
-    if not isinstance(ev.get("command"), list) or not ev["command"]:
-        errors.append("FORGED: 'command' must be a non-empty list")
-    if not isinstance(ev.get("turn"), str) or not ev["turn"]:
-        errors.append("FORGED: 'turn' must be a non-empty string")
-    for field in ("timestamp_utc", "workspace", "tree_sha"):
-        if not ev.get(field):
-            errors.append(f"FORGED: '{field}' is missing or empty")
-    return errors
+    """Delegate the schema contract to evidence_common.
+
+    This module previously kept its own, weaker copy: it accepted schema v1 and
+    never checked the tree_sha fingerprint format, so a hand-typed record with
+    `"schema_version": "1"` and `"tree_sha": "NONGIT:fake"` opened the gate on a
+    real code change. evidence_common.schema_errors is the same validator the
+    reference implementation uses and is already vendored here byte-identically.
+    """
+    return schema_errors(ev)
 
 
 def _validate_output(ev: dict) -> list[str]:
@@ -416,6 +428,16 @@ def _selftest() -> int:
 
     tmp = Path(tempfile.mkdtemp())
     try:
+        # schema_errors requires test_refs to name a real file inside the
+        # workspace AND to appear in the exact command. Give the fixture one.
+        check_dir = tmp / "tests"
+        check_dir.mkdir(parents=True, exist_ok=True)
+        (check_dir / "check_selftest.py").write_text(
+            "def test_ok():" + chr(10) + "    assert True" + chr(10),
+            encoding="utf-8",
+        )
+        selftest_ref = "tests/check_selftest.py::test_ok"
+
         ev = {
             "schema_version": "1",
             "turn": "selftest_001",
@@ -437,17 +459,49 @@ def _selftest() -> int:
                 + _validate_exit_code(record)
             )
 
+        # A complete v2 record. evidence_common.schema_errors owns this contract
+        # now, so the fixture must carry every field it requires — that is the
+        # point of the selftest.
+        digest = hashlib.sha256(ev["output"].encode("utf-8")).hexdigest()
         v2 = dict(
             ev,
             schema_version="2",
             tier="unit",
-            acceptance="selftest proves the validators accept a well-formed record",
-            negative_paths=[],
-            output_sha256=hashlib.sha256(ev["output"].encode("utf-8")).hexdigest(),
+            command=["python", "-m", "pytest", selftest_ref],
+            test_refs=[selftest_ref],
+            acceptance_criteria=[
+                {
+                    "id": "selftest-accepts-v2",
+                    "claim": "a well-formed v2 record is accepted",
+                    "test_refs": [selftest_ref],
+                }
+            ],
+            negative_paths=["a v1 record is rejected"],
+            negative_path_bindings=[
+                {
+                    "id": "negative-path-1",
+                    "claim": "a v1 record is rejected",
+                    "acceptance_ids": ["selftest-accepts-v2"],
+                    "test_refs": [selftest_ref],
+                }
+            ],
+            limitations=[],
+            change_kind="test",
+            phase="green",
+            reviewer={"status": "not_required"},
+            implementer_id="selftest@local",
+            tree_sha="NONGIT:" + digest,
+            output_sha256=digest,
         )
+        # The manifest is derived from the command, never hand-written — the
+        # validator recomputes it and compares.
+        manifest, _manifest_errors = execution_manifest(
+            tmp, v2["command"], v2["test_refs"]
+        )
+        v2["execution"] = manifest
 
         cases = [
-            ("v1 record accepted", validate(ev), True),
+            ("v1 record rejected", _validate_schema(ev), False),
             ("v2 record accepted", validate(v2), True),
             (
                 "empty output + nonzero exit rejected",
@@ -549,14 +603,24 @@ def main() -> None:
             pass
 
     workspace = _workspace()
-    changed = _changed_files(workspace)
+    # Union, not either/or: honour what the caller declared and what the
+    # worktree shows. Trusting only one of the two is how this gate opened on a
+    # real change.
+    changed = sorted(set(_changed_files(workspace)) | set(_declared_files()))
     code_changed = _code_files(changed)
 
     # Claim correlation runs first and unconditionally: a VERIFY block that
     # misquotes its evidence is a false report whether or not code changed.
     claim_errors = _correlate_claims(response_text)
 
-    if not code_changed and not claim_errors:
+    # Evidence present for this turn is validated whether or not code changed.
+    # Skipping validation when no change was detected meant a record carrying a
+    # leaked secret, a forged output shape, a nonzero exit code or a stale tree
+    # passed unexamined the moment file detection came up empty — which it does
+    # in a non-git workspace, or when the turn's edits were already committed.
+    # Only the question "is evidence REQUIRED here" depends on code changing.
+    turn_evidence = _find_evidence(workspace, os.environ.get("DAINEXUS_TURN", ""))
+    if not code_changed and not claim_errors and turn_evidence is None:
         _ok(
             f"No code changes detected ({len(changed)} doc/config file(s) changed) — gate OPEN"
         )
@@ -573,14 +637,14 @@ def main() -> None:
         for e in claim_errors:
             print(f"   - {e}", file=sys.stderr)
         all_errors.append("MISREPORTED")
-    if not code_changed:
-        # Nothing else to validate; the claim mismatch alone decides the turn.
+    if not code_changed and turn_evidence is None:
+        # No evidence to examine; the claim mismatch alone decides the turn.
         _err("Gate BLOCKED. Reasons: MISREPORTED")
         sys.exit(block_code)
 
     # 1. Stub check
     print("[VERIFY-GATE] 1. Checking for stubs (TODO, FIXME, NotImplementedError)...")
-    stub_errs = _check_stubs(workspace, code_changed)
+    stub_errs = _check_stubs(workspace, code_changed) if code_changed else []
     if stub_errs:
         _err("Code contains stubs:")
         for e in stub_errs:
@@ -593,6 +657,9 @@ def main() -> None:
     print("[VERIFY-GATE] 2. Validating machine-written evidence...")
     turn_env = os.environ.get("DAINEXUS_TURN", "")
     ev_path = _find_evidence(workspace, turn_env)
+    if ev_path is None and not code_changed:
+        _ok("No code changes detected and no evidence to validate — gate OPEN")
+        sys.exit(0)
     if ev_path is None:
         _err("MISSING: No evidence file under .dainexus/verify/")
         print(

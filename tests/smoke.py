@@ -694,17 +694,21 @@ def test_evidence_schema_v2() -> None:
         ),
     )
     check("v2 bad tier is FORGED", bool(vg._validate_schema(dict(ev, tier="turbo"))))
-    # v1 must still be accepted: old evidence files stay valid.
+    # v1 must be REJECTED. kernel/VERIFY.md: "Schema v2 is the only completion
+    # format; Schema v1 is legacy and non-completion after v2 activation." While
+    # this oracle asserted the opposite, a hand-typed eight-line v1 record with
+    # `"tree_sha": "NONGIT:fake"` opened the gate on a real, sabotaged code change.
     v1 = {
         k: v
         for k, v in ev.items()
         if k not in ("output_sha256", "tier", "acceptance", "negative_paths")
     }
     v1["schema_version"] = "1"
+    v1_errors = vg._validate_schema(v1)
     check(
-        "v1 evidence still accepted",
-        not (vg._validate_schema(v1) + vg._validate_output(v1)),
-        str(vg._validate_schema(v1) + vg._validate_output(v1))[:150],
+        "v1 evidence is rejected",
+        any("v1 is rejected" in e for e in v1_errors),
+        str(v1_errors)[:200],
     )
 
 
